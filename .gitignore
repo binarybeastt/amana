@@ -1,0 +1,17 @@
+# Rust
+target/
+# Android
+*.iml
+.gradle/
+local.properties
+build/
+.idea/
+# External clones (zcash-devtool etc.)
+third_party/
+# Wallet data and secrets: never commit
+*.sqlite
+*.db
+wallets/
+*.seed
+.env
+.DS_Store

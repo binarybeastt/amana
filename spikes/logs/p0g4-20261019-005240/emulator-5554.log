@@ -1,0 +1,11 @@
+--------- beginning of main
+10-19 00:52:38.074 I/BLEBLOB ( 9443): START role=send node=A
+10-19 00:52:38.792 I/BLEBLOB ( 9443): CONNECTED target=B mtu=517
+10-19 00:52:39.661 I/BLEBLOB ( 9443): RESULT node=A i=1 ok=true ms=1578 sha=1f22adef err=-
+10-19 00:53:39.693 I/BLEBLOB ( 9443): RESULT node=A i=2 ok=false ms=60029 sha=7818933e err=timeout_waiting_for_Ack
+10-19 00:53:39.824 I/BLEBLOB ( 9443): CONNECTED target=B mtu=517
+10-19 00:53:40.354 I/BLEBLOB ( 9443): RESULT node=A i=3 ok=true ms=661 sha=492a01c8 err=-
+10-19 00:54:40.369 I/BLEBLOB ( 9443): RESULT node=A i=4 ok=false ms=60012 sha=5dd69ae9 err=timeout_waiting_for_Ack
+10-19 00:54:40.540 I/BLEBLOB ( 9443): CONNECTED target=B mtu=517
+10-19 00:54:41.165 I/BLEBLOB ( 9443): RESULT node=A i=5 ok=true ms=794 sha=c6f7ef58 err=-
+10-19 00:54:41.167 I/BLEBLOB ( 9443): SUMMARY node=A sent=5 ok=3 p50=794 p95=794 max=1578

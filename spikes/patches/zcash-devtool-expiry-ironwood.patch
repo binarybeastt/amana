@@ -1,0 +1,53 @@
+diff --git a/src/commands/pczt/create.rs b/src/commands/pczt/create.rs
+index 2679a32..6936159 100644
+--- a/src/commands/pczt/create.rs
++++ b/src/commands/pczt/create.rs
+@@ -26,6 +26,7 @@ use zcash_client_backend::{
+ use zcash_client_sqlite::{WalletDb, util::SystemClock};
+ use zcash_protocol::{
+     ShieldedPool,
++    consensus::BlockHeight,
+     memo::{Memo, MemoBytes},
+     value::Zatoshis,
+ };
+@@ -64,6 +65,15 @@ pub(crate) struct Command {
+     /// Path to a file to which to write the PCZT. If not provided, writes to stdout.
+     #[arg(long)]
+     output: Option<PathBuf>,
++
++    /// The transaction's expiry height. 0 disables expiry (ZIP 203). If not provided, the
++    /// builder default (target height + 40 blocks) is used.
++    #[arg(long)]
++    expiry_height: Option<u32>,
++
++    /// Send change to the Ironwood pool instead of the Orchard pool.
++    #[arg(long)]
++    ironwood_change: bool,
+ }
+ 
+ impl Command {
+@@ -79,7 +89,11 @@ impl Command {
+         let change_strategy = MultiOutputChangeStrategy::new(
+             StandardFeeRule::Zip317,
+             None,
+-            ShieldedPool::Orchard,
++            if self.ironwood_change {
++                ShieldedPool::Ironwood
++            } else {
++                ShieldedPool::Orchard
++            },
+             DustOutputPolicy::default(),
+             SplitPolicy::with_min_output_value(
+                 NonZeroUsize::new(self.target_note_count)
+@@ -130,8 +144,9 @@ impl Command {
+             account.id(),
+             OvkPolicy::Sender,
+             &proposal,
+-            // Use the builder-derived expiry and a standard Orchard-pool bundle.
+-            None,
++            // Use the requested expiry (0 = never expires) or the builder-derived default,
++            // and a standard Orchard-pool bundle.
++            self.expiry_height.map(BlockHeight::from_u32),
+             zcash_primitives::transaction::builder::BundlePadding::DEFAULT,
+         )
+         .map_err(error::Error::from)?;
