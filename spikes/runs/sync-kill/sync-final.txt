@@ -1,0 +1,24 @@
+[2m2026-10-19T05:42:13.321355Z[0m [32m INFO[0m [2mzcash_devtool::remote[0m[2m:[0m Connecting to testnet.zec.rocks:443
+[2m2026-10-19T05:42:14.383233Z[0m [32m INFO[0m [2mzcash_devtool::commands::wallet::sync[0m[2m:[0m Sapling tree has 6 subtrees
+[2m2026-10-19T05:42:14.631511Z[0m [32m INFO[0m [2mzcash_devtool::commands::wallet::sync[0m[2m:[0m Orchard tree has 3 subtrees
+[2m2026-10-19T05:42:14.841473Z[0m [32m INFO[0m [2mzcash_devtool::commands::wallet::sync[0m[2m:[0m Ironwood tree has 8 subtrees
+[2m2026-10-19T05:42:15.087770Z[0m [32m INFO[0m [2mzcash_devtool::commands::wallet::sync[0m[2m:[0m Latest block height is 4517630
+[2m2026-10-19T05:42:15.092045Z[0m [32m INFO[0m [2mzcash_devtool::commands::wallet::sync[0m[2m:[0m Refreshing UTXOs for AccountUuid(a680291d-e91c-4b0d-b1dd-ba7a5782516d) from height 0
+[2m2026-10-19T05:42:15.352307Z[0m [32m INFO[0m [2mzcash_devtool::commands::wallet::sync[0m[2m:[0m Fetching scan ranges
+[2m2026-10-19T05:42:15.352816Z[0m [32m INFO[0m [2mzcash_devtool::commands::wallet::sync[0m[2m:[0m Fetched 2 scan ranges
+[2m2026-10-19T05:42:15.352899Z[0m [32m INFO[0m [2mzcash_devtool::commands::wallet::sync[0m[2m:[0m Fetching Verify(4480010..4480020)
+[2m2026-10-19T05:42:16.316223Z[0m [32m INFO[0m [2mzcash_devtool::commands::wallet::sync[0m[2m:[0m Scanning Verify(4480010..4480020)
+[2m2026-10-19T05:42:16.594015Z[0m [32m INFO[0m [2mzcash_devtool::commands::wallet::sync[0m[2m:[0m Scan complete for range Verify(4480010..4480020); progress is 208/7226
+[2m2026-10-19T05:42:16.594126Z[0m [32m INFO[0m [2mzcash_devtool::commands::wallet::sync[0m[2m:[0m Fetching ChainTip(4480020..4490020)
+[2m2026-10-19T05:42:23.024604Z[0m [32m INFO[0m [2mzcash_devtool::commands::wallet::sync[0m[2m:[0m Scanning ChainTip(4480020..4490020)
+[2m2026-10-19T05:42:27.536918Z[0m [32m INFO[0m [2mzcash_devtool::commands::wallet::sync[0m[2m:[0m Scan complete for range ChainTip(4480020..4490020); progress is 638/5686
+[2m2026-10-19T05:42:27.537036Z[0m [32m INFO[0m [2mzcash_devtool::commands::wallet::sync[0m[2m:[0m Fetching ChainTip(4490020..4500020)
+[2m2026-10-19T05:42:30.508581Z[0m [32m INFO[0m [2mzcash_devtool::commands::wallet::sync[0m[2m:[0m Scanning ChainTip(4490020..4500020)
+[2m2026-10-19T05:42:33.332966Z[0m [32m INFO[0m [2mzcash_devtool::commands::wallet::sync[0m[2m:[0m Scan complete for range ChainTip(4490020..4500020); progress is 654/3781
+[2m2026-10-19T05:42:33.333048Z[0m [32m INFO[0m [2mzcash_devtool::commands::wallet::sync[0m[2m:[0m Fetching ChainTip(4500020..4510020)
+[2m2026-10-19T05:42:36.371263Z[0m [32m INFO[0m [2mzcash_devtool::commands::wallet::sync[0m[2m:[0m Scanning ChainTip(4500020..4510020)
+[2m2026-10-19T05:42:38.825567Z[0m [32m INFO[0m [2mzcash_devtool::commands::wallet::sync[0m[2m:[0m Scan complete for range ChainTip(4500020..4510020); progress is 990/2310
+[2m2026-10-19T05:42:38.825664Z[0m [32m INFO[0m [2mzcash_devtool::commands::wallet::sync[0m[2m:[0m Fetching ChainTip(4510020..4517631)
+[2m2026-10-19T05:42:41.236841Z[0m [32m INFO[0m [2mzcash_devtool::commands::wallet::sync[0m[2m:[0m Scanning ChainTip(4510020..4517631)
+[2m2026-10-19T05:42:43.111511Z[0m [32m INFO[0m [2mzcash_devtool::commands::wallet::sync[0m[2m:[0m Scan complete for range ChainTip(4510020..4517631); progress is 1037/1037
+[2m2026-10-19T05:42:43.111594Z[0m [32m INFO[0m [2mzcash_devtool::commands::wallet::sync[0m[2m:[0m Waiting for cached blocks to be deleted...

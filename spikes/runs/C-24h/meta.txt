@@ -1,0 +1,14 @@
+label=C-24h
+account=cbc406ec-6c58-4b1c-a589-36a026e61b36
+value_zats=10000000
+build_tip=4516878
+build_time=2026-10-19T00:21:40Z
+expiry_height=0
+raw_tx_bytes=9166
+offline_build=ok
+txid=3f6f04f21bc6b4a80fd4cb30cf08e35fa19c32cbe804503cd85863871a5755e9
+broadcast_tip=4518043
+broadcast_time=2026-10-19T08:30:35Z
+send1_exit=0
+send2_exit=1
+mined_height=4518044

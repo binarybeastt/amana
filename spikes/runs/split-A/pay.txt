@@ -1,0 +1,48 @@
+Creating transaction...
+Proposed transfer:
+  Min target height: 4517699
+  Fee rule: Zip317
+  Steps (1):
+    Step 0:
+      Shielding: false
+      Payments (8):
+        [0] -> utest1gn9lcnlpfjx3tu8g7gu86r0fmqksc94ufsf52eqy2h7udkeh3700q5azwg6ekvq5p937s22nxzp5d6jvsgqscjjvryathda0yn2r8sa8xkkyxz73ydx8c64wsrang0a2ukheugg2m8u4yf93w2rw72as23v48stdmrtuu03zkdllmjj6vh3sm598pjagjkl2l0h7nfula9qvcd70frg
+            Amount:   0.10000000 TAZ
+            Pool: Ironwood
+        [1] -> utest1gn9lcnlpfjx3tu8g7gu86r0fmqksc94ufsf52eqy2h7udkeh3700q5azwg6ekvq5p937s22nxzp5d6jvsgqscjjvryathda0yn2r8sa8xkkyxz73ydx8c64wsrang0a2ukheugg2m8u4yf93w2rw72as23v48stdmrtuu03zkdllmjj6vh3sm598pjagjkl2l0h7nfula9qvcd70frg
+            Amount:   0.10000000 TAZ
+            Pool: Ironwood
+        [2] -> utest1gn9lcnlpfjx3tu8g7gu86r0fmqksc94ufsf52eqy2h7udkeh3700q5azwg6ekvq5p937s22nxzp5d6jvsgqscjjvryathda0yn2r8sa8xkkyxz73ydx8c64wsrang0a2ukheugg2m8u4yf93w2rw72as23v48stdmrtuu03zkdllmjj6vh3sm598pjagjkl2l0h7nfula9qvcd70frg
+            Amount:   0.05000000 TAZ
+            Pool: Ironwood
+        [3] -> utest1gn9lcnlpfjx3tu8g7gu86r0fmqksc94ufsf52eqy2h7udkeh3700q5azwg6ekvq5p937s22nxzp5d6jvsgqscjjvryathda0yn2r8sa8xkkyxz73ydx8c64wsrang0a2ukheugg2m8u4yf93w2rw72as23v48stdmrtuu03zkdllmjj6vh3sm598pjagjkl2l0h7nfula9qvcd70frg
+            Amount:   0.05000000 TAZ
+            Pool: Ironwood
+        [4] -> utest1gn9lcnlpfjx3tu8g7gu86r0fmqksc94ufsf52eqy2h7udkeh3700q5azwg6ekvq5p937s22nxzp5d6jvsgqscjjvryathda0yn2r8sa8xkkyxz73ydx8c64wsrang0a2ukheugg2m8u4yf93w2rw72as23v48stdmrtuu03zkdllmjj6vh3sm598pjagjkl2l0h7nfula9qvcd70frg
+            Amount:   0.02000000 TAZ
+            Pool: Ironwood
+        [5] -> utest1gn9lcnlpfjx3tu8g7gu86r0fmqksc94ufsf52eqy2h7udkeh3700q5azwg6ekvq5p937s22nxzp5d6jvsgqscjjvryathda0yn2r8sa8xkkyxz73ydx8c64wsrang0a2ukheugg2m8u4yf93w2rw72as23v48stdmrtuu03zkdllmjj6vh3sm598pjagjkl2l0h7nfula9qvcd70frg
+            Amount:   0.02000000 TAZ
+            Pool: Ironwood
+        [6] -> utest1gn9lcnlpfjx3tu8g7gu86r0fmqksc94ufsf52eqy2h7udkeh3700q5azwg6ekvq5p937s22nxzp5d6jvsgqscjjvryathda0yn2r8sa8xkkyxz73ydx8c64wsrang0a2ukheugg2m8u4yf93w2rw72as23v48stdmrtuu03zkdllmjj6vh3sm598pjagjkl2l0h7nfula9qvcd70frg
+            Amount:   0.01000000 TAZ
+            Pool: Ironwood
+        [7] -> utest1gn9lcnlpfjx3tu8g7gu86r0fmqksc94ufsf52eqy2h7udkeh3700q5azwg6ekvq5p937s22nxzp5d6jvsgqscjjvryathda0yn2r8sa8xkkyxz73ydx8c64wsrang0a2ukheugg2m8u4yf93w2rw72as23v48stdmrtuu03zkdllmjj6vh3sm598pjagjkl2l0h7nfula9qvcd70frg
+            Amount:   0.01000000 TAZ
+            Pool: Ironwood
+      Shielded inputs (5) at anchor height 4517696:
+        - Ironwood 8839fb9a45b607a2b14b4c9cb925b7367a28dabaebc1cbe4ebe44e95e3daccd6:3    0.13323333 TAZ
+        - Ironwood b49de3fea28571785be281a6e3fbfcf7bc44817d1ee73f216f44d1e36d7cfb5e:0    0.08313334 TAZ
+        - Ironwood b49de3fea28571785be281a6e3fbfcf7bc44817d1ee73f216f44d1e36d7cfb5e:1    0.05000000 TAZ
+        - Ironwood 3021261711202bb17596e7d18b3ccb09fbc87845a3b8d8b6f126b4b502c27f29:0    0.05000000 TAZ
+        - Ironwood efe6362d4361917323098b416a15328222409d40dc9522d7725962f2eedd8d71:1    0.10000000 TAZ
+      Change outputs (1):
+        - Ironwood   0.05591667 TAZ
+      Fee:   0.00045000 TAZ
+Continue? [y/n]: Sending transaction...
+Error: code: 'Unknown error', message: "transport error", source: tonic::transport::Error(Transport, hyper::Error(Io, Custom { kind: UnexpectedEof, error: "peer closed connection without sending TLS close_notify: https://docs.rs/rustls/latest/rustls/manual/_03_howto/index.html#unexpected-eof" }))
+
+Caused by:
+    0: transport error
+    1: connection error
+    2: peer closed connection without sending TLS close_notify: https://docs.rs/rustls/latest/rustls/manual/_03_howto/index.html#unexpected-eof

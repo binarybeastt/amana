@@ -1,0 +1,26 @@
+Creating transaction...
+Proposed transfer:
+  Min target height: 4516857
+  Fee rule: Zip317
+  Steps (1):
+    Step 0:
+      Shielding: false
+      Payments (3):
+        [0] -> utest1s50tledvraupnmmkyunryczqvmjrlm6r583czlhzrl8s7sskr3pgzkzupqts2qehzm0y2zjc0lp8kqdex0nefmgg5u4spr9tle673ns3sa0vpp7ym234jp0f9lrj8xrjumgmtmt6n9a6al26azxpr9kqpuu6jw2mg3j7m5vj54qplg734ty5nee66gw8w7v4f7rqp2vxqd7pz0k2axw
+            Amount:   0.20000000 TAZ
+            Pool: Ironwood
+        [1] -> utest1m6uankyfexlx96ljn0200cvujrt36pwutk2epr7tr76ztxqf4e20d7rw3m2xh5envrd484wyeaa9j9gecn5t6fc8772jg7uq8d3har5t39lt87kljzp9uwqp5f25v4yhku0w8uenwlfs5whqxjr389mfw3370dulkg37ew3k399namajertejtyjtnrjddaw08t0ehzmmd3vs7td62m
+            Amount:   0.20000000 TAZ
+            Pool: Ironwood
+        [2] -> utest1kkh4094vrhm0vu4t0vr0y5hrawlu870qt9fp6pgvc6d205e5gxvs54authhnh9qu9xj5awnpd7c36nyae04xn439e6xy99aeyts2x89cequd2n927lv6r65rwlwfl3yc8mj7u3wdrze22snd0cj8aamt2ltt33waktxe4x7pdedyumfq7mg0k6dwhgpmy3ve6vsqqvrae8v02tu6zeg
+            Amount:   0.20000000 TAZ
+            Pool: Ironwood
+      Shielded inputs (1) at anchor height 4516854:
+        - Ironwood 5a7d13f1940c429802979d9529697f33c70d81ad6408fb32ecc306655c32495e:0    1.00000000 TAZ
+      Change outputs (3):
+        - Ironwood   0.13323334 TAZ
+        - Ironwood   0.13323333 TAZ
+        - Ironwood   0.13323333 TAZ
+      Fee:   0.00030000 TAZ
+Continue? [y/n]: Sending transaction...
+8839fb9a45b607a2b14b4c9cb925b7367a28dabaebc1cbe4ebe44e95e3daccd6

@@ -1,0 +1,3 @@
+[2m2026-10-19T05:39:25.045662Z[0m [32m INFO[0m [2mzcash_devtool::remote[0m[2m:[0m Connecting to testnet.zec.rocks:443
+Sending transaction...
+Error: Send failed: (-25) failed to validate tx: WtxId("private"), error: transaction is already in state

@@ -1,0 +1,73 @@
+Creating transaction...
+Proposed transfer:
+  Min target height: 4519394
+  Fee rule: Zip317
+  Steps (1):
+    Step 0:
+      Shielding: false
+      Payments (16):
+        [0] -> utest1gn9lcnlpfjx3tu8g7gu86r0fmqksc94ufsf52eqy2h7udkeh3700q5azwg6ekvq5p937s22nxzp5d6jvsgqscjjvryathda0yn2r8sa8xkkyxz73ydx8c64wsrang0a2ukheugg2m8u4yf93w2rw72as23v48stdmrtuu03zkdllmjj6vh3sm598pjagjkl2l0h7nfula9qvcd70frg
+            Amount:   0.20000000 TAZ
+            Pool: Ironwood
+        [1] -> utest1gn9lcnlpfjx3tu8g7gu86r0fmqksc94ufsf52eqy2h7udkeh3700q5azwg6ekvq5p937s22nxzp5d6jvsgqscjjvryathda0yn2r8sa8xkkyxz73ydx8c64wsrang0a2ukheugg2m8u4yf93w2rw72as23v48stdmrtuu03zkdllmjj6vh3sm598pjagjkl2l0h7nfula9qvcd70frg
+            Amount:   0.10000000 TAZ
+            Pool: Ironwood
+        [2] -> utest1gn9lcnlpfjx3tu8g7gu86r0fmqksc94ufsf52eqy2h7udkeh3700q5azwg6ekvq5p937s22nxzp5d6jvsgqscjjvryathda0yn2r8sa8xkkyxz73ydx8c64wsrang0a2ukheugg2m8u4yf93w2rw72as23v48stdmrtuu03zkdllmjj6vh3sm598pjagjkl2l0h7nfula9qvcd70frg
+            Amount:   0.10000000 TAZ
+            Pool: Ironwood
+        [3] -> utest1gn9lcnlpfjx3tu8g7gu86r0fmqksc94ufsf52eqy2h7udkeh3700q5azwg6ekvq5p937s22nxzp5d6jvsgqscjjvryathda0yn2r8sa8xkkyxz73ydx8c64wsrang0a2ukheugg2m8u4yf93w2rw72as23v48stdmrtuu03zkdllmjj6vh3sm598pjagjkl2l0h7nfula9qvcd70frg
+            Amount:   0.05000000 TAZ
+            Pool: Ironwood
+        [4] -> utest1gn9lcnlpfjx3tu8g7gu86r0fmqksc94ufsf52eqy2h7udkeh3700q5azwg6ekvq5p937s22nxzp5d6jvsgqscjjvryathda0yn2r8sa8xkkyxz73ydx8c64wsrang0a2ukheugg2m8u4yf93w2rw72as23v48stdmrtuu03zkdllmjj6vh3sm598pjagjkl2l0h7nfula9qvcd70frg
+            Amount:   0.05000000 TAZ
+            Pool: Ironwood
+        [5] -> utest1gn9lcnlpfjx3tu8g7gu86r0fmqksc94ufsf52eqy2h7udkeh3700q5azwg6ekvq5p937s22nxzp5d6jvsgqscjjvryathda0yn2r8sa8xkkyxz73ydx8c64wsrang0a2ukheugg2m8u4yf93w2rw72as23v48stdmrtuu03zkdllmjj6vh3sm598pjagjkl2l0h7nfula9qvcd70frg
+            Amount:   0.02000000 TAZ
+            Pool: Ironwood
+        [6] -> utest1gn9lcnlpfjx3tu8g7gu86r0fmqksc94ufsf52eqy2h7udkeh3700q5azwg6ekvq5p937s22nxzp5d6jvsgqscjjvryathda0yn2r8sa8xkkyxz73ydx8c64wsrang0a2ukheugg2m8u4yf93w2rw72as23v48stdmrtuu03zkdllmjj6vh3sm598pjagjkl2l0h7nfula9qvcd70frg
+            Amount:   0.02000000 TAZ
+            Pool: Ironwood
+        [7] -> utest1gn9lcnlpfjx3tu8g7gu86r0fmqksc94ufsf52eqy2h7udkeh3700q5azwg6ekvq5p937s22nxzp5d6jvsgqscjjvryathda0yn2r8sa8xkkyxz73ydx8c64wsrang0a2ukheugg2m8u4yf93w2rw72as23v48stdmrtuu03zkdllmjj6vh3sm598pjagjkl2l0h7nfula9qvcd70frg
+            Amount:   0.01000000 TAZ
+            Pool: Ironwood
+        [8] -> utest1gn9lcnlpfjx3tu8g7gu86r0fmqksc94ufsf52eqy2h7udkeh3700q5azwg6ekvq5p937s22nxzp5d6jvsgqscjjvryathda0yn2r8sa8xkkyxz73ydx8c64wsrang0a2ukheugg2m8u4yf93w2rw72as23v48stdmrtuu03zkdllmjj6vh3sm598pjagjkl2l0h7nfula9qvcd70frg
+            Amount:   0.01000000 TAZ
+            Pool: Ironwood
+        [9] -> utest1gn9lcnlpfjx3tu8g7gu86r0fmqksc94ufsf52eqy2h7udkeh3700q5azwg6ekvq5p937s22nxzp5d6jvsgqscjjvryathda0yn2r8sa8xkkyxz73ydx8c64wsrang0a2ukheugg2m8u4yf93w2rw72as23v48stdmrtuu03zkdllmjj6vh3sm598pjagjkl2l0h7nfula9qvcd70frg
+            Amount:   0.00010000 TAZ
+            Pool: Ironwood
+        [10] -> utest1gn9lcnlpfjx3tu8g7gu86r0fmqksc94ufsf52eqy2h7udkeh3700q5azwg6ekvq5p937s22nxzp5d6jvsgqscjjvryathda0yn2r8sa8xkkyxz73ydx8c64wsrang0a2ukheugg2m8u4yf93w2rw72as23v48stdmrtuu03zkdllmjj6vh3sm598pjagjkl2l0h7nfula9qvcd70frg
+            Amount:   0.00015000 TAZ
+            Pool: Ironwood
+        [11] -> utest1gn9lcnlpfjx3tu8g7gu86r0fmqksc94ufsf52eqy2h7udkeh3700q5azwg6ekvq5p937s22nxzp5d6jvsgqscjjvryathda0yn2r8sa8xkkyxz73ydx8c64wsrang0a2ukheugg2m8u4yf93w2rw72as23v48stdmrtuu03zkdllmjj6vh3sm598pjagjkl2l0h7nfula9qvcd70frg
+            Amount:   0.00020000 TAZ
+            Pool: Ironwood
+        [12] -> utest1gn9lcnlpfjx3tu8g7gu86r0fmqksc94ufsf52eqy2h7udkeh3700q5azwg6ekvq5p937s22nxzp5d6jvsgqscjjvryathda0yn2r8sa8xkkyxz73ydx8c64wsrang0a2ukheugg2m8u4yf93w2rw72as23v48stdmrtuu03zkdllmjj6vh3sm598pjagjkl2l0h7nfula9qvcd70frg
+            Amount:   0.00025000 TAZ
+            Pool: Ironwood
+        [13] -> utest1gn9lcnlpfjx3tu8g7gu86r0fmqksc94ufsf52eqy2h7udkeh3700q5azwg6ekvq5p937s22nxzp5d6jvsgqscjjvryathda0yn2r8sa8xkkyxz73ydx8c64wsrang0a2ukheugg2m8u4yf93w2rw72as23v48stdmrtuu03zkdllmjj6vh3sm598pjagjkl2l0h7nfula9qvcd70frg
+            Amount:   0.00030000 TAZ
+            Pool: Ironwood
+        [14] -> utest1gn9lcnlpfjx3tu8g7gu86r0fmqksc94ufsf52eqy2h7udkeh3700q5azwg6ekvq5p937s22nxzp5d6jvsgqscjjvryathda0yn2r8sa8xkkyxz73ydx8c64wsrang0a2ukheugg2m8u4yf93w2rw72as23v48stdmrtuu03zkdllmjj6vh3sm598pjagjkl2l0h7nfula9qvcd70frg
+            Amount:   0.00035000 TAZ
+            Pool: Ironwood
+        [15] -> utest1gn9lcnlpfjx3tu8g7gu86r0fmqksc94ufsf52eqy2h7udkeh3700q5azwg6ekvq5p937s22nxzp5d6jvsgqscjjvryathda0yn2r8sa8xkkyxz73ydx8c64wsrang0a2ukheugg2m8u4yf93w2rw72as23v48stdmrtuu03zkdllmjj6vh3sm598pjagjkl2l0h7nfula9qvcd70frg
+            Amount:   0.00040000 TAZ
+            Pool: Ironwood
+      Shielded inputs (11) at anchor height 4519382:
+        - Ironwood 0b7f2fbab616624ad57c516de9e60c53827317ec380bd1d6563d05267f1b6615:0    0.12313333 TAZ
+        - Ironwood bb65b071a838059276e3251c01936ed80514c9b92e5e3fff1d438b133b56ddf1:0    0.05591667 TAZ
+        - Ironwood bb65b071a838059276e3251c01936ed80514c9b92e5e3fff1d438b133b56ddf1:1    0.01000000 TAZ
+        - Ironwood bb65b071a838059276e3251c01936ed80514c9b92e5e3fff1d438b133b56ddf1:2    0.05000000 TAZ
+        - Ironwood bb65b071a838059276e3251c01936ed80514c9b92e5e3fff1d438b133b56ddf1:3    0.02000000 TAZ
+        - Ironwood bb65b071a838059276e3251c01936ed80514c9b92e5e3fff1d438b133b56ddf1:4    0.05000000 TAZ
+        - Ironwood bb65b071a838059276e3251c01936ed80514c9b92e5e3fff1d438b133b56ddf1:5    0.02000000 TAZ
+        - Ironwood bb65b071a838059276e3251c01936ed80514c9b92e5e3fff1d438b133b56ddf1:6    0.10000000 TAZ
+        - Ironwood bb65b071a838059276e3251c01936ed80514c9b92e5e3fff1d438b133b56ddf1:7    0.01000000 TAZ
+        - Ironwood bb65b071a838059276e3251c01936ed80514c9b92e5e3fff1d438b133b56ddf1:8    0.10000000 TAZ
+        - Ironwood 3f6f04f21bc6b4a80fd4cb30cf08e35fa19c32cbe804503cd85863871a5755e9:1    0.10000000 TAZ
+      Change outputs (1):
+        - Ironwood   0.07645000 TAZ
+      Fee:   0.00085000 TAZ
+Continue? [y/n]: Sending transaction...
+271f73ee57901a6cf6119d40a665dfa88c792c46d3b0c5f85070cd073ea835ec

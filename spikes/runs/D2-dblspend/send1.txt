@@ -1,0 +1,3 @@
+[2m2026-10-19T00:22:58.753511Z[0m [32m INFO[0m [2mzcash_devtool::remote[0m[2m:[0m Connecting to testnet.zec.rocks:443
+Sending transaction...
+Error: Send failed: (-25) any transaction with the same effects will be rejected from the mempool until the next chain tip block: transaction rejected because another transaction in the mempool has already spent some of its inputs

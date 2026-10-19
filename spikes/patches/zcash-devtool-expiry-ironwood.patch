@@ -1,3 +1,24 @@
+diff --git a/src/commands/pczt.rs b/src/commands/pczt.rs
+index cd6c3d7..d68a0ce 100644
+--- a/src/commands/pczt.rs
++++ b/src/commands/pczt.rs
+@@ -12,6 +12,7 @@ pub(crate) mod prove;
+ pub(crate) mod qr_density;
+ pub(crate) mod redact;
+ pub(crate) mod send;
++pub(crate) mod send_raw;
+ pub(crate) mod send_without_storing;
+ pub(crate) mod shield;
+ pub(crate) mod sign;
+@@ -59,6 +60,8 @@ pub(crate) enum Command {
+     ///
+     /// This should be used for PCZTs created with `pczt create-manual`.
+     SendWithoutStoring(send_without_storing::Command),
++    /// Send raw transaction bytes (from a file, or stored in the wallet) without changing the wallet
++    SendRaw(send_raw::Command),
+     #[cfg(feature = "pczt-qr")]
+     /// Render a PCZT as an animated QR code
+     ToQr(qr::Send),
 diff --git a/src/commands/pczt/create.rs b/src/commands/pczt/create.rs
 index 2679a32..6936159 100644
 --- a/src/commands/pczt/create.rs
@@ -51,3 +72,187 @@ index 2679a32..6936159 100644
              zcash_primitives::transaction::builder::BundlePadding::DEFAULT,
          )
          .map_err(error::Error::from)?;
+diff --git a/src/commands/pczt/extract.rs b/src/commands/pczt/extract.rs
+index c4d322c..4cb3680 100644
+--- a/src/commands/pczt/extract.rs
++++ b/src/commands/pczt/extract.rs
+@@ -5,12 +5,18 @@ use pczt::{
+     roles::{spend_finalizer::SpendFinalizer, tx_extractor::TransactionExtractor},
+ };
+ use rand::{rand_core::UnwrapErr, rngs::SysRng};
++use std::path::PathBuf;
++
+ use tokio::io::{AsyncReadExt, stdin};
+ use zcash_proofs::prover::LocalTxProver;
+ 
+ // Options accepted for the `pczt extract` command
+ #[derive(Debug, Args)]
+-pub(crate) struct Command {}
++pub(crate) struct Command {
++    /// Path to a file to which to write the raw transaction bytes.
++    #[arg(long)]
++    output: Option<PathBuf>,
++}
+ 
+ impl Command {
+     pub(crate) async fn run(self) -> Result<(), anyhow::Error> {
+@@ -32,6 +38,13 @@ impl Command {
+             .map_err(|e| anyhow!("Failed to extract transaction from PCZT: {e:?}"))?;
+         let txid = tx.txid();
+         println!("{txid}");
++        eprintln!("expiry_height={}", u32::from(tx.expiry_height()));
++        if let Some(path) = &self.output {
++            let mut raw = vec![];
++            tx.write(&mut raw)?;
++            std::fs::write(path, &raw)?;
++            eprintln!("raw_tx_bytes={}", raw.len());
++        }
+         Ok(())
+     }
+ }
+diff --git a/src/commands/pczt/send_raw.rs b/src/commands/pczt/send_raw.rs
+new file mode 100644
+index 0000000..5b482c1
+--- /dev/null
++++ b/src/commands/pczt/send_raw.rs
+@@ -0,0 +1,67 @@
++use std::path::PathBuf;
++
++use anyhow::anyhow;
++use clap::Args;
++use rand::{rand_core::UnwrapErr, rngs::SysRng};
++use zcash_client_backend::{data_api::WalletRead, proto::service};
++use zcash_client_sqlite::{WalletDb, util::SystemClock};
++use zcash_protocol::TxId;
++
++use crate::{config::WalletConfig, data::get_db_paths, error, remote::ConnectionArgs};
++
++// Options accepted for the `pczt send-raw` command
++#[derive(Debug, Args)]
++pub(crate) struct Command {
++    #[command(flatten)]
++    connection: ConnectionArgs,
++
++    /// Path to a file of raw transaction bytes.
++    #[arg(long, conflicts_with = "txid")]
++    file: Option<PathBuf>,
++
++    /// Txid (display order) of a transaction stored in the wallet; its stored raw bytes are sent.
++    #[arg(long)]
++    txid: Option<String>,
++}
++
++impl Command {
++    pub(crate) async fn run(self, wallet_dir: Option<String>) -> Result<(), anyhow::Error> {
++        let config = WalletConfig::read(wallet_dir.as_ref())?;
++        let params = config.network();
++
++        let data = match (&self.file, &self.txid) {
++            (Some(path), None) => std::fs::read(path)?,
++            (None, Some(txid)) => {
++                let mut bytes = <[u8; 32]>::try_from(hex::decode(txid)?.as_slice())
++                    .map_err(|_| anyhow!("txid must be 32 bytes of hex"))?;
++                bytes.reverse();
++                let (_, db_data) = get_db_paths(wallet_dir.as_ref());
++                let db = WalletDb::for_path(db_data, params, SystemClock, UnwrapErr(SysRng))?;
++                let tx = db
++                    .get_transaction(TxId::from_bytes(bytes))?
++                    .ok_or_else(|| anyhow!("transaction {txid} not in wallet"))?;
++                let mut raw = vec![];
++                tx.write(&mut raw)?;
++                raw
++            }
++            _ => return Err(anyhow!("pass exactly one of --file or --txid")),
++        };
++
++        let mut client = self.connection.connect(params, wallet_dir.as_ref()).await?;
++        println!("Sending transaction...");
++        let response = client
++            .send_transaction(service::RawTransaction { data, height: 0 })
++            .await?
++            .into_inner();
++        if response.error_code != 0 {
++            Err(error::Error::SendFailed {
++                code: response.error_code,
++                reason: response.error_message,
++            }
++            .into())
++        } else {
++            println!("sent");
++            Ok(())
++        }
++    }
++}
+diff --git a/src/commands/pczt/sign.rs b/src/commands/pczt/sign.rs
+index 49c13f9..7289b0f 100644
+--- a/src/commands/pczt/sign.rs
++++ b/src/commands/pczt/sign.rs
+@@ -66,6 +66,9 @@ impl Command {
+             Orchard {
+                 index: usize,
+             },
++            Ironwood {
++                index: usize,
++            },
+             Sapling {
+                 index: usize,
+             },
+@@ -103,6 +106,27 @@ impl Command {
+                 Ok(())
+             })
+             .map_err(|e| anyhow!("Invalid PCZT: {:?}", e))?
++            .with_ironwood::<Infallible, _>(|bundle| {
++                for (index, action) in bundle.actions().iter().enumerate() {
++                    if let Some(account_index) = action
++                        .spend()
++                        .zip32_derivation()
++                        .as_ref()
++                        .and_then(|derivation| {
++                            derivation.extract_account_index(
++                                &seed_fp,
++                                zip32::ChildIndex::hardened(params.network_type().coin_type()),
++                            )
++                        })
++                    {
++                        keys.entry(account_index)
++                            .or_default()
++                            .push(KeyRef::Ironwood { index });
++                    }
++                }
++                Ok(())
++            })
++            .map_err(|e| anyhow!("Invalid PCZT: {:?}", e))?
+             .with_sapling::<Infallible, _>(|bundle| {
+                 for (index, spend) in bundle.spends().iter().enumerate() {
+                     if let Some(account_index) =
+@@ -175,6 +199,18 @@ impl Command {
+                                 anyhow!("Failed to sign Orchard spend {index}: {:?}", e)
+                             })?;
+                     }
++                    // Ironwood notes are spent with the account's Orchard spending key.
++                    KeyRef::Ironwood { index } => {
++                        signer
++                            .sign_ironwood(
++                                UnwrapErr(SysRng),
++                                index,
++                                &orchard::keys::SpendAuthorizingKey::from(usk.orchard()),
++                            )
++                            .map_err(|e| {
++                                anyhow!("Failed to sign Ironwood spend {index}: {:?}", e)
++                            })?;
++                    }
+                     KeyRef::Sapling { index } => {
+                         signer
+                             .sign_sapling(UnwrapErr(SysRng), index, usk.sapling().expsk().ask())
+diff --git a/src/main.rs b/src/main.rs
+index 8d75ad8..3f7dd1a 100644
+--- a/src/main.rs
++++ b/src/main.rs
+@@ -223,6 +223,7 @@ fn main() -> Result<(), anyhow::Error> {
+                 commands::pczt::Command::SendWithoutStoring(command) => {
+                     command.run(wallet_dir).await
+                 }
++                commands::pczt::Command::SendRaw(command) => command.run(wallet_dir).await,
+                 #[cfg(feature = "pczt-qr")]
+                 commands::pczt::Command::ToQr(command) => {
+                     command

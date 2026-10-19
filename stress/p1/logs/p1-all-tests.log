@@ -1,0 +1,77 @@
+warning: patch `zcash_proofs v0.31.0-pre.2 (https://github.com/zcash/librustzcash.git?rev=eb38d7a373661179dbc083a2fd58b3a6c9b25818#eb38d7a3)` was not used in the crate graph
+help: Check that the patched package version and available features are compatible
+      with the dependency requirements. If the patch has a different version from
+      what is locked in the Cargo.lock file, run `cargo update` to use the new
+      version. This may also occur with an optional dependency that is not enabled.
+   Compiling offline-core v0.1.0 (/Users/binaryy/Downloads/zcash_hack/offline-core)
+    Finished `release` profile [optimized] target(s) in 8.11s
+     Running unittests src/lib.rs (target/release/deps/offline_core-abd8eb8b20db4ef4)
+
+running 6 tests
+test split::tests::fee_matches_zip317_examples ... ok
+test split::tests::fee_notes_cover_payments_of_one_to_seven_denomination_notes ... ok
+test split::tests::small_balance_uses_what_fits ... ok
+test split::tests::small_balance_covers_small_denominations_first ... ok
+test split::tests::large_balance_gets_fee_notes_and_two_of_each_up_to_half_a_zec ... ok
+test split::tests::too_small_to_pay_the_fee ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/bin/offline-cli.rs (target/release/deps/offline_cli-e94baf6c7a9795e2)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/note_status.rs (target/release/deps/note_status-3de7a673a169d870)
+
+running 2 tests
+test every_pair_is_covered ... ok
+test transitions_stay_legal ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.10s
+
+     Running tests/select.rs (target/release/deps/select-d0063216619fd6ff)
+
+running 7 tests
+test spent_notes_are_never_picked_even_when_they_fit_best ... ok
+test insufficient_funds_is_an_error ... ok
+test exact_when_amount_plus_fee_is_a_sum_of_denominations ... ok
+test round_amounts_need_change_without_fee_sized_notes ... ok
+test round_amounts_are_exact_with_fee_notes ... ok
+test matches_brute_force ... ok
+test selection_is_fast_on_twenty_notes ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.04s
+
+     Running tests/split.rs (target/release/deps/split-f1b45b8465feb00e)
+
+running 2 tests
+test balances_that_cannot_pay_the_fee_are_refused ... ok
+test plans_balance_exactly ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/status.rs (target/release/deps/status-1ee0d4f9c4848dde)
+
+running 3 tests
+test parse_network_accepts_only_test_and_main ... ok
+test open_refuses_a_missing_wallet_instead_of_creating_one ... ok
+test fresh_wallet_has_no_accounts_and_no_tip ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.16s
+
+   Doc-tests offline_core
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+warning: patch `zcash_proofs v0.31.0-pre.2 (https://github.com/zcash/librustzcash.git?rev=eb38d7a373661179dbc083a2fd58b3a6c9b25818#eb38d7a3)` was not used in the crate graph
+help: Check that the patched package version and available features are compatible
+      with the dependency requirements. If the patch has a different version from
+      what is locked in the Cargo.lock file, run `cargo update` to use the new
+      version. This may also occur with an optional dependency that is not enabled.
+    Checking offline-core v0.1.0 (/Users/binaryy/Downloads/zcash_hack/offline-core)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.52s
+clippy_exit=0

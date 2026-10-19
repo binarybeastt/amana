@@ -1,0 +1,2 @@
+chain tip 4517630; wallet: {"chain_tip_height":4517630,"ironwood_spendable":0,"orchard_spendable":0,"sapling_spendable":0,"total":1000000,"transparent_spendable":0}
+PASS: synced=4517630 tip=4517630 total=1000000 (want 1000000)

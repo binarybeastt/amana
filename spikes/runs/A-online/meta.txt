@@ -1,0 +1,14 @@
+label=A-online
+account=95defbbe-3c89-4d63-b057-a7961943a69b
+value_zats=5000000
+build_tip=4516878
+build_time=2026-10-19T00:22:10Z
+expiry_height=0
+raw_tx_bytes=9166
+offline_build=ok
+txid=b49de3fea28571785be281a6e3fbfcf7bc44817d1ee73f216f44d1e36d7cfb5e
+broadcast_tip=4516878
+broadcast_time=2026-10-19T00:22:25Z
+send1_exit=0
+send2_exit=1
+mined_height=4516884

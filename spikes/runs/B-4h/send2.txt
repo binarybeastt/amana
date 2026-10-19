@@ -1,0 +1,3 @@
+[2m2026-10-19T01:44:05.685778Z[0m [32m INFO[0m [2mzcash_devtool::remote[0m[2m:[0m Connecting to testnet.zec.rocks:443
+Sending transaction...
+Error: Send failed: (-1) transaction already exists in mempool

@@ -1,0 +1,13 @@
+label=D2-dblspend
+account=ab16e8ea-92db-46e5-bcfa-01bb17db1ede
+value_zats=6000000
+build_tip=4516878
+build_time=2026-10-19T00:22:00Z
+expiry_height=0
+raw_tx_bytes=9166
+offline_build=ok
+txid=2251c7e312febf7d4dac5d7a061e82673b6bcdb1af10cfcfcb395de4d0393f78
+broadcast_tip=4516881
+broadcast_time=2026-10-19T00:22:58Z
+send1_exit=1
+send2_exit=1

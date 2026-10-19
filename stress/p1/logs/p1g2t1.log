@@ -1,0 +1,146 @@
+warning: patch `zcash_proofs v0.31.0-pre.2 (https://github.com/zcash/librustzcash.git?rev=eb38d7a373661179dbc083a2fd58b3a6c9b25818#eb38d7a3)` was not used in the crate graph
+help: Check that the patched package version and available features are compatible
+      with the dependency requirements. If the patch has a different version from
+      what is locked in the Cargo.lock file, run `cargo update` to use the new
+      version. This may also occur with an optional dependency that is not enabled.
+   Compiling getrandom v0.4.3
+   Compiling num-traits v0.2.19
+   Compiling bitflags v2.13.2
+   Compiling chacha20 v0.10.2
+   Compiling regex-syntax v0.8.11
+   Compiling rustix v1.1.5
+   Compiling errno v0.3.14
+   Compiling fastrand v2.5.0
+   Compiling wait-timeout v0.2.1
+   Compiling quick-error v1.2.3
+   Compiling fnv v1.0.7
+   Compiling bit-vec v0.10.1
+   Compiling rand_xorshift v0.5.0
+   Compiling core_detect v1.0.0
+   Compiling zcash_script v0.6.0
+   Compiling shardtree v0.8.0
+   Compiling chacha20poly1305 v0.11.0
+   Compiling bit-set v0.11.1
+   Compiling unarray v0.1.4
+   Compiling zcash_note_encryption v0.5.1
+   Compiling rand v0.10.3
+   Compiling uuid v1.26.1
+   Compiling zcash_transparent v0.11.0-pre.2 (https://github.com/zcash/librustzcash.git?rev=eb38d7a373661179dbc083a2fd58b3a6c9b25818#eb38d7a3)
+   Compiling schemerz v0.3.0
+   Compiling rusqlite v0.37.0
+   Compiling tempfile v3.27.0
+   Compiling pasta_curves v0.6.1
+   Compiling groth16 v0.2.0
+   Compiling rusty-fork v0.3.1
+   Compiling regex-automata v0.4.18
+   Compiling num-integer v0.1.47
+   Compiling rand_distr v0.6.0
+   Compiling proptest v1.12.0
+   Compiling num-bigint v0.5.1
+   Compiling reddsa v0.6.1
+   Compiling sinsemilla v0.2.0
+   Compiling halo2_poseidon v0.2.0
+   Compiling halo2_proofs v0.4.0
+   Compiling fpe v0.7.0
+   Compiling redjubjub v0.9.0
+   Compiling regex v1.13.1
+   Compiling schemerz-rusqlite v0.371.0
+   Compiling sapling-crypto v0.9.0
+   Compiling halo2_gadgets v0.6.0
+   Compiling orchard v0.16.0
+   Compiling zcash_primitives v0.31.0-pre.2 (https://github.com/zcash/librustzcash.git?rev=eb38d7a373661179dbc083a2fd58b3a6c9b25818#eb38d7a3)
+   Compiling zcash_keys v0.17.0-pre.2 (https://github.com/zcash/librustzcash.git?rev=eb38d7a373661179dbc083a2fd58b3a6c9b25818#eb38d7a3)
+   Compiling pczt v0.10.0-pre.2 (https://github.com/zcash/librustzcash.git?rev=eb38d7a373661179dbc083a2fd58b3a6c9b25818#eb38d7a3)
+   Compiling zcash_client_backend v0.25.0-pre.2 (https://github.com/zcash/librustzcash.git?rev=eb38d7a373661179dbc083a2fd58b3a6c9b25818#eb38d7a3)
+   Compiling zcash_pool_migration v0.2.0-pre.2 (https://github.com/zcash/librustzcash.git?rev=eb38d7a373661179dbc083a2fd58b3a6c9b25818#eb38d7a3)
+   Compiling zcash_client_sqlite v0.23.0-pre.2 (https://github.com/zcash/librustzcash.git?rev=eb38d7a373661179dbc083a2fd58b3a6c9b25818#eb38d7a3)
+   Compiling offline-core v0.1.0 (/Users/binaryy/Downloads/zcash_hack/offline-core)
+    Finished `release` profile [optimized] target(s) in 35.17s
+     Running unittests src/lib.rs (target/release/deps/offline_core-abd8eb8b20db4ef4)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/bin/offline-cli.rs (target/release/deps/offline_cli-e94baf6c7a9795e2)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/note_status.rs (target/release/deps/note_status-3de7a673a169d870)
+
+running 2 tests
+test every_pair_is_covered ... ok
+test transitions_stay_legal ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+
+     Running tests/status.rs (target/release/deps/status-1ee0d4f9c4848dde)
+
+running 3 tests
+test parse_network_accepts_only_test_and_main ... ok
+test open_refuses_a_missing_wallet_instead_of_creating_one ... ok
+test fresh_wallet_has_no_accounts_and_no_tip ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.16s
+
+   Doc-tests offline_core
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+test_exit=0
+warning: patch `zcash_proofs v0.31.0-pre.2 (https://github.com/zcash/librustzcash.git?rev=eb38d7a373661179dbc083a2fd58b3a6c9b25818#eb38d7a3)` was not used in the crate graph
+help: Check that the patched package version and available features are compatible
+      with the dependency requirements. If the patch has a different version from
+      what is locked in the Cargo.lock file, run `cargo update` to use the new
+      version. This may also occur with an optional dependency that is not enabled.
+   Compiling getrandom v0.4.3
+   Compiling num-traits v0.2.19
+    Checking chacha20 v0.10.2
+    Checking regex-syntax v0.8.11
+    Checking wait-timeout v0.2.1
+    Checking fnv v1.0.7
+    Checking bit-vec v0.10.1
+    Checking quick-error v1.2.3
+    Checking rand_xorshift v0.5.0
+    Checking unarray v0.1.4
+    Checking core_detect v1.0.0
+    Checking bit-set v0.11.1
+    Checking chacha20poly1305 v0.11.0
+    Checking zcash_note_encryption v0.5.1
+    Checking regex-automata v0.4.18
+    Checking num-integer v0.1.47
+    Checking num-bigint v0.5.1
+    Checking rand v0.10.3
+    Checking uuid v1.26.1
+    Checking tempfile v3.27.0
+    Checking rusty-fork v0.3.1
+    Checking rusqlite v0.37.0
+    Checking schemerz v0.3.0
+    Checking pasta_curves v0.6.1
+    Checking groth16 v0.2.0
+    Checking rand_distr v0.6.0
+    Checking proptest v1.12.0
+    Checking regex v1.13.1
+    Checking fpe v0.7.0
+    Checking reddsa v0.6.1
+    Checking sinsemilla v0.2.0
+    Checking halo2_poseidon v0.2.0
+    Checking halo2_proofs v0.4.0
+    Checking schemerz-rusqlite v0.371.0
+    Checking redjubjub v0.9.0
+    Checking sapling-crypto v0.9.0
+    Checking halo2_gadgets v0.6.0
+    Checking orchard v0.16.0
+    Checking zcash_primitives v0.31.0-pre.2 (https://github.com/zcash/librustzcash.git?rev=eb38d7a373661179dbc083a2fd58b3a6c9b25818#eb38d7a3)
+    Checking zcash_keys v0.17.0-pre.2 (https://github.com/zcash/librustzcash.git?rev=eb38d7a373661179dbc083a2fd58b3a6c9b25818#eb38d7a3)
+    Checking pczt v0.10.0-pre.2 (https://github.com/zcash/librustzcash.git?rev=eb38d7a373661179dbc083a2fd58b3a6c9b25818#eb38d7a3)
+    Checking zcash_client_backend v0.25.0-pre.2 (https://github.com/zcash/librustzcash.git?rev=eb38d7a373661179dbc083a2fd58b3a6c9b25818#eb38d7a3)
+    Checking zcash_pool_migration v0.2.0-pre.2 (https://github.com/zcash/librustzcash.git?rev=eb38d7a373661179dbc083a2fd58b3a6c9b25818#eb38d7a3)
+    Checking zcash_client_sqlite v0.23.0-pre.2 (https://github.com/zcash/librustzcash.git?rev=eb38d7a373661179dbc083a2fd58b3a6c9b25818#eb38d7a3)
+    Checking offline-core v0.1.0 (/Users/binaryy/Downloads/zcash_hack/offline-core)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 10.37s
+clippy_exit=0

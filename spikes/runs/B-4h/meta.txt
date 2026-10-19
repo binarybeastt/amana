@@ -1,0 +1,14 @@
+label=B-4h
+account=52a70598-2d18-421f-b412-b1f273cb2ac2
+value_zats=10000000
+build_tip=4516875
+build_time=2026-10-19T00:20:10Z
+offline_build=ok
+txid=efe6362d4361917323098b416a15328222409d40dc9522d7725962f2eedd8d71
+expiry_height=0
+raw_tx_bytes=9166
+broadcast_tip=4517078
+broadcast_time=2026-10-19T01:43:52Z
+send1_exit=0
+send2_exit=1
+mined_height=4517084

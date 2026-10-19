@@ -1,0 +1,19 @@
+[2m2026-10-19T05:40:49.876745Z[0m [32m INFO[0m [2mzcash_devtool::remote[0m[2m:[0m Connecting to testnet.zec.rocks:443
+Creating transaction...
+Proposed transfer:
+  Min target height: 4517625
+  Fee rule: Zip317
+  Steps (1):
+    Step 0:
+      Shielding: false
+      Payments (1):
+        [0] -> utest19z79tw8qz9ksf6xlnw6wydzp2vkznlyj6h8u75hsuljp930z88qkrts7qfvadrntvrg5ewhjj09jdzxwcf3qpn74hjeh9r5t5dnykd2tr0x8d7w6nljzez4vdk7xtaxc25z2hxfk6qv4zuzuqxj3tplejp5uf2g5hmntgmzqu5haswk04d92e8t34ayg7wcndnzfm5syfkqyvxpzv9p
+            Amount:   0.01000000 TAZ
+            Pool: Ironwood
+      Shielded inputs (1) at anchor height 4517615:
+        - Ironwood 8839fb9a45b607a2b14b4c9cb925b7367a28dabaebc1cbe4ebe44e95e3daccd6:1    0.13323333 TAZ
+      Change outputs (1):
+        - Ironwood   0.12313333 TAZ
+      Fee:   0.00010000 TAZ
+Continue? [y/n]: Sending transaction...
+0b7f2fbab616624ad57c516de9e60c53827317ec380bd1d6563d05267f1b6615

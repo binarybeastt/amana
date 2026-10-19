@@ -1,0 +1,10 @@
+2 Ironwood actions:
+- 0:
+  - Spend: 20000000 zatoshis
+  - Output: 9990000 zatoshis
+- 1:
+  - Spend: Zero value (likely a dummy)
+  - Output: 10000000 zatoshis to utest1gn9lcnlpfjx3tu8g7gu86r0fmqksc94ufsf52eqy2h7udkeh3700q5azwg6ekvq5p937s22nxzp5d6jvsgqscjjvryathda0yn2r8sa8xkkyxz73ydx8c64wsrang0a2ukheugg2m8u4yf93w2rw72as23v48stdmrtuu03zkdllmjj6vh3sm598pjagjkl2l0h7nfula9qvcd70frg
+
+TxID: efe6362d4361917323098b416a15328222409d40dc9522d7725962f2eedd8d71
+Version: V6

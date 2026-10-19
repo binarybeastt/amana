@@ -1,0 +1,3 @@
+[2m2026-10-19T00:22:42.231044Z[0m [32m INFO[0m [2mzcash_devtool::remote[0m[2m:[0m Connecting to testnet.zec.rocks:443
+Sending transaction...
+3021261711202bb17596e7d18b3ccb09fbc87845a3b8d8b6f126b4b502c27f29
