@@ -15,3 +15,8 @@ wallets/
 *.seed
 .env
 .DS_Store
+# Crash-test evidence (wallet DB copies)
+stress/p1/failures*/
+# Wallet keys anywhere (encrypted mnemonics, age identities): never commit
+keys.toml
+*.age

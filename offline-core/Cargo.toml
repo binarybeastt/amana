@@ -6,9 +6,19 @@ rust-version = "1.89"
 publish = false
 description = "Zcash logic for offline shielded payments. No networking: sync and broadcast live elsewhere."
 
+[features]
+default = ["desktop"]
+# Desktop CLI support: reading zcash-devtool wallets' encrypted seeds. Off for Android builds.
+desktop = ["dep:age", "dep:bip0039", "dep:toml"]
+
+[lib]
+# rlib for the CLI and tests; cdylib is the .so the Android app loads.
+crate-type = ["rlib", "cdylib"]
+
 [[bin]]
 name = "offline-cli"
 path = "src/bin/offline-cli.rs"
+required-features = ["desktop"]
 
 [dependencies]
 anyhow = "1"
@@ -24,11 +34,29 @@ zcash_client_backend = { version = "=0.25.0-pre.2", features = ["orchard", "pczt
 # transparent-inputs must match zcash_client_backend's pczt feature (see zcash-devtool Cargo.toml).
 zcash_client_sqlite = { version = "=0.23.0-pre.2", features = ["transparent-inputs", "unstable", "orchard", "serde"] }
 zcash_protocol = "=0.11.0-pre.1"
-pczt = { version = "=0.10.0-pre.2", features = ["orchard", "signer", "spend-finalizer", "tx-extractor"] }
+pczt = { version = "=0.10.0-pre.2", features = ["orchard", "prover", "signer", "spend-finalizer", "tx-extractor"] }
+orchard = { version = "0.16", default-features = false }
+secrecy = "0.8"
+shardtree = "0.8"
+zcash_address = "=0.14.0-pre.2"
+zcash_keys = { version = "=0.17.0-pre.2", features = ["orchard", "sapling", "unstable"] }
+zcash_primitives = "=0.31.0-pre.2"
+zip32 = "0.3"
+zip321 = "=0.10.0-pre.2"
 
+# Desktop only (feature "desktop").
+age = { version = "0.12", features = ["armor"], optional = true }
+bip0039 = { version = "0.14", features = ["std"], optional = true }
+toml = { version = "0.8", optional = true }
+
+
+# Android has no system SQLite for rusqlite to link against: compile it in.
+[target.'cfg(target_os = "android")'.dependencies]
+rusqlite = { version = "0.37", features = ["bundled"] }
 
 [dev-dependencies]
 proptest = "1"
+rand = { version = "0.10", default-features = false, features = ["std_rng", "sys_rng"] }
 tempfile = "3"
 
 [patch.crates-io]

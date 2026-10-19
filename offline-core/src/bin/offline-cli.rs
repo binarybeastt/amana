@@ -3,7 +3,11 @@
 use std::path::PathBuf;
 
 use clap::{Parser, Subcommand};
-use offline_core::{NoteStatus, WalletStore, split::plan_split, wallet::parse_network};
+use offline_core::{
+    NoteStatus, WalletStore, devtool_keys::seed_from_devtool_wallet, split::plan_split,
+    wallet::parse_network,
+};
+use secrecy::ExposeSecret;
 
 #[derive(Parser)]
 #[command(version, about = "Offline shielded Zcash payments: desktop tool")]
@@ -47,6 +51,43 @@ enum Command {
         #[arg(long)]
         json: bool,
     },
+    /// Build, prove, sign and store a payment with no network; writes the raw bytes for the receiver.
+    Pay {
+        /// Account UUID to pay from.
+        #[arg(long)]
+        account: String,
+        /// Recipient address.
+        #[arg(long)]
+        to: String,
+        /// Amount in zatoshis.
+        #[arg(long)]
+        amount: u64,
+        #[arg(long)]
+        memo: Option<String>,
+        /// age identity file that decrypts the wallet's mnemonic (zcash-devtool wallets).
+        #[arg(short, long)]
+        identity: PathBuf,
+        /// Where to write the raw transaction bytes.
+        #[arg(long)]
+        raw_out: Option<PathBuf>,
+    },
+    /// List stored payments that are not mined yet; optionally export their raw bytes.
+    Pending {
+        /// Directory to write `<txid>.raw` files into.
+        #[arg(long)]
+        raw_dir: Option<PathBuf>,
+    },
+    /// Verify a payment received as raw bytes, offline: proofs, signatures, anchor, what it pays us.
+    Receive {
+        raw: PathBuf,
+        /// Receiving account UUID (default: any account of this wallet).
+        #[arg(long)]
+        account: Option<String>,
+    },
+    /// Release note-selection locks left by an interrupted `pay` (also done at the start of `pay`).
+    ReleaseLocks,
+    /// Read expiry, actions and fee from raw transaction bytes.
+    InspectRaw { raw: PathBuf },
     /// Write-before-send: verify a signed PCZT and store it so its notes become spent-offline.
     StorePczt {
         /// Path to the combined (proven + signed) PCZT.
@@ -130,6 +171,50 @@ fn main() -> anyhow::Result<()> {
                 println!("  remainder {}  fee {}", zec(plan.remainder), zec(plan.fee));
                 println!("{uri}");
             }
+        }
+        Command::Pay { account, to, amount, memo, identity, raw_out } => {
+            let seed = seed_from_devtool_wallet(&cli.wallet_dir, &identity)?;
+            let built = store.pay_offline(seed.expose_secret(), &account, &to, amount, memo.as_deref())?;
+            if let Some(path) = raw_out {
+                std::fs::write(&path, &built.raw)?;
+            }
+            println!("{}", serde_json::to_string_pretty(&built)?);
+        }
+        Command::Pending { raw_dir } => {
+            for (txid, expiry, raw) in store.pending_payments()? {
+                println!("{txid}  expiry {expiry}  {} bytes", raw.len());
+                if let Some(dir) = &raw_dir {
+                    std::fs::create_dir_all(dir)?;
+                    std::fs::write(dir.join(format!("{txid}.raw")), &raw)?;
+                }
+            }
+        }
+        Command::Receive { raw, account } => {
+            let bytes = std::fs::read(&raw)?;
+            match store.verify_payment(&bytes, account.as_deref()) {
+                Ok(p) => {
+                    let verdict = if p.is_verified() {
+                        "received, not yet settled"
+                    } else if !p.is_for_us() {
+                        "not for this wallet"
+                    } else {
+                        "valid, but anchor unknown: not verified"
+                    };
+                    println!("{verdict}");
+                    println!("{}", serde_json::to_string_pretty(&p)?);
+                }
+                Err(e) => {
+                    println!("rejected: {e:#}");
+                    std::process::exit(2);
+                }
+            }
+        }
+        Command::ReleaseLocks => {
+            println!("released {} selection locks", store.release_selection_locks()?);
+        }
+        Command::InspectRaw { raw } => {
+            let info = offline_core::pay::inspect_raw(&std::fs::read(&raw)?)?;
+            println!("{}", serde_json::to_string_pretty(&info)?);
         }
         Command::StorePczt { pczt, raw_out } => {
             let bytes = std::fs::read(&pczt)?;

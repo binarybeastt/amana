@@ -1,0 +1,15 @@
+2026-10-19T18:05:07Z synced at 4519420; offline session starts
+pay1: 5000000 zats, 2 notes, fee 10000, exact, 9166 bytes, expiry 0 -> T2 ok
+pay2: 1000000 zats, 2 notes, fee 10000, change 5000, 9166 bytes, expiry 0 -> T2 ok
+pay3: 10000000 zats, 5 notes, fee 25000, exact, 18634 bytes, expiry 0 -> T2 ok
+pay4: 2000000 zats, 1 notes, fee 10000, change 5635000, 9166 bytes, expiry 0 -> T2 ok
+pay5: 3000000 zats, 1 notes, fee 10000, change 6990000, 9166 bytes, expiry 0 -> T2 ok
+pay6: 7000000 zats, 1 notes, fee 10000, change 2990000, 9166 bytes, expiry 0 -> T2 ok
+pay7: 5000000 zats, 1 notes, fee 10000, change 14990000, 9166 bytes, expiry 0 -> T2 ok
+pay8: FAILED Error: insufficient available notes: have 125000 zats, need 2000000 plus fee
+pay9: FAILED Error: insufficient available notes: have 125000 zats, need 1000000 plus fee
+pay10: FAILED Error: insufficient available notes: have 125000 zats, need 10000000 plus fee
+pay8: 10000 zats, 1 notes, fee 10000 change 0 expiry 0 T2 ok
+pay9: 20000 zats, 1 notes, fee 10000 change 0 expiry 0 T2 ok
+pay10: 25000 zats, 1 notes, fee 10000 change 0 expiry 0 T2 ok
+T3: 10/10 built offline; notes spent 16, distinct 16, reused none; exact 5/10; T2 failures 0

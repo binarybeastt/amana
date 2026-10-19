@@ -1,0 +1,10 @@
+{
+  "txid": "a151002f921ce85f54cc1875b56a8f7f88f2dde5408c74586d26973cdff7e45b",
+  "version": "V6",
+  "expiry_height": 0,
+  "ironwood_actions": 2,
+  "orchard_actions": 0,
+  "sapling_spends": 0,
+  "fee": 10000,
+  "zip317_fee": 10000
+}

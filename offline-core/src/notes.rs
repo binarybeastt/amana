@@ -95,8 +95,9 @@ pub struct NoteInfo {
 
 const POOLS: [&str; 2] = ["ironwood", "orchard"];
 
-/// Status query for one pool's notes. A pending spend only counts while its transaction can
-/// still be mined: never-expiring (0 or unknown) or expiring at or after the next block.
+/// Status query for one pool's notes. Zero-value notes (bundle padding) are left out. A note
+/// or a pending spend only counts while its transaction can still be mined: mined already,
+/// never-expiring (0 or unknown), or expiring at or after the next block.
 fn notes_query(pool: &str) -> String {
     format!(
         "SELECT a.uuid, t.txid, n.action_index, n.value, n.nf, t.mined_height,
@@ -114,9 +115,10 @@ fn notes_query(pool: &str) -> String {
            FROM {pool}_received_notes n
            JOIN transactions t ON t.id_tx = n.transaction_id
            JOIN accounts a ON a.id = n.account_id
-          WHERE t.mined_height IS NOT NULL
+          WHERE n.value > 0
+            AND (t.mined_height IS NOT NULL
              OR t.expiry_height IS NULL OR t.expiry_height = 0
-             OR t.expiry_height >= :target_height"
+             OR t.expiry_height >= :target_height)"
     )
 }
 
@@ -237,6 +239,23 @@ impl WalletStore {
         let mut raw = Vec::new();
         tx.write(&mut raw)?;
         Ok((txid, raw))
+    }
+
+    /// Stored transactions that are not mined yet but still can be (never-expiring or not yet
+    /// expired): payments to rebroadcast. Returns (txid in display order, expiry height, raw bytes).
+    pub fn pending_payments(&self) -> anyhow::Result<Vec<(String, u32, Vec<u8>)>> {
+        let target_height = self.db.chain_height()?.map_or(0, |h| u32::from(h) + 1);
+        let conn = self.read_conn()?;
+        let mut stmt = conn.prepare(
+            "SELECT txid, IFNULL(expiry_height, 0), raw FROM transactions
+              WHERE mined_height IS NULL AND raw IS NOT NULL
+                AND (expiry_height IS NULL OR expiry_height = 0 OR expiry_height >= ?1)
+              ORDER BY id_tx",
+        )?;
+        let rows = stmt.query_map([target_height], |r| {
+            Ok((display_hex(&r.get::<_, Vec<u8>>(0)?), r.get(1)?, r.get(2)?))
+        })?;
+        Ok(rows.collect::<Result<_, _>>()?)
     }
 
     /// Raw bytes of a stored transaction, if the wallet has it.

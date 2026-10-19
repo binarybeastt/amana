@@ -1,0 +1,5 @@
+2026-10-19T18:56:11Z device=emulator-5554 model=sdk_gphone64_arm64 abi=arm64-v8a airplane=on (ping fails) runs=3
+run=1 ok ms=17497 peak_kb=115784 txid=f99689186126f903e16e68039f1ca3ce5028dcd7491c5485aba9751d5191f1bf
+run=2 ok ms=13552 peak_kb=116572 txid=bafab816d6540d5433b026f39c551279513db90d8fa2440293537d00ac72427a
+run=3 ok ms=13593 peak_kb=118144 txid=a5664542908fc6eb0cc9b707666b6c1c1356bc6a9fae8e5ebaeb78e8fabc5697
+summary: 3 ok, median 13.6 s, worst 17.5 s, peak memory 115 MB
