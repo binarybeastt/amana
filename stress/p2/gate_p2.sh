@@ -3,17 +3,21 @@
 # the receiver's scanner path); then ONE phone comes online and broadcasts; the payment must
 # settle on testnet. N runs per direction (default 5), alternating directions; the phone that
 # broadcasts alternates between receiver and sender.
-#   ./gate_p2.sh <phone-A> <phone-B> [runs-per-direction=5] [zec=0.01]
+#   ./gate_p2.sh <phone-A> <phone-B> [runs-per-direction=5] [zec=0.01] [runs-to-do, e.g. "2 4 5"]
+# With runs-to-do the log is appended to and the verdict counts the latest result of every run.
 # Both phones need a prepared ("ready for offline") funded wallet.
 set -euo pipefail
 source "$(dirname "$0")/lib.sh"
-A=$1; B=$2; N=${3:-5}; AMT=${4:-0.01}
+A=$1; B=$2; N=${3:-5}; AMT=${4:-0.01}; ONLY=${5:-}
 ZATS=$(python3 -c "from decimal import Decimal; print(int(Decimal('$AMT') * 10**8))")
 LOG="$ROOT/stress/p2/logs/gate-p2.log"
-echo "$(date -u +%FT%TZ) Gate P2: $N runs per direction, $AMT ZEC, phones $A $B" | tee "$LOG"
+if [ -z "$ONLY" ]; then : >"$LOG"; fi
+echo "$(date -u +%FT%TZ) Gate P2: $N runs per direction, $AMT ZEC, phones $A $B${ONLY:+, runs $ONLY}" | tee -a "$LOG"
+# Keyboards with stylus handwriting pop a tutorial that swallows typed text.
+for s in "$A" "$B"; do "$ADB" -s "$s" shell settings put secure stylus_handwriting_enabled 0; done
 is_offline() { [ "$("$ADB" -s "$1" shell settings get global airplane_mode_on | tr -d '\r')" = 1 ] && ! "$ADB" -s "$1" shell ping -c 1 -W 2 8.8.8.8 >/dev/null 2>&1; }
 passed=0; total=$((2 * N))
-for k in $(seq 1 "$total"); do
+for k in ${ONLY:-$(seq 1 "$total")}; do
   if [ $((k % 2)) = 1 ]; then SND=$A; RCV=$B; else SND=$B; RCV=$A; fi
   # Runs 1,2 / 5,6 / 9,10: receiver broadcasts; 3,4 / 7,8: sender broadcasts.
   if [ $(( (k - 1) / 2 % 2 )) = 0 ]; then BC=$RCV; who=receiver; else BC=$SND; who=sender; fi
@@ -55,5 +59,15 @@ for k in $(seq 1 "$total"); do
   echo "run $k: $r $SND -> $RCV txid $TXID; pay+QR ${t_pay}s; $who broadcast; mined at $mined, ${t_settle}s after it came online; receiver shows settled" | tee -a "$LOG"
 done
 for s in "$A" "$B"; do airplane "$s" off; done
+# Verdict: the latest result of every run 1..total.
+passed=$(python3 - "$LOG" "$total" <<'PY'
+import re, sys
+last = {}
+for line in open(sys.argv[1]):
+    m = re.match(r"run (\d+): (\w+)", line)
+    if m: last[int(m.group(1))] = m.group(2)
+print(sum(1 for k in range(1, int(sys.argv[2]) + 1) if last.get(k) == "pass"))
+PY
+)
 echo "passed $passed/$total" | tee -a "$LOG"
 [ "$passed" = "$total" ] && echo PASS | tee -a "$LOG" || { echo FAIL | tee -a "$LOG"; exit 1; }

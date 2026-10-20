@@ -6,10 +6,12 @@ import cash.z.ecc.android.sdk.model.CreatedTransaction
 import cash.z.ecc.android.sdk.model.FirstClassByteArray
 import cash.z.ecc.android.sdk.model.TransactionSubmitResult
 import dev.offlinezec.wallet.core.BuiltPayment
+import dev.offlinezec.wallet.core.CoreException
 import dev.offlinezec.wallet.core.Note
 import dev.offlinezec.wallet.core.VerifiedPayment
 import dev.offlinezec.wallet.core.hexToBytes
 import dev.offlinezec.wallet.core.toHex
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -87,7 +89,25 @@ class Payer(private val mgr: WalletManager) {
      */
     suspend fun pay(to: String, amount: Long, memo: String?): BuiltPayment = mutex.withLock {
         val w = mgr.wallet ?: error("no wallet")
-        mgr.core.payOffline(w.dbPath, mgr.seed(), w.accountUuid, to, amount, memo)
+        // The SDK may hold a write lock (e.g. finishing a sync) longer than offline-core waits.
+        // Nothing is stored until the last step, so retrying a "database is locked" build is safe.
+        var attempt = 1
+        while (true) {
+            try {
+                return mgr.core.payOffline(w.dbPath, mgr.seed(), w.accountUuid, to, amount, memo)
+            } catch (e: CoreException) {
+                val busy = e.message.orEmpty().let { "database is locked" in it || "DatabaseBusy" in it }
+                if (!busy || attempt >= PAY_ATTEMPTS) throw e
+                Log.w("Payer", "wallet DB busy (attempt $attempt), retrying")
+                attempt++
+                delay(2_000)
+            }
+        }
+        @Suppress("UNREACHABLE_CODE") error("unreachable")
+    }
+
+    private companion object {
+        const val PAY_ATTEMPTS = 4
     }
 }
 

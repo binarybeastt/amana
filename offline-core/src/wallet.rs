@@ -13,7 +13,7 @@ use zcash_protocol::consensus::Network;
 pub const DATA_DB: &str = "data.sqlite";
 
 /// How long to wait for another connection's lock before giving up.
-pub const BUSY_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(15);
+pub const BUSY_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(60);
 
 /// Parses `test` / `main` into consensus parameters.
 pub fn parse_network(s: &str) -> anyhow::Result<Network> {

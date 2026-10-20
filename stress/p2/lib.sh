@@ -89,7 +89,17 @@ note_txids() { core_notes "$1" | python3 -c "import json,sys; print('\n'.join(so
 home() { "$ADB" -s "$1" shell input keyevent KEYCODE_BACK; "$ADB" -s "$1" shell input keyevent KEYCODE_BACK; launch "$1"; }
 
 # type_into <serial> <resource-id> <text>: focus a field and type (no spaces in text)
-type_into() { tap_id "$1" "$2"; sleep 0.5; "$ADB" -s "$1" shell input text "$3"; "$ADB" -s "$1" shell input keyevent KEYCODE_ESCAPE 2>/dev/null || true; }
+type_into() {
+  tap_id "$1" "$2"; sleep 0.5; "$ADB" -s "$1" shell input text "$3"; sleep 0.5
+  hide_keyboard "$1"
+}
+# hide_keyboard <serial>: Back closes the on-screen keyboard, but only press it while one shows
+# (otherwise Back leaves the screen). A covering keyboard swallows the next tap.
+hide_keyboard() {
+  if [ "$("$ADB" -s "$1" shell dumpsys input_method | grep -c "mInputShown=true")" -gt 0 ]; then
+    "$ADB" -s "$1" shell input keyevent KEYCODE_BACK; sleep 0.5
+  fi
+}
 
 # ui_text <serial> <resource-id>: text of that view on screen ('' if absent)
 ui_text() {
@@ -109,7 +119,8 @@ pay_via_ui() {
   type_into "$s" pay_to "$to"
   type_into "$s" pay_amount "$amt"
   tap_id "$s" pay_go
-  wait_state "$s" "s['pay']['state'] in ('ready', 'failed')" 300 || return 1
+  # 900 s: on 2 GB emulators deep in swap, proving occasionally takes minutes
+  wait_state "$s" "s['pay']['state'] in ('ready', 'failed')" 900 || return 1
   [ "$(state "$s" "s['pay']['state']")" = ready ] || { state "$s" "s['pay']['error']" >&2; return 1; }
   wait_state "$s" "s.get('notes_at_qr', {}).get('txid') == s['pay']['txid']" 60 || return 1
   state "$s" "s['pay']['txid']"
@@ -128,7 +139,14 @@ relay_frames() {
     [ "$(grep -c '^UR:BYTES/' "$tmp")" -ge 2 ] && break; sleep 1
   done
   [ "$(grep -c '^UR:BYTES/' "$tmp")" -ge 2 ] || { echo "no frames from $s" >&2; rm -f "$tmp"; return 1; }
-  push_app_file "$r" in_frames.txt "$tmp"; rm -f "$tmp"
+  # Write under a temp name, rename into place, and check every line arrived: exec-in can
+  # return before the device has finished writing.
+  local want; want=$(grep -c '^UR:BYTES/' "$tmp")
+  push_app_file "$r" in_frames.tmp "$tmp"; rm -f "$tmp"
+  for i in $(seq 1 20); do
+    [ "$(app_file "$r" in_frames.tmp | grep -c '^UR:BYTES/')" = "$want" ] && break; sleep 1
+  done
+  "$ADB" -s "$r" shell run-as "$PKG" mv files/in_frames.tmp files/in_frames.txt
   hook "$r" FEED_FRAMES --es skip "$skip"
   wait_state "$r" "s['receive']['state'] in ('accepted', 'rejected')" 600  # slow emulators: ~2 frames/s
 }

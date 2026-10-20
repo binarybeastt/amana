@@ -1,0 +1,26 @@
+2026-10-20T22:15:22Z Gate P2: 5 runs per direction, 0.01 ZEC, phones emulator-5554 emulator-5556
+run 1: pass emulator-5554 -> emulator-5556 txid 94b153b18d00dbc0855b84bb254f031942c32fff08c1aea2f35e6e5d4410ed7b; pay+QR 76s; receiver broadcast; mined at 4523507, 43s after it came online; receiver shows settled
+run 2: pay failed
+run 3: pass emulator-5554 -> emulator-5556 txid 2f8aad15cfbd7b951de458d72f9ce28a479aff0dd84d805cd295db330f7b6ac3; pay+QR 79s; sender broadcast; mined at 4523528, 129s after it came online; receiver shows settled
+2026-10-20T22:30:04Z Gate P2: 5 runs per direction, 0.01 ZEC, phones emulator-5554 emulator-5556, runs 2 4 5 6 7 8 9 10
+run 2: pay failed
+2026-10-20T22:36:20Z Gate P2: 5 runs per direction, 0.01 ZEC, phones emulator-5554 emulator-5556, runs 2 4 5 6 7 8 9 10
+2026-10-20T22:36:25Z Gate P2: 5 runs per direction, 0.01 ZEC, phones emulator-5554 emulator-5556, runs 2 4 5 6 7 8 9 10
+run 2: pass emulator-5556 -> emulator-5554 txid bdcdc92c3fdb9581d77e5f9ece9e73b45d5b5542f0d0333bb2e4d21f4fd10f34; pay+QR 35s; receiver broadcast; mined at 4523563, 108s after it came online; receiver shows settled
+run 4: pass emulator-5556 -> emulator-5554 txid b8376c1b186a1bd8bf12771b1fb6041429f728e9674b0742c4398a49c085d1e4; pay+QR 36s; sender broadcast; mined at 4523567, 128s after it came online; receiver shows settled
+run 5: pay failed
+run 6: pass emulator-5556 -> emulator-5554 txid 0c9713f162d50046d72a4c5ff54510a31f40514f293935e84341cae1f9072d88; pay+QR 35s; receiver broadcast; mined at 4523584, 61s after it came online; receiver shows settled
+run 7: pass emulator-5554 -> emulator-5556 txid 51c75f9873ab70bef423a28d46d71d9fd8de96471798a3038257884e59f37b4d; pay+QR 57s; sender broadcast; mined at 4523588, 28s after it came online; receiver shows settled
+run 8: pass emulator-5556 -> emulator-5554 txid d2f65a3e9d9e51907148530970ff78c68ab10abd5fe58ed4e636200bd2de8dbe; pay+QR 28s; sender broadcast; mined at 4523594, 95s after it came online; receiver shows settled
+run 9: pass emulator-5554 -> emulator-5556 txid a8fee1544eecd57ba3bc74a1beefd47dbb784ce140177289a0d9721330806e78; pay+QR 63s; receiver broadcast; mined at 4523596, 27s after it came online; receiver shows settled
+run 10: pass emulator-5556 -> emulator-5554 txid 0c229157614048b719077f8aed1a5795c196688d68c5f2c9976aa8643268afe3; pay+QR 29s; receiver broadcast; mined at 4523600, 98s after it came online; receiver shows settled
+passed 9/10
+FAIL
+2026-10-20T23:12:02Z Gate P2: 5 runs per direction, 0.01 ZEC, phones emulator-5554 emulator-5556, runs 5
+run 5: pay failed
+passed 9/10
+FAIL
+2026-10-20T23:23:42Z Gate P2: 5 runs per direction, 0.01 ZEC, phones emulator-5554 emulator-5556, runs 5
+run 5: pass emulator-5554 -> emulator-5556 txid c9ae1ead0453b88e3bd7799332f65a41c551c2746efaed7cd2dfe2b959346805; pay+QR 55s; receiver broadcast; mined at 4523657, 46s after it came online; receiver shows settled
+passed 10/10
+PASS

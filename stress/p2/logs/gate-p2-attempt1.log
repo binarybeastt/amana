@@ -1,0 +1,2 @@
+2026-10-20T22:00:45Z Gate P2: 5 runs per direction, 0.01 ZEC, phones emulator-5554 emulator-5556
+run 1: FAIL receive=scanning amount= spent_offline_at_qr=True 
