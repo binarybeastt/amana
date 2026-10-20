@@ -10,6 +10,9 @@ description = "Zcash logic for offline shielded payments. No networking: sync an
 default = ["desktop"]
 # Desktop CLI support: reading zcash-devtool wallets' encrypted seeds. Off for Android builds.
 desktop = ["dep:age", "dep:bip0039", "dep:toml"]
+# JNI entry points for the Android app (liboffline_core.so). Build with
+# `cargo ndk -t arm64-v8a --platform 33 build --release --lib --no-default-features --features jni`.
+jni = ["dep:jni"]
 
 [lib]
 # rlib for the CLI and tests; cdylib is the .so the Android app loads.
@@ -23,26 +26,32 @@ required-features = ["desktop"]
 [dependencies]
 anyhow = "1"
 clap = { version = "4.5", features = ["derive"] }
-rand = { version = "0.10", default-features = false, features = ["sys_rng"] }
 rusqlite = "0.37"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 
-# Zcash, pinned to the librustzcash revision zcash-devtool uses (Ironwood / NU6.3 support).
+# Zcash, pinned to the exact crate versions the ZODL Zcash Android Wallet SDK 5.2.1-SNAPSHOT
+# bundles (its backend-lib/Cargo.lock at f682b4c952, 2026-10-14), so this crate and the SDK
+# share one wallet DB with the same schema and code. All from crates.io; NU7-aware
+# (testnet NU7 at 4,465,026) and Ironwood (NU6.3).
 # No lightwalletd or Tor features: this crate must not be able to reach the network.
-zcash_client_backend = { version = "=0.25.0-pre.2", features = ["orchard", "pczt", "unstable"] }
+zcash_client_backend = { version = "=0.25.0-pre.1", features = ["orchard", "pczt", "unstable"] }
 # transparent-inputs must match zcash_client_backend's pczt feature (see zcash-devtool Cargo.toml).
-zcash_client_sqlite = { version = "=0.23.0-pre.2", features = ["transparent-inputs", "unstable", "orchard", "serde"] }
-zcash_protocol = "=0.11.0-pre.1"
-pczt = { version = "=0.10.0-pre.2", features = ["orchard", "prover", "signer", "spend-finalizer", "tx-extractor"] }
-orchard = { version = "0.16", default-features = false }
+zcash_client_sqlite = { version = "=0.23.0-pre.1", features = ["transparent-inputs", "unstable", "orchard", "serde"] }
+zcash_protocol = "=0.11.0-pre.0"
+pczt = { version = "=0.10.0-pre.1", features = ["orchard", "prover", "signer", "spend-finalizer", "tx-extractor"] }
+orchard = { version = "=0.16.0", default-features = false }
 secrecy = "0.8"
-shardtree = "0.8"
-zcash_address = "=0.14.0-pre.2"
-zcash_keys = { version = "=0.17.0-pre.2", features = ["orchard", "sapling", "unstable"] }
-zcash_primitives = "=0.31.0-pre.2"
-zip32 = "0.3"
-zip321 = "=0.10.0-pre.2"
+shardtree = "=0.8.0"
+zcash_address = "=0.14.0-pre.1"
+zcash_keys = { version = "=0.17.0-pre.1", features = ["orchard", "sapling", "unstable"] }
+zcash_primitives = "=0.31.0-pre.1"
+zip32 = "=0.3.0"
+zip321 = "=0.10.0-pre.1"
+# The RNG the Zcash crates above take (rand 0.10's SysRng, as zcash-devtool uses).
+rand = { version = "0.10", default-features = false, features = ["sys_rng"] }
+
+jni = { version = "0.21", default-features = false, optional = true }
 
 # Desktop only (feature "desktop").
 age = { version = "0.12", features = ["armor"], optional = true }
@@ -58,17 +67,3 @@ rusqlite = { version = "0.37", features = ["bundled"] }
 proptest = "1"
 rand = { version = "0.10", default-features = false, features = ["std_rng", "sys_rng"] }
 tempfile = "3"
-
-[patch.crates-io]
-equihash = { git = "https://github.com/zcash/librustzcash.git", rev = "eb38d7a373661179dbc083a2fd58b3a6c9b25818" }
-pczt = { git = "https://github.com/zcash/librustzcash.git", rev = "eb38d7a373661179dbc083a2fd58b3a6c9b25818" }
-zcash_address = { git = "https://github.com/zcash/librustzcash.git", rev = "eb38d7a373661179dbc083a2fd58b3a6c9b25818" }
-zcash_client_backend = { git = "https://github.com/zcash/librustzcash.git", rev = "eb38d7a373661179dbc083a2fd58b3a6c9b25818" }
-zcash_client_sqlite = { git = "https://github.com/zcash/librustzcash.git", rev = "eb38d7a373661179dbc083a2fd58b3a6c9b25818" }
-zcash_encoding = { git = "https://github.com/zcash/librustzcash.git", rev = "eb38d7a373661179dbc083a2fd58b3a6c9b25818" }
-zcash_keys = { git = "https://github.com/zcash/librustzcash.git", rev = "eb38d7a373661179dbc083a2fd58b3a6c9b25818" }
-zcash_primitives = { git = "https://github.com/zcash/librustzcash.git", rev = "eb38d7a373661179dbc083a2fd58b3a6c9b25818" }
-zcash_proofs = { git = "https://github.com/zcash/librustzcash.git", rev = "eb38d7a373661179dbc083a2fd58b3a6c9b25818" }
-zcash_protocol = { git = "https://github.com/zcash/librustzcash.git", rev = "eb38d7a373661179dbc083a2fd58b3a6c9b25818" }
-zcash_transparent = { git = "https://github.com/zcash/librustzcash.git", rev = "eb38d7a373661179dbc083a2fd58b3a6c9b25818" }
-zip321 = { git = "https://github.com/zcash/librustzcash.git", rev = "eb38d7a373661179dbc083a2fd58b3a6c9b25818" }

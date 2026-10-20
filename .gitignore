@@ -20,3 +20,8 @@ stress/p1/failures*/
 # Wallet keys anywhere (encrypted mnemonics, age identities): never commit
 keys.toml
 *.age
+# ...except the app's wrapper, so `./gradlew` works from a clean clone
+!android/gradle/wrapper/gradle-wrapper.jar
+!android/gradle/wrapper/gradle-wrapper.properties
+# Built by the app's Gradle build from offline-core
+android/app/src/main/jniLibs/

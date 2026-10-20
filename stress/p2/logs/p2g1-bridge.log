@@ -1,0 +1,14 @@
+2026-10-20T05:52:38Z bridge tests on emulator-5554 emulator-5556
+emulator-5554: pass (5 tests, 0 failed)
+  ok   t3_core_process_death_becomes_exception 10.447s
+  ok   t3_rust_panic_becomes_exception 0.0s
+  ok   t3_bad_input_is_an_exception_not_a_crash 0.0s
+  ok   t2_version_string 0.0s
+  ok   t3_rust_error_becomes_exception 0.0s
+emulator-5556: pass (5 tests, 0 failed)
+  ok   t3_core_process_death_becomes_exception 3.984s
+  ok   t3_rust_panic_becomes_exception 0.001s
+  ok   t3_bad_input_is_an_exception_not_a_crash 0.002s
+  ok   t2_version_string 0.001s
+  ok   t3_rust_error_becomes_exception 0.001s
+PASS

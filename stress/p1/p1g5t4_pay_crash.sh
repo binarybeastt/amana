@@ -5,40 +5,54 @@
 #   stored:     the note is spent-offline and the payment's raw bytes are recoverable
 #               (`pending --raw-dir`) with expiry 0.
 # Selection locks left by the kill must be fully released by `release-locks`.
-#   ./p1g5t4_pay_crash.sh [runs]
+#   ./p1g5t4_pay_crash.sh [runs] [account] [zats]   (default: D pays A 0.01 ZEC)
+# The notes to watch come from one uninterrupted reference pay on a copy (pay is deterministic).
 set -euo pipefail
 source "$(dirname "$0")/../../spikes/zcash/env.sh"
 RUNS_N=${1:-100}
+ACCT=${2:-$ACCT_D}
+ZATS=${3:-1000000}
 CLI="$ROOT/offline-core/target/release/offline-cli"
 LOG="$ROOT/stress/p1/logs/p1g5t4.log"
 OWNER=6f66666c696e652d636f72653a73656c656374696f6e2d6c6f636b3a76310000
-NOTE_TXID=efe6362d4361917323098b416a15328222409d40dc9522d7725962f2eedd8d71   # B's 0.0999 note
 WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
 
+cp "$W/data.sqlite" "$W/keys.toml" "$WORK/"
+# Reference run: which notes does this payment spend, and how long does a pay take?
+t0=$(python3 -c 'import time; print(time.time())')
+NOTES=$(sandbox-exec -p '(version 1)(allow default)(deny network*)' \
+  "$CLI" -w "$WORK" pay --account "$ACCT" --to "$ADDR_A" --amount "$ZATS" -i "$ID" \
+  | python3 -c "import json,sys; print(','.join(json.load(sys.stdin)['spent_notes']))")
+PAY_S=$(python3 -c "import time; print(f'{time.time() - $t0:.2f}')")
+cp "$W/data.sqlite" "$WORK/data.sqlite"
+
+# One status for the watched notes: their common status, or "mixed".
 note_status() {
   "$CLI" -w "$WORK" notes --json | python3 -c "
 import json, sys
-print(next(n['status'] for n in json.load(sys.stdin) if n['txid'] == '$NOTE_TXID' and n['output_index'] == 0))"
+want = set('$NOTES'.split(','))
+st = {n['status'] for n in json.load(sys.stdin) if f\"{n['txid']}:{n['output_index']}\" in want}
+print(st.pop() if len(st) == 1 else 'mixed:' + '/'.join(sorted(st)))"
 }
-
-cp "$W/data.sqlite" "$W/keys.toml" "$WORK/"
 BASE_PENDING=$("$CLI" -w "$WORK" pending | wc -l | tr -d ' ')
-echo "$(date -u +%FT%TZ) runs=$RUNS_N base_pending=$BASE_PENDING note_status=$(note_status)" >"$LOG"
+echo "$(date -u +%FT%TZ) runs=$RUNS_N account=$ACCT zats=$ZATS notes=$NOTES ref_pay=${PAY_S}s base_pending=$BASE_PENDING note_status=$(note_status)" >"$LOG"
+[ "$(note_status)" = available ] || { echo "watched notes are not available" | tee -a "$LOG"; exit 1; }
 
 stored=0; not_stored=0; locks_seen=0; fail=0
 for i in $(seq 1 "$RUNS_N"); do
   rm -f "$WORK"/data.sqlite* "$WORK"/*.raw; rm -rf "$WORK/raw"
   cp "$W/data.sqlite" "$WORK/data.sqlite"
   # Every 10th run aims at the brief window while selection locks are held; the rest at the
-  # end of the build, where the payment is stored (a full pay takes ~3.7 s).
-  if [ $((i % 10)) = 1 ]; then lo=0.02; hi=0.4; else lo=2.5; hi=5.5; fi
+  # end of the build, where the payment is stored (around the reference pay time).
+  if [ $((i % 10)) = 1 ]; then lo=0.02; hi=0.4
+  else lo=$(python3 -c "print($PAY_S * 0.6)"); hi=$(python3 -c "print($PAY_S * 1.4)"); fi
   delay=$(python3 -c "import random; print(f'{random.uniform($lo, $hi):.3f}')")
   # Call sandbox-exec directly, not the `nonet` shell function: backgrounding a function forks
   # a subshell, so $! would be the subshell and kill -9 would leave the real pay running.
   # sandbox-exec execs offline-cli, so $! is the process that does the work.
   sandbox-exec -p '(version 1)(allow default)(deny network*)' \
-    "$CLI" -w "$WORK" pay --account "$ACCT_B" --to "$ADDR_A" --amount 5000000 -i "$ID" \
+    "$CLI" -w "$WORK" pay --account "$ACCT" --to "$ADDR_A" --amount "$ZATS" -i "$ID" \
     --raw-out "$WORK/out.raw" >/dev/null 2>&1 &
   pid=$!
   sleep "$delay"

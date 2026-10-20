@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+
+    <application
+        android:name=".App"
+        android:allowBackup="false"
+        android:label="Offline ZEC"
+        android:theme="@android:style/Theme.Material.NoActionBar">
+
+        <activity
+            android:name=".ui.MainActivity"
+            android:exported="true"
+            android:screenOrientation="portrait">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- offline-core runs in its own process: its bundled SQLite must never share a
+             process with the SDK's (separate SQLite copies cannot see each other's locks). -->
+        <provider
+            android:name=".core.CoreProvider"
+            android:authorities="dev.offlinezec.wallet.core"
+            android:exported="false"
+            android:process=":core" />
+    </application>
+</manifest>

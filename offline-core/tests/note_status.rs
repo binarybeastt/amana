@@ -91,4 +91,8 @@ fn every_pair_is_covered() {
     assert_eq!(Spent.apply(SeenMined), Ok(Spent));
     assert!(SpentOffline.apply(SignedOffline).is_err());
     assert!(Spent.apply(SignedOffline).is_err());
+    // Dust: never signable, stays dust when confirmed, can still be seen spent.
+    assert_eq!(Dust.apply(Confirmed), Ok(Dust));
+    assert!(Dust.apply(SignedOffline).is_err());
+    assert_eq!(Dust.apply(SeenMined), Ok(Spent));
 }

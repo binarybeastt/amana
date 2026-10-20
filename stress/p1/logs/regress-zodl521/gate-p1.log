@@ -1,0 +1,5 @@
+2026-10-20T09:01:29Z gate P1: 3 runs, wait 5 blocks, 1000000 zats A -> D
+run=1 PASS txid=b7db6af939ab4916290e314cff6dca886c64b8ed8d8f276342b40a9816ae16f3 built_at=4521592 broadcast="sent" mined=4521598
+run=2 PASS txid=9312da98143077d8ac7885a90687b2355ee402beb50ae5f4380bb45a7129c321 built_at=4521598 broadcast="sent" mined=4521604
+run=3 FAIL pay: Error: insufficient available notes: have 0 zats, need 1000000 plus fee
+gate P1: 2/3 in a row

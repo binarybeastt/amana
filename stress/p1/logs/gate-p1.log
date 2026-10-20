@@ -1,5 +1,5 @@
-2026-10-19T19:01:12Z gate P1: 3 runs, wait 5 blocks, 1000000 zats A -> D
-run=1 PASS txid=7008afeef1900645f43b0bff8d1e62d1ecd007673d5634321ade9b1a19ac0211 built_at=4519569 broadcast="sent" mined=4519577
-run=2 PASS txid=d21c94712aac749713de65ce68cac6b902069d8219e6346635e7166560bbbf93 built_at=4519577 broadcast="sent" mined=4519586
-run=3 PASS txid=6b75898f9a924fc567b0615d603ac24b0126d3dd595ff2647c0a49d0f2c2d5d3 built_at=4519588 broadcast="sent" mined=4519604
+2026-10-20T09:09:22Z gate P1: 3 runs, wait 5 blocks, 1000000 zats ab16e8ea -> utest1gn9lcn
+run=1 PASS txid=64a7d10c165454917b63b9057f2a30d3ffc28f687e8cc6ea9c80805517526f64 built_at=4521604 broadcast="sent" mined=4521615
+run=2 PASS txid=f27b4c5ae37aebe51005775554936c47e0763bce0983b7e2e858962deb4f08d3 built_at=4521617 broadcast="sent" mined=4521633
+run=3 PASS txid=4a00262b4910a611f96624cd0679e85d48bab3c849c8175c0d7f64ab59c6a2f3 built_at=4521633 broadcast="sent" mined=4521642
 gate P1: 3/3 in a row

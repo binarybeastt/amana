@@ -1,0 +1,28 @@
+split request: zcash:?address=utest1kkh4094vrhm0vu4t0vr0y5hrawlu870qt9fp6pgvc6d205e5gxvs54authhnh9qu9xj5awnpd7c36nyae04xn439e6xy99aeyts...
+      Fee:   0.00080000 TAZ
+Continue? [y/n]: Sending transaction...
+e3a99b60cccffcea32ef2cb1bf3ff86e1f586a0eddd9046c0b02c3b108fdacf8
+prepared at tip 4520121 (sent at 4520109)
+ab16e8ea ironwood     0.00010000 Available     b5d67d4712e96f46:0
+ab16e8ea ironwood     0.07000000 Available     d997789e6915af7b:0
+ab16e8ea ironwood     0.00020000 Available     f45d26df7bb0befd:1
+ab16e8ea ironwood     0.01000000 Available     7008afeef1900645:0
+ab16e8ea ironwood     0.01000000 Available     d21c94712aac7497:0
+ab16e8ea ironwood     0.01000000 Available     6b75898f9a924fc5:0
+ab16e8ea ironwood     0.02000000 Available     e3a99b60cccffcea:0
+ab16e8ea ironwood     0.01000000 Available     e3a99b60cccffcea:1
+ab16e8ea ironwood     0.00040000 Available     e3a99b60cccffcea:2
+ab16e8ea ironwood     0.00030000 Available     e3a99b60cccffcea:3
+ab16e8ea ironwood     0.10000000 Available     e3a99b60cccffcea:4
+ab16e8ea ironwood     0.00035000 Available     e3a99b60cccffcea:5
+ab16e8ea ironwood     0.02000000 Available     e3a99b60cccffcea:6
+ab16e8ea ironwood     0.00010000 Available     e3a99b60cccffcea:7
+ab16e8ea ironwood     0.05000000 Available     e3a99b60cccffcea:8
+ab16e8ea ironwood     0.00025000 Available     e3a99b60cccffcea:9
+ab16e8ea ironwood     0.00020000 Available     e3a99b60cccffcea:10
+ab16e8ea ironwood     0.00015000 Available     e3a99b60cccffcea:11
+ab16e8ea ironwood     0.05000000 Available     e3a99b60cccffcea:12
+ab16e8ea ironwood     0.10000000 Available     e3a99b60cccffcea:13
+ab16e8ea ironwood     0.04760000 Available     e3a99b60cccffcea:14
+ab16e8ea ironwood     0.01000000 Available     e3a99b60cccffcea:15
+exit 0

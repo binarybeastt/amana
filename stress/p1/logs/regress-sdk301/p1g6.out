@@ -1,0 +1,24 @@
+    Finished `release` profile [optimized] target(s) in 0.72s
+     Running tests/receive_live.rs (target/release/deps/receive_live-8291f23bd2a11654)
+
+running 6 tests
+test t1_valid_payment_is_verified ... ok
+test t6_nullifiers_match_sender ... ok
+test t2_other_account_is_not_paid ... ok
+test t3_tampered_bytes_are_rejected ... ok
+test t5_unknown_anchor_is_flagged ... ok
+fuzz: 100,000 inputs, slowest 1.136168542s, accepted 0
+
+thread 't4_fuzz_never_panics_or_hangs' (29767012) panicked at tests/receive_live.rs:112:5:
+slowest 1.136168542s
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test t4_fuzz_never_panics_or_hangs ... FAILED
+
+failures:
+
+failures:
+    t4_fuzz_never_panics_or_hangs
+
+test result: FAILED. 5 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 42.06s
+
+error: test failed, to rerun pass `--test receive_live`

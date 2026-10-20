@@ -6,6 +6,8 @@
 
 #[cfg(feature = "desktop")]
 pub mod devtool_keys;
+#[cfg(feature = "jni")]
+pub mod jni;
 pub mod notes;
 pub mod pay;
 pub mod receive;

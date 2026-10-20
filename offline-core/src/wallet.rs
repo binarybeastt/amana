@@ -5,12 +5,15 @@ use std::path::{Path, PathBuf};
 use anyhow::{Context, anyhow, bail};
 use serde::Serialize;
 use zcash_client_backend::data_api::{Account as _, WalletRead, wallet::ConfirmationsPolicy};
-use rand::{rand_core::UnwrapErr, rngs::SysRng};
 use zcash_client_sqlite::{WalletDb, util::SystemClock};
+use rand::{rand_core::UnwrapErr, rngs::SysRng};
 use zcash_protocol::consensus::Network;
 
 /// File name of the wallet database inside a wallet directory (same as zcash-devtool).
 pub const DATA_DB: &str = "data.sqlite";
+
+/// How long to wait for another connection's lock before giving up.
+pub const BUSY_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(15);
 
 /// Parses `test` / `main` into consensus parameters.
 pub fn parse_network(s: &str) -> anyhow::Result<Network> {
@@ -27,6 +30,8 @@ pub fn parse_network(s: &str) -> anyhow::Result<Network> {
 pub struct AccountStatus {
     pub account_uuid: String,
     pub name: Option<String>,
+    /// Height the account's scanning starts from (as stored in the wallet).
+    pub birthday_height: u32,
     pub total: u64,
     pub sapling_spendable: u64,
     pub orchard_spendable: u64,
@@ -53,21 +58,33 @@ impl WalletStore {
     /// Opens `<wallet_dir>/data.sqlite`. Fails if the file does not exist: this never creates
     /// or migrates a wallet.
     pub fn open(wallet_dir: &Path, network: Network) -> anyhow::Result<Self> {
-        let path: PathBuf = wallet_dir.join(DATA_DB);
+        Self::open_file(&wallet_dir.join(DATA_DB), network)
+    }
+
+    /// Opens a wallet database file directly (the Android SDK names it `data.sqlite3`). Fails if
+    /// it does not exist: this never creates or migrates a wallet. Waits up to [`BUSY_TIMEOUT`]
+    /// for a lock held by another process (the SDK's sync) instead of failing at once.
+    pub fn open_file(path: &Path, network: Network) -> anyhow::Result<Self> {
         if !path.is_file() {
             bail!("no wallet database at {}", path.display());
         }
-        let db = WalletDb::for_path(&path, network, SystemClock, UnwrapErr(SysRng))
+        let conn = rusqlite::Connection::open(path)
             .with_context(|| format!("opening wallet database {}", path.display()))?;
-        Ok(Self { db, path })
+        conn.busy_timeout(BUSY_TIMEOUT)?;
+        // Same setup as `WalletDb::for_path`: its queries use the `rarray` virtual table.
+        rusqlite::vtab::array::load_module(&conn)?;
+        let db = WalletDb::from_connection(conn, network, SystemClock, UnwrapErr(SysRng));
+        Ok(Self { db, path: path.to_owned() })
     }
 
     /// A separate read-only connection for queries the wallet API does not offer.
     pub(crate) fn read_conn(&self) -> anyhow::Result<rusqlite::Connection> {
-        Ok(rusqlite::Connection::open_with_flags(
+        let conn = rusqlite::Connection::open_with_flags(
             &self.path,
             rusqlite::OpenFlags::SQLITE_OPEN_READ_ONLY | rusqlite::OpenFlags::SQLITE_OPEN_NO_MUTEX,
-        )?)
+        )?;
+        conn.busy_timeout(BUSY_TIMEOUT)?;
+        Ok(conn)
     }
 
     pub(crate) fn rng(&self) -> UnwrapErr<SysRng> {
@@ -97,6 +114,7 @@ impl WalletStore {
             accounts.push(AccountStatus {
                 account_uuid: id.expose_uuid().to_string(),
                 name: account.name().map(str::to_owned),
+                birthday_height: u32::from(self.db.get_account_birthday(id)?),
                 total,
                 sapling_spendable: sapling,
                 orchard_spendable: orchard,

@@ -1,10 +1,11 @@
 {
-  "txid": "d997789e6915af7b7006b00f4a0a16d95e288966159b0bc6fb678429f3ad76ee",
+  "txid": "e161774075d6da0e03421e10121abf70d9cfe455c471271ff96b22f858ddeec9",
   "raw_len": 9166,
   "amount": 7000000,
   "fee": 10000,
-  "change": 2990000,
+  "change": 2750000,
   "spent_notes": [
-    "271f73ee57901a6cf6119d40a665dfa88c792c46d3b0c5f85070cd073ea835ec:15"
+    "e3a99b60cccffcea32ef2cb1bf3ff86e1f586a0eddd9046c0b02c3b108fdacf8:12",
+    "e3a99b60cccffcea32ef2cb1bf3ff86e1f586a0eddd9046c0b02c3b108fdacf8:14"
   ]
 }

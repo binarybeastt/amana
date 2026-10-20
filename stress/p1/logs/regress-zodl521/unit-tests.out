@@ -1,0 +1,94 @@
+    Blocking waiting for file lock on build directory
+   Compiling num-bigint v0.5.1
+   Compiling zcash_script v0.6.0
+   Compiling shardtree v0.8.0
+   Compiling rusqlite v0.37.0
+   Compiling rand_distr v0.6.0
+   Compiling proptest v1.6.0
+   Compiling zcash_transparent v0.11.0-pre.1
+   Compiling fpe v0.7.0
+   Compiling schemerz-rusqlite v0.370.0
+   Compiling sapling-crypto v0.9.0
+   Compiling orchard v0.16.0
+   Compiling zcash_primitives v0.31.0-pre.1
+   Compiling zcash_keys v0.17.0-pre.1
+   Compiling pczt v0.10.0-pre.1
+   Compiling zcash_client_backend v0.25.0-pre.1
+   Compiling zcash_pool_migration v0.2.0-pre.1
+   Compiling zcash_client_sqlite v0.23.0-pre.1
+   Compiling offline-core v0.1.0 (/Users/binaryy/Downloads/zcash_hack/offline-core)
+    Finished `release` profile [optimized] target(s) in 1m 13s
+     Running unittests src/lib.rs (target/release/deps/offline_core-ed7322f5ad8353c4)
+
+running 6 tests
+test split::tests::fee_matches_zip317_examples ... ok
+test split::tests::fee_notes_cover_payments_of_one_to_seven_denomination_notes ... ok
+test split::tests::large_balance_gets_fee_notes_and_two_of_each_up_to_half_a_zec ... ok
+test split::tests::small_balance_covers_small_denominations_first ... ok
+test split::tests::small_balance_uses_what_fits ... ok
+test split::tests::too_small_to_pay_the_fee ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/bin/offline-cli.rs (target/release/deps/offline_cli-81a07225e7ad00f0)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/note_status.rs (target/release/deps/note_status-6c891f3439295a4d)
+
+running 2 tests
+test every_pair_is_covered ... ok
+test transitions_stay_legal ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.13s
+
+     Running tests/receive_live.rs (target/release/deps/receive_live-774915d138458d17)
+
+running 6 tests
+test t1_valid_payment_is_verified ... ignored
+test t2_other_account_is_not_paid ... ignored
+test t3_tampered_bytes_are_rejected ... ignored
+test t4_fuzz_never_panics_or_hangs ... ignored
+test t5_unknown_anchor_is_flagged ... ignored
+test t6_nullifiers_match_sender ... ignored
+
+test result: ok. 0 passed; 0 failed; 6 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/select.rs (target/release/deps/select-e8bca957cd0c56ed)
+
+running 7 tests
+test insufficient_funds_is_an_error ... ok
+test spent_notes_are_never_picked_even_when_they_fit_best ... ok
+test exact_when_amount_plus_fee_is_a_sum_of_denominations ... ok
+test round_amounts_need_change_without_fee_sized_notes ... ok
+test round_amounts_are_exact_with_fee_notes ... ok
+test matches_brute_force ... ok
+test selection_is_fast_on_twenty_notes ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.02s
+
+     Running tests/split.rs (target/release/deps/split-6712a6d9a80c03fa)
+
+running 2 tests
+test balances_that_cannot_pay_the_fee_are_refused ... ok
+test plans_balance_exactly ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests/status.rs (target/release/deps/status-b8e34163abc901b7)
+
+running 3 tests
+test parse_network_accepts_only_test_and_main ... ok
+test open_refuses_a_missing_wallet_instead_of_creating_one ... ok
+test fresh_wallet_has_no_accounts_and_no_tip ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.20s
+
+   Doc-tests offline_core
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

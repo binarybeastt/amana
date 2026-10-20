@@ -1,0 +1,5 @@
+   Compiling offline-core v0.1.0 (/Users/binaryy/Downloads/zcash_hack/offline-core)
+    Finished `release` profile [optimized] target(s) in 1m 06s
+synced tip 4520090
+Error: Data DB is corrupted: Consensus branch ID not known, cannot parse this transaction until it is mined
+fixtures exit 1

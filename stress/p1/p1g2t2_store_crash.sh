@@ -4,21 +4,34 @@
 # PRAGMA integrity_check, hold exactly the notes of the before- or after-store state, and the
 # store must be all-or-nothing:
 # the payment's tx row and its note-spend row exist together or not at all.
-#   ./p1g2t2_store_crash.sh [runs] [pczt]
+#   ./p1g2t2_store_crash.sh [runs] [pczt]   (default pczt: a fresh, unstored B -> A payment)
 set -euo pipefail
 source "$(dirname "$0")/../../spikes/zcash/env.sh"
 RUNS_N=${1:-1000}
-PCZT=${2:-$RUNS/C-24h/combined.pczt}
+PCZT=${2:-}
 CLI="$ROOT/offline-core/target/release/offline-cli"
 SRC="$W/data.sqlite"
 LOG="$ROOT/stress/p1/logs/p1g2t2.log"
 [ -x "$CLI" ] || { echo "build offline-core --release first" >&2; exit 1; }
 
-TXID=$(nonet "$DT" pczt extract <"$PCZT" 2>/dev/null)
-TXID_INTERNAL=$(python3 -c "import sys; print(bytes.fromhex(sys.argv[1])[::-1].hex())" "$TXID")
-BASE_NOTES=$(sqlite3 "$SRC" "SELECT COUNT(*) FROM ironwood_received_notes")
 WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
+if [ -z "${2:-}" ]; then
+  # Default: a fresh payment B -> A, built and signed on a copy but never stored, so its tx is
+  # in neither the copy nor the live wallet. (The old default, C's 24 h payment, is mined now.)
+  PCZT="$WORK/fresh.pczt"
+  mkdir -p "$WORK/build"; cp "$SRC" "$W/keys.toml" "$WORK/build/"
+  nonet "$CLI" -w "$WORK/build" build-pczt --account "$ACCT_B" --to "$ADDR_A" --amount 10000 \
+    -i "$ID" --out "$PCZT" >/dev/null
+fi
+# txid of the PCZT: store it once into a scratch copy and read the txid back.
+mkdir -p "$WORK/probe"; cp "$SRC" "$W/keys.toml" "$WORK/probe/"
+TXID=$("$CLI" -w "$WORK/probe" store-pczt "$PCZT" | awk '/^stored/{print $2}')
+[ -n "$TXID" ] || { echo "could not store the PCZT once" >&2; exit 1; }
+TXID_INTERNAL=$(python3 -c "import sys; print(bytes.fromhex(sys.argv[1])[::-1].hex())" "$TXID")
+[ "$(sqlite3 "$SRC" "SELECT COUNT(*) FROM transactions WHERE txid = X'$TXID_INTERNAL'")" = 0 ] \
+  || { echo "PCZT's tx $TXID is already in the wallet: the test would prove nothing" >&2; exit 1; }
+BASE_NOTES=$(sqlite3 "$SRC" "SELECT COUNT(*) FROM ironwood_received_notes")
 
 # Reference: one uninterrupted store. A committed store legitimately adds the payment's own
 # change note, so "after" has its own expected note count.

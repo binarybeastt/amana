@@ -1,15 +1,26 @@
-2026-10-19T18:05:07Z synced at 4519420; offline session starts
+2026-10-20T08:27:58Z synced at 4521526; offline session starts
 pay1: 5000000 zats, 2 notes, fee 10000, exact, 9166 bytes, expiry 0 -> T2 ok
-pay2: 1000000 zats, 2 notes, fee 10000, change 5000, 9166 bytes, expiry 0 -> T2 ok
-pay3: 10000000 zats, 5 notes, fee 25000, exact, 18634 bytes, expiry 0 -> T2 ok
-pay4: 2000000 zats, 1 notes, fee 10000, change 5635000, 9166 bytes, expiry 0 -> T2 ok
-pay5: 3000000 zats, 1 notes, fee 10000, change 6990000, 9166 bytes, expiry 0 -> T2 ok
-pay6: 7000000 zats, 1 notes, fee 10000, change 2990000, 9166 bytes, expiry 0 -> T2 ok
-pay7: 5000000 zats, 1 notes, fee 10000, change 14990000, 9166 bytes, expiry 0 -> T2 ok
-pay8: FAILED Error: insufficient available notes: have 125000 zats, need 2000000 plus fee
-pay9: FAILED Error: insufficient available notes: have 125000 zats, need 1000000 plus fee
-pay10: FAILED Error: insufficient available notes: have 125000 zats, need 10000000 plus fee
-pay8: 10000 zats, 1 notes, fee 10000 change 0 expiry 0 T2 ok
-pay9: 20000 zats, 1 notes, fee 10000 change 0 expiry 0 T2 ok
-pay10: 25000 zats, 1 notes, fee 10000 change 0 expiry 0 T2 ok
-T3: 10/10 built offline; notes spent 16, distinct 16, reused none; exact 5/10; T2 failures 0
+pay2: 1000000 zats, 2 notes, fee 10000, exact, 9166 bytes, expiry 0 -> T2 ok
+pay3: 10000000 zats, 4 notes, fee 20000, exact, 15478 bytes, expiry 0 -> T2 ok
+pay4: 2000000 zats, 3 notes, fee 15000, exact, 12322 bytes, expiry 0 -> T2 ok
+pay5: 3000000 zats, 3 notes, fee 15000, change 5000, 12322 bytes, expiry 0 -> T2 ok
+pay6: 7000000 zats, 2 notes, fee 10000, change 2750000, 9166 bytes, expiry 0 -> T2 ok
+pay7: 5000000 zats, 1 notes, fee 10000, change 4990000, 9166 bytes, expiry 0 -> T2 ok
+pay8: 10000 zats, 1 notes, fee 10000, change 5000, 9166 bytes, expiry 0 -> T2 ok
+pay9: 20000 zats, 1 notes, fee 10000, exact, 9166 bytes, expiry 0 -> T2 ok
+pay10: 25000 zats, 1 notes, fee 10000, exact, 9166 bytes, expiry 0 -> T2 ok
+notes spent: 20, distinct: 20, reused: none; T2 failures: 0
+built 10/10 offline
+bb53c71c32d8fe9d699feabd555f89cbbee6342fe6e7e266e9894e5bf956f7bd  expiry 0  9166 bytes
+639ba0db430f7689c0210c37b3835831fd0a39b1312640fc8e5e9510dbbb9bdc  expiry 0  9166 bytes
+9ef8da9ee4e41ed1c1194bebc15767c1c5fc2092741096d87db5b586d76b943b  expiry 0  9166 bytes
+a66c092bade398462937067ec9427ad6e7e36b8b5d555915c8abd0f4e81f8960  expiry 0  9166 bytes
+b90ed16f7679c313917be17a8acffc7598a8dc9243aa918d8b0a0d4c473da193  expiry 0  9166 bytes
+b5ff725c02c3dfe78b934edb3c2aeb3eecbbf49e37a4c1bce00503d03b9b9081  expiry 0  15478 bytes
+ed6ec9098b7adac82219b9ba454509b5f8eb5152270bc744e97ac3f9001afe9a  expiry 0  12322 bytes
+7e0294aabc7be015c62cbebb22574182f739b18f891ddbdf0bee8af66a3b9a4d  expiry 0  12322 bytes
+e161774075d6da0e03421e10121abf70d9cfe455c471271ff96b22f858ddeec9  expiry 0  9166 bytes
+7a2c119d13160b15a18134698202bca624118d74606954239d37b3afe8812f4d  expiry 0  9166 bytes
+69ce051b6865f2b8cc3c826cc550c7744c90af723fe31a938bc129bd9bcad63b  expiry 0  9166 bytes
+e9b7ff68316ea79406ea9c2f300694fb0f915a0b098f1a42a43b89c9a6d573c8  expiry 0  9166 bytes
+bc09b8ddc535827f6132b0912381e8efd977b02ee4570b3c076d6dd9a8b452c7  expiry 0  9166 bytes

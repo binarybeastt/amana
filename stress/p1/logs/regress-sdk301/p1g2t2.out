@@ -1,0 +1,12 @@
+100/1000: committed=36 not_committed=64 failures=0
+200/1000: committed=68 not_committed=132 failures=0
+300/1000: committed=103 not_committed=197 failures=0
+400/1000: committed=138 not_committed=262 failures=0
+500/1000: committed=174 not_committed=326 failures=0
+600/1000: committed=201 not_committed=399 failures=0
+700/1000: committed=234 not_committed=466 failures=0
+800/1000: committed=266 not_committed=534 failures=0
+900/1000: committed=297 not_committed=603 failures=0
+1000/1000: committed=320 not_committed=680 failures=0
+runs=1000 committed=320 not_committed=680 failures=0
+PASS

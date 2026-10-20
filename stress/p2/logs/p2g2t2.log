@@ -1,0 +1,8 @@
+2026-10-20T08:40:09Z 5 kills mid-sync on emulator-5556 (restore from birthday 4321429)
+kill 1: status=SYNCING progress before=0.008964397013187408 after-restart=0.008991357870399952 scanned=4317170 -> ok
+kill 2: status=SYNCING progress before=0.013801084831357002 after-restart=0.01516764611005783 scanned=4324180 -> ok
+kill 3: status=SYNCING progress before=0.054542895406484604 after-restart=0.05736764892935753 scanned=4341190 -> ok
+kill 4: status=SYNCING progress before=0.06236095726490021 after-restart=0.06310722231864929 scanned=4350200 -> ok
+kill 5: status=SYNCING progress before=0.07309652864933014 after-restart=0.07701751589775085 scanned=4364210 -> ok
+reached tip 4521580 707s after the last kill
+PASS

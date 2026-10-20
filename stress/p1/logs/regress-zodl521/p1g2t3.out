@@ -1,0 +1,5 @@
+MATCH spike-b-4h         available=1 pending=0 sum=4980000 balance=4980000
+MATCH spike-a            available=2 pending=2 sum=29585000 balance=29585000
+MATCH spike-d-dblspend   available=22 pending=0 sum=50965000 balance=50965000
+MATCH spike-c-24h        available=1 pending=0 sum=9990000 balance=9990000
+PASS

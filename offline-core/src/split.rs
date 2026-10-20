@@ -11,6 +11,8 @@
 use anyhow::bail;
 use serde::Serialize;
 
+use crate::{NoteStatus, WalletStore};
+
 pub const COIN: u64 = 100_000_000;
 
 /// Denominations, largest first, in zatoshis.
@@ -191,5 +193,54 @@ mod tests {
         assert!(plan_split(10_000, 1).is_err());
         assert!(plan_split(9_999, 1).is_err());
         assert!(plan_split(COIN, 0).is_err());
+    }
+}
+
+/// ZIP 321 request paying each amount to `address`. The remainder is left for the wallet's change.
+pub fn zip321_uri(address: &str, amounts: &[u64]) -> String {
+    let parts: Vec<String> = amounts
+        .iter()
+        .enumerate()
+        .map(|(i, z)| {
+            let amount = zec(*z).trim_end_matches('0').trim_end_matches('.').to_string();
+            if i == 0 {
+                format!("address={address}&amount={amount}")
+            } else {
+                format!("address.{i}={address}&amount.{i}={amount}")
+            }
+        })
+        .collect();
+    format!("zcash:?{}", parts.join("&"))
+}
+
+/// Zatoshis as a ZEC decimal string with 8 places.
+pub fn zec(zats: u64) -> String {
+    format!("{}.{:08}", zats / 100_000_000, zats % 100_000_000)
+}
+
+
+/// A planned split of one account's available Ironwood notes, ready to send online.
+#[derive(Debug, Clone, Serialize)]
+pub struct SplitRequest {
+    pub input_notes: usize,
+    pub input_total: u64,
+    pub plan: SplitPlan,
+    /// ZIP 321 request paying the planned notes to the account's own address.
+    pub zip321: String,
+}
+
+impl WalletStore {
+    /// Plans "prepare for offline" for `account_uuid`: its available Ironwood notes split into
+    /// denominations and fee-sized notes, paid to `address` (normally the account's own).
+    pub fn plan_split_request(&self, account_uuid: &str, address: &str) -> anyhow::Result<SplitRequest> {
+        let notes: Vec<_> = self
+            .notes()?
+            .into_iter()
+            .filter(|n| n.account_uuid == account_uuid && n.pool == "ironwood" && n.status == NoteStatus::Available)
+            .collect();
+        let input_total: u64 = notes.iter().map(|n| n.value).sum();
+        let plan = plan_split(input_total, notes.len())?;
+        let zip321 = zip321_uri(address, &plan.payments());
+        Ok(SplitRequest { input_notes: notes.len(), input_total, plan, zip321 })
     }
 }

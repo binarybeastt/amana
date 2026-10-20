@@ -1,0 +1,24 @@
+warning: patch `zcash_proofs v0.31.0-pre.2 (https://github.com/zcash/librustzcash.git?rev=eb38d7a373661179dbc083a2fd58b3a6c9b25818#eb38d7a3)` was not used in the crate graph
+help: Check that the patched package version and available features are compatible
+      with the dependency requirements. If the patch has a different version from
+      what is locked in the Cargo.lock file, run `cargo update` to use the new
+      version. This may also occur with an optional dependency that is not enabled.
+   Compiling offline-core v0.1.0 (/Users/binaryy/Downloads/zcash_hack/offline-core)
+    Finished `release` profile [optimized] target(s) in 12.61s
+     Running tests/receive_live.rs (target/release/deps/receive_live-ec2a9b6438014dd7)
+
+running 6 tests
+test t2_other_account_is_not_paid ... ok
+test t1_valid_payment_is_verified ... ok
+test t3_tampered_bytes_are_rejected ... ok
+test t5_unknown_anchor_is_flagged ... ok
+test t6_nullifiers_match_sender ... ok
+fuzz: 100,000 inputs, slowest 41.354625ms, accepted 0
+test t4_fuzz_never_panics_or_hangs ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 38.88s
+
+
+real	0m52.589s
+user	4m12.074s
+sys	0m25.263s

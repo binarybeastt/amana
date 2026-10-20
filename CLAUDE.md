@@ -8,7 +8,7 @@ Android wallet that signs shielded Zcash payments offline and relays them phone 
 - `docs/PLAN.md`: phases split into goals, each with stress tests and pass criteria
 - `docs/PROGRESS.md`: live status of every goal, test results, decisions, log
 - `offline-core/`: Rust crate (library + `offline-cli`)
-- `android/`: Kotlin app
+- `android/`: Kotlin app (ZODL SDK + offline-core over JNI in a `:core` process)
 - `spikes/`: Phase 0 spike scripts and raw logs
 - `stress/<phase>/`: stress test scripts
 - `third_party/`: external clones such as zcash-devtool (git-ignored)
@@ -29,6 +29,22 @@ Update `docs/PROGRESS.md` in the same step as the work, never batched for later:
 - Something blocks progress: set `blocked`, fill in **Blockers**, and tell the user.
 - End of each working session: add a dated line to *Log*.
 - Spike results also go into the spec doc's *Verification spikes* section, as the spec asks. At each phase gate, tick that phase's items in the spec doc's *Build order*.
+
+## Working notes
+
+Gotchas learned the hard way:
+- `spikes/zcash/env.sh` and `stress/p2/lib.sh` only work when sourced from bash (use `bash -c` or a bash script), not zsh.
+- Never background the `nonet` shell function when you need to kill the process; call `sandbox-exec` directly.
+- Android's shell does 32-bit arithmetic: subtract timestamps on the host.
+- Always sync right before an online build, or a 40-block expiry can already be past.
+- In pipelines under `set -o pipefail`, avoid `grep -q` and early-exiting `awk`.
+- Don't run tests that copy the live wallet (`wallets/testnet-a`) while another job is syncing or sending from it.
+- lightwalletd drops the odd request: use `sync_wallet` / `tip` from env.sh (they retry) in `set -e` scripts.
+- `zcash-devtool wallet pay` asks to confirm: pipe `echo y` into it.
+- Testnet is past NU7 (activated at 4,465,026). Anything on `zcash_protocol` 0.10.x (zcash-android-sdk 3.x/4.0) signs with the wrong branch ID and is rejected. The app uses the ZODL SDK (`com.zodl.android:zcash-android-sdk:5.2.1-SNAPSHOT`, AGPL-3.0) and offline-core pins the crates it bundles.
+- offline-core must only run in the app's `:core` process (`CoreProvider`): it bundles its own SQLite, and two SQLite copies in one process corrupt each other's locking. Use an unstable provider client so the app survives a core-process crash.
+- Gradle 8.13 cannot run on Java 25: build with Android Studio's JDK 21 (`JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"`).
+- Emulator tests: debug builds expose adb hooks (`.debug.TestHooks`) and write `files/state.json`; see `stress/p2/lib.sh`.
 
 ## Safety
 

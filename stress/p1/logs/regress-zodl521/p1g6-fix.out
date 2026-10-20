@@ -1,0 +1,10 @@
+RECEIVE_WALLET=/Users/binaryy/Downloads/zcash_hack/wallets/testnet-a
+RECEIVE_RAW=/Users/binaryy/Downloads/zcash_hack/spikes/runs/p1g6/memo.raw
+RECEIVE_ACCOUNT=ab16e8ea-92db-46e5-bcfa-01bb17db1ede
+RECEIVE_AMOUNT=2000000
+RECEIVE_MEMO="bread for Ada"
+OTHER_ACCOUNT=52a70598-2d18-421f-b412-b1f273cb2ac2
+SENDER_NULLIFIERS=d2297ae0b8f96714d37fc5cbf64698ac9331fb70aaf35a3eb41694266d1e7a23
+STALE_WALLET=/Users/binaryy/Downloads/zcash_hack/wallets/sync-kill
+STALE_RAW=/Users/binaryy/Downloads/zcash_hack/spikes/runs/p1g6/anchor.raw
+STALE_ACCOUNT=a680291d-e91c-4b0d-b1dd-ba7a5782516d

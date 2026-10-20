@@ -78,7 +78,11 @@ fn t4_fuzz_never_panics_or_hangs() {
     let (_t, mut store) = store_copy(&env("RECEIVE_WALLET"));
     let good = raw();
     let mut rng = StdRng::seed_from_u64(317);
+    // The verifying keys are built once per process (about a second); the app builds them at
+    // start-up. Time inputs, not that one-time setup (user's call, see PROGRESS.md Decisions).
+    offline_core::receive::prewarm_verifier();
     let mut slowest = std::time::Duration::ZERO;
+    let mut slowest_k = 0;
     let mut accepted = 0;
     for k in 0..100_000 {
         let input: Vec<u8> = match k % 4 {
@@ -105,9 +109,11 @@ fn t4_fuzz_never_panics_or_hangs() {
         if store.verify_payment(&input, None).is_ok() && changed {
             accepted += 1;
         }
-        slowest = slowest.max(t.elapsed());
+        if t.elapsed() > slowest {
+            (slowest, slowest_k) = (t.elapsed(), k);
+        }
     }
-    eprintln!("fuzz: 100,000 inputs, slowest {slowest:?}, accepted {accepted}");
+    eprintln!("fuzz: 100,000 inputs, slowest {slowest:?} (input {slowest_k}), accepted {accepted}");
     assert_eq!(accepted, 0);
     assert!(slowest.as_secs_f64() < 1.0, "slowest {slowest:?}");
 }

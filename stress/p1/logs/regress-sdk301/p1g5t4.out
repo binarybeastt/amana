@@ -1,0 +1,7 @@
+20/100 stored=18 not_stored=2 locks_seen=0 failures=0
+40/100 stored=36 not_stored=4 locks_seen=0 failures=0
+60/100 stored=54 not_stored=6 locks_seen=0 failures=0
+80/100 stored=72 not_stored=8 locks_seen=0 failures=0
+100/100 stored=90 not_stored=10 locks_seen=0 failures=0
+runs=100 stored=90 not_stored=10 kills_that_left_locks=0 failures=0
+PASS

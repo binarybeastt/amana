@@ -1,0 +1,23 @@
+2026-10-19T22:57:33Z synced at 4520124; offline session starts
+pay1: 5000000 zats, 2 notes, fee 10000, exact, 9166 bytes, expiry 0 -> T2 ok
+pay2: 1000000 zats, 2 notes, fee 10000, exact, 9166 bytes, expiry 0 -> T2 ok
+pay3: 10000000 zats, 4 notes, fee 20000, exact, 15478 bytes, expiry 0 -> T2 ok
+pay4: 2000000 zats, 3 notes, fee 15000, exact, 12322 bytes, expiry 0 -> T2 ok
+pay5: 3000000 zats, 3 notes, fee 15000, change 5000, 12322 bytes, expiry 0 -> T2 ok
+pay6: 7000000 zats, 2 notes, fee 10000, change 2750000, 9166 bytes, expiry 0 -> T2 ok
+pay7: 5000000 zats, 1 notes, fee 10000, change 4990000, 9166 bytes, expiry 0 -> T2 ok
+pay8: 10000 zats, 1 notes, fee 10000, change 5000, 9166 bytes, expiry 0 -> T2 ok
+pay9: 20000 zats, 1 notes, fee 10000, exact, 9166 bytes, expiry 0 -> T2 ok
+pay10: 25000 zats, 1 notes, fee 10000, exact, 9166 bytes, expiry 0 -> T2 ok
+notes spent: 20, distinct: 20, reused: none; T2 failures: 0
+built 10/10 offline
+8de71ddbaf53c919a120d77ea88c3d278f9a9ac382388edbf990d8eeb42c4ac7  expiry 0  9166 bytes
+7c4dccbf5ff8292379349cfcb9bb687e1036854085fc5ab46952b050dca2c6ad  expiry 0  9166 bytes
+032663c92123b0ad597872489b948e3bd9fb66ba7b3f78e3dbd77271ff59ee84  expiry 0  15478 bytes
+af2ef887fc4253ee35d9a6d38ebec942541109a608f3e857807a504f92631e88  expiry 0  12322 bytes
+ac17488842d4549c43e059ea2c4503b398bdb9dc4484804490db1a683d59bdd0  expiry 0  12322 bytes
+164e98a944c15545bd4806b2add9b7a73c66a21da0c8940fabe3aae13231c7a3  expiry 0  9166 bytes
+2e015f1be0995343a9b0605d984e5518f0abb190c8465bf76b0b0d6a0c1aab84  expiry 0  9166 bytes
+29f9114031044ac130f555510260703d92408b0445fdb5f31b1ab003d27dbbde  expiry 0  9166 bytes
+adf08465239f2441f7baf431a8872f71e66e5b3d84d48a6129c93c4bb34a6dba  expiry 0  9166 bytes
+f966d024248eec3c7730c37c7c795d8a83330de2fa5366816c8feed420730817  expiry 0  9166 bytes

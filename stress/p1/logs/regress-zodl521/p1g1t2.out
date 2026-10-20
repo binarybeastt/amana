@@ -1,0 +1,5 @@
+MATCH spike-b-4h         total=4980000 ironwood=4980000
+MATCH spike-a            total=29585000 ironwood=21980000
+MATCH spike-d-dblspend   total=50965000 ironwood=50965000
+MATCH spike-c-24h        total=9990000 ironwood=9990000
+PASS: 4 accounts match

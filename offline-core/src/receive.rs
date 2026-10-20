@@ -89,6 +89,18 @@ fn verifying_key(version: orchard::circuit::OrchardCircuitVersion) -> &'static o
     vk
 }
 
+/// Builds the verifying keys for the current (NU6.3) Orchard and Ironwood circuits now, so the
+/// first payment a receiver checks does not wait for them (~1 s on desktop, longer on phones).
+pub fn prewarm_verifier() {
+    for pool in [orchard::ValuePool::Orchard, orchard::ValuePool::Ironwood] {
+        if let Some(v) =
+            zcash_primitives::transaction::components::orchard::bundle_version_for_branch(BranchId::Nu6_3, pool)
+        {
+            verifying_key(v.circuit_version());
+        }
+    }
+}
+
 fn verify_bundle(bundle: &orchard::Bundle<Authorized, ZatBalance>, sighash: [u8; 32]) -> bool {
     let vk = verifying_key(bundle.bundle_version().circuit_version());
     let mut validator = orchard::bundle::BatchValidator::new(vk);

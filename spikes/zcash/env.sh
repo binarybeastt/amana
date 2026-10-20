@@ -1,7 +1,7 @@
 # Shared settings for the Phase 0 Zcash spikes. Source this file.
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 DT="$ROOT/third_party/zcash-devtool/target/release/zcash-devtool"
-W="$ROOT/wallets/testnet-a"
+W="${WALLET_DIR:-$ROOT/wallets/testnet-a}"   # WALLET_DIR: run against a copy
 ID="$ROOT/wallets/testnet-a.age"
 RUNS="$ROOT/spikes/runs"
 
@@ -20,4 +20,23 @@ ADDR_D=utest1kkh4094vrhm0vu4t0vr0y5hrawlu870qt9fp6pgvc6d205e5gxvs54authhnh9qu9xj
 nonet() { sandbox-exec -p '(version 1)(allow default)(deny network*)' "$@"; }
 
 # Current chain tip from the lightwalletd server.
-tip() { "$DT" wallet -w "$W" get-info 2>/dev/null | python3 -c 'import sys, json; print(json.load(sys.stdin)["chain_tip_height"])'; }
+# Retries: lightwalletd drops the odd request, and one failure must not abort a `set -e` script.
+tip() {
+  local t i
+  for i in 1 2 3 4 5 6; do
+    t=$("$DT" wallet -w "$W" get-info 2>/dev/null | python3 -c 'import sys, json; print(json.load(sys.stdin)["chain_tip_height"])' 2>/dev/null) \
+      && [ -n "$t" ] && { echo "$t"; return 0; }
+    sleep 10
+  done
+  return 1
+}
+
+# Sync the wallet, retrying transient lightwalletd failures.
+sync_wallet() {
+  local i
+  for i in 1 2 3 4 5; do
+    "$DT" wallet -w "$W" sync >/dev/null 2>&1 && return 0
+    sleep 15
+  done
+  return 1
+}

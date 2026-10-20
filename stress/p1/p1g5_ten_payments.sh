@@ -3,7 +3,9 @@
 #   T1 every build succeeds with no network; T2 every tx has expiry 0 and the ZIP 317 fee for
 #   its shape; T3 no note is spent by two of the ten.
 # Raw bytes stay stored in the wallet for P1.G5.T5 (broadcast >= 1 h later).
-#   ./p1g5_ten_payments.sh [account] [to-address]
+#   ./p1g5_ten_payments.sh [account] [to-address] ["zats zats ..."]
+# Run on a prepared account (stress/p1/prepare_account.sh). Exit 1 unless all ten build with T2 ok
+# and no note reused. WALLET_DIR=<copy> runs it on a copy of the wallet.
 set -euo pipefail
 source "$(dirname "$0")/../../spikes/zcash/env.sh"
 ACCT=${1:-$ACCT_A}
@@ -12,8 +14,10 @@ CLI="$ROOT/offline-core/target/release/offline-cli"
 OUT="$RUNS/p1g5"
 LOG="$ROOT/stress/p1/logs/p1g5.log"
 mkdir -p "$OUT"
+rm -f "$OUT"/pay*.json "$OUT"/pay*.raw "$OUT"/pay*.err
 # Round amounts in zatoshis: 0.05 0.01 0.1 0.02 0.03 0.07 0.05 0.02 0.01 0.1 ZEC
 AMOUNTS=(5000000 1000000 10000000 2000000 3000000 7000000 5000000 2000000 1000000 10000000)
+if [ -n "${3:-}" ]; then read -r -a AMOUNTS <<<"$3"; fi
 
 "$DT" wallet -w "$W" sync >/dev/null 2>&1   # online, before the offline session
 echo "$(date -u +%FT%TZ) synced at $(tip); offline session starts" | tee "$LOG"
@@ -49,6 +53,8 @@ for f in sorted(glob.glob(f"{sys.argv[1]}/pay*.json")):
     fails += not (i["expiry_height"] == 0 and i["fee"] == i["zip317_fee"])
 dupes = {n for n in spent if spent.count(n) > 1}
 print(f"notes spent: {len(spent)}, distinct: {len(set(spent))}, reused: {sorted(dupes) or 'none'}; T2 failures: {fails}")
+sys.exit(1 if dupes or fails else 0)
 EOF
 echo "built $ok/${#AMOUNTS[@]} offline" | tee -a "$LOG"
 nonet "$CLI" -w "$W" pending | tee -a "$LOG"
+[ "$ok" = "${#AMOUNTS[@]}" ]

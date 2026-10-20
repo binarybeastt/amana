@@ -1,0 +1,4 @@
+tip core=4521564 sdk=4521564
+total     core=20000000 sdk=20000000
+ironwood spendable core=20000000 sdk=20000000
+PASS

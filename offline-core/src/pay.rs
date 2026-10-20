@@ -63,6 +63,14 @@ pub struct BuiltPayment {
     pub spent_notes: Vec<String>,
 }
 
+/// A proven and signed payment that is not stored yet (see [`WalletStore::build_signed_pczt`]).
+pub struct SignedPczt {
+    pub pczt: Vec<u8>,
+    pub fee: u64,
+    pub change: u64,
+    pub spent_notes: Vec<String>,
+}
+
 fn txid_from_display(hex: &str) -> anyhow::Result<TxId> {
     let mut bytes = [0u8; 32];
     ensure!(hex.len() == 64, "bad txid {hex}");
@@ -104,6 +112,31 @@ impl WalletStore {
         amount: u64,
         memo: Option<&str>,
     ) -> anyhow::Result<BuiltPayment> {
+        let signed = self.build_signed_pczt(seed, account_uuid, to, amount, memo)?;
+        // 4. Write-before-send.
+        let (txid, raw) = self.store_signed(&signed.pczt)?;
+        Ok(BuiltPayment {
+            txid: txid.to_string(),
+            raw_len: raw.len(),
+            raw,
+            amount,
+            fee: signed.fee,
+            change: signed.change,
+            spent_notes: signed.spent_notes,
+        })
+    }
+
+    /// Steps 1-3 of [`Self::pay_offline`]: the signed PCZT, **not stored**. Its notes stay
+    /// available, so never hand its bytes to anyone; only for tests that store it themselves
+    /// (the store crash test).
+    pub fn build_signed_pczt(
+        &mut self,
+        seed: &[u8],
+        account_uuid: &str,
+        to: &str,
+        amount: u64,
+        memo: Option<&str>,
+    ) -> anyhow::Result<SignedPczt> {
         // Crash recovery: an interrupted earlier run may have left selection locks behind.
         self.release_selection_locks()?;
         let params = *self.db.params();
@@ -221,14 +254,8 @@ impl WalletStore {
             .map_err(|e| anyhow!("deriving spending key: {e:?}"))?;
         let pczt = sign(pczt, &params, seed, account_index, &usk)?;
         let bytes = pczt.serialize().map_err(|e| anyhow!("serializing PCZT: {e:?}"))?;
-
-        // 4. Write-before-send.
-        let (txid, raw) = self.store_signed(&bytes)?;
-        Ok(BuiltPayment {
-            txid: txid.to_string(),
-            raw_len: raw.len(),
-            raw,
-            amount,
+        Ok(SignedPczt {
+            pczt: bytes,
             fee,
             change,
             spent_notes: chosen.iter().map(|n| format!("{}:{}", n.txid, n.output_index)).collect(),

@@ -6,7 +6,10 @@
 //!   payment); it has no witness, so it cannot be spent until that transaction is mined;
 //! - `available`: mined, and no transaction spends it;
 //! - `spent-offline`: a stored transaction that is not mined (and cannot expire) spends it;
-//! - `spent`: a mined transaction spends it.
+//! - `spent`: a mined transaction spends it;
+//! - `dust`: unspent but worth at most the ZIP 317 marginal fee (5,000 zatoshis), so spending it
+//!   costs at least what it is worth. The wallet leaves such "uneconomic" notes out of its
+//!   balance, and this crate never selects them.
 //!
 //! Signing a payment stores it in the wallet before any bytes leave the phone
 //! ([`WalletStore::store_signed`]). That one SQLite transaction moves its notes to
@@ -32,7 +35,11 @@ pub enum NoteStatus {
     Available,
     SpentOffline,
     Spent,
+    Dust,
 }
+
+/// Notes worth this much or less are dust (ZIP 317 marginal fee, the wallet's "uneconomic" line).
+pub const DUST_LIMIT: u64 = 5_000;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum NoteEvent {
@@ -62,14 +69,16 @@ impl NoteStatus {
     /// The only legal moves are `pending → available` (confirmed), `available → spent-offline`
     /// (signed), and `→ spent` (seen mined) from `available`, `spent-offline` or `spent`.
     /// Nothing leads back to `available` once it is left, and only an `available` note can be
-    /// signed: never one that is pending or already signed.
+    /// signed: never one that is pending or already signed. A dust note stays dust when
+    /// confirmed and can never be signed; another wallet (the SDK) may still spend it.
     pub fn apply(self, event: NoteEvent) -> Result<Self, IllegalTransition> {
         use NoteEvent::*;
         use NoteStatus::*;
         match (self, event) {
             (Pending, Confirmed) => Ok(Available),
+            (Dust, Confirmed) => Ok(Dust),
             (Available, SignedOffline) => Ok(SpentOffline),
-            (Available | SpentOffline | Spent, SeenMined) => Ok(Spent),
+            (Available | SpentOffline | Spent | Dust, SeenMined) => Ok(Spent),
             _ => Err(IllegalTransition { from: self, event }),
         }
     }
@@ -150,9 +159,11 @@ impl WalletStore {
                 let mined_spend: Option<Vec<u8>> = r.get(7)?;
                 let pending_spend: Option<Vec<u8>> = r.get(8)?;
                 let mined_height: Option<u32> = r.get(5)?;
+                let value = r.get::<_, i64>(3)? as u64;
                 let (status, spent_by) = match (&mined_spend, &pending_spend) {
                     (Some(t), _) => (NoteStatus::Spent, Some(display_hex(t))),
                     (None, Some(t)) => (NoteStatus::SpentOffline, Some(display_hex(t))),
+                    (None, None) if value <= DUST_LIMIT => (NoteStatus::Dust, None),
                     (None, None) if mined_height.is_none() => (NoteStatus::Pending, None),
                     (None, None) => (NoteStatus::Available, None),
                 };
@@ -161,7 +172,7 @@ impl WalletStore {
                     pool,
                     txid: display_hex(&r.get::<_, Vec<u8>>(1)?),
                     output_index: r.get(2)?,
-                    value: r.get::<_, i64>(3)? as u64,
+                    value,
                     nullifier: r.get::<_, Option<Vec<u8>>>(4)?.map(|nf| plain_hex(&nf)),
                     mined_height,
                     has_tree_position: r.get(6)?,
@@ -235,14 +246,17 @@ impl WalletStore {
         )
         .map_err(|e| anyhow::anyhow!("failed to verify and store transaction: {e:?}"))?;
 
-        let tx = self.db.get_transaction(txid)?.context("stored transaction not found")?;
-        let mut raw = Vec::new();
-        tx.write(&mut raw)?;
+        // Read the stored bytes directly: zcash_client_sqlite 0.22's `get_transaction` cannot
+        // parse an unmined expiry-0 transaction ("Consensus branch ID not known"; fixed upstream
+        // in librustzcash 90c1cc86, after the SDK's version).
+        let raw = self.raw_transaction(&txid)?.context("stored transaction not found")?;
         Ok((txid, raw))
     }
 
-    /// Stored transactions that are not mined yet but still can be (never-expiring or not yet
-    /// expired): payments to rebroadcast. Returns (txid in display order, expiry height, raw bytes).
+    /// Our stored transactions (they spend our notes) that are not mined yet but still can be
+    /// (never-expiring or not yet expired): payments to rebroadcast. Incoming transactions the
+    /// wallet saw in the mempool are not listed. Returns (txid in display order, expiry height,
+    /// raw bytes).
     pub fn pending_payments(&self) -> anyhow::Result<Vec<(String, u32, Vec<u8>)>> {
         let target_height = self.db.chain_height()?.map_or(0, |h| u32::from(h) + 1);
         let conn = self.read_conn()?;
@@ -250,12 +264,53 @@ impl WalletStore {
             "SELECT txid, IFNULL(expiry_height, 0), raw FROM transactions
               WHERE mined_height IS NULL AND raw IS NOT NULL
                 AND (expiry_height IS NULL OR expiry_height = 0 OR expiry_height >= ?1)
+                AND id_tx IN (SELECT transaction_id FROM ironwood_received_note_spends
+                              UNION SELECT transaction_id FROM orchard_received_note_spends
+                              UNION SELECT transaction_id FROM sapling_received_note_spends)
               ORDER BY id_tx",
         )?;
         let rows = stmt.query_map([target_height], |r| {
             Ok((display_hex(&r.get::<_, Vec<u8>>(0)?), r.get(1)?, r.get(2)?))
         })?;
         Ok(rows.collect::<Result<_, _>>()?)
+    }
+
+    /// Online transactions (expiry > 0) that spend our notes, are not mined, and can still be
+    /// mined: e.g. a "prepare for offline" split waiting to be mined. Txids in display order.
+    /// The app must not start a second split while one is listed here.
+    pub fn in_flight_online_txs(&self) -> anyhow::Result<Vec<String>> {
+        let target_height = self.db.chain_height()?.map_or(0, |h| u32::from(h) + 1);
+        let conn = self.read_conn()?;
+        let mut out = Vec::new();
+        for pool in POOLS {
+            let mut stmt = conn.prepare(&format!(
+                "SELECT DISTINCT t.txid FROM {pool}_received_note_spends s
+                   JOIN transactions t ON t.id_tx = s.transaction_id
+                  WHERE t.mined_height IS NULL AND t.expiry_height > 0 AND t.expiry_height >= ?1"
+            ))?;
+            for row in stmt.query_map([target_height], |r| r.get::<_, Vec<u8>>(0))? {
+                let txid = display_hex(&row?);
+                if !out.contains(&txid) {
+                    out.push(txid);
+                }
+            }
+        }
+        Ok(out)
+    }
+
+    /// Height the wallet saw this transaction mined at (txid in display order), or `None` if it
+    /// is unknown or not mined yet.
+    pub fn mined_height(&self, txid_display: &str) -> anyhow::Result<Option<u32>> {
+        let mut internal = Vec::with_capacity(32);
+        for i in (0..txid_display.len()).step_by(2).rev() {
+            internal.push(u8::from_str_radix(txid_display.get(i..i + 2).context("bad txid")?, 16)?);
+        }
+        anyhow::ensure!(internal.len() == 32, "bad txid {txid_display}");
+        let conn = self.read_conn()?;
+        Ok(conn
+            .query_row("SELECT mined_height FROM transactions WHERE txid = ?1", [internal], |r| r.get(0))
+            .optional()?
+            .flatten())
     }
 
     /// Raw bytes of a stored transaction, if the wallet has it.

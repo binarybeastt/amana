@@ -1,25 +1,27 @@
 #!/usr/bin/env bash
 # Gate P1: the CLI syncs, goes offline, pays, waits, broadcasts, and the payment confirms.
-#   ./e2e.sh [runs=3] [wait_blocks=5] [zats=1000000]
+#   ./e2e.sh [runs=3] [wait_blocks=5] [zats=1000000] [from-account=A] [to-address=D's]
 # Pass = every run confirms on testnet, in a row.
 set -euo pipefail
 source "$(dirname "$0")/../../spikes/zcash/env.sh"
 RUNS_N=${1:-3}
 WAIT=${2:-5}
 ZATS=${3:-1000000}
+FROM=${4:-$ACCT_A}
+TO=${5:-$ADDR_D}
 CLI="$ROOT/offline-core/target/release/offline-cli"
 OUT="$RUNS/gate-p1"
 LOG="$ROOT/stress/p1/logs/gate-p1.log"
 mkdir -p "$OUT"
-echo "$(date -u +%FT%TZ) gate P1: $RUNS_N runs, wait $WAIT blocks, $ZATS zats A -> D" | tee "$LOG"
+echo "$(date -u +%FT%TZ) gate P1: $RUNS_N runs, wait $WAIT blocks, $ZATS zats ${FROM:0:8} -> ${TO:0:12}" | tee "$LOG"
 
 passed=0
 for k in $(seq 1 "$RUNS_N"); do
   # 1. Online: sync.
-  "$DT" wallet -w "$W" sync >/dev/null 2>&1
+  sync_wallet
   build_tip=$(tip)
   # 2. Offline: pay (build, prove, sign, store) with networking denied.
-  if ! nonet "$CLI" -w "$W" pay --account "$ACCT_A" --to "$ADDR_D" --amount "$ZATS" -i "$ID" \
+  if ! nonet "$CLI" -w "$W" pay --account "$FROM" --to "$TO" --amount "$ZATS" -i "$ID" \
        --raw-out "$OUT/run$k.raw" >"$OUT/run$k.json" 2>"$OUT/run$k.err"; then
     echo "run=$k FAIL pay: $(tail -1 "$OUT/run$k.err")" | tee -a "$LOG"; break
   fi
@@ -31,7 +33,7 @@ for k in $(seq 1 "$RUNS_N"); do
   # 5. Confirm.
   mined=""
   for i in $(seq 1 40); do
-    "$DT" wallet -w "$W" sync >/dev/null 2>&1
+    sync_wallet || true
     mined=$("$DT" wallet -w "$W" list-tx 2>/dev/null | grep -A1 "^$txid" | awk '/Mined:/{print $2}' | head -1)
     [ -n "$mined" ] && break
     sleep 40

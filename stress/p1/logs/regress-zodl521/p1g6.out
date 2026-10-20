@@ -1,0 +1,14 @@
+    Finished `release` profile [optimized] target(s) in 0.79s
+     Running tests/receive_live.rs (target/release/deps/receive_live-774915d138458d17)
+
+running 6 tests
+test t2_other_account_is_not_paid ... ok
+test t6_nullifiers_match_sender ... ok
+test t1_valid_payment_is_verified ... ok
+test t5_unknown_anchor_is_flagged ... ok
+test t3_tampered_bytes_are_rejected ... ok
+fuzz: 100,000 inputs, slowest 105.015ms (input 45726), accepted 0
+test t4_fuzz_never_panics_or_hangs ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 44.43s
+

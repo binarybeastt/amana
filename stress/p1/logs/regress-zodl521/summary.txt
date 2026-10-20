@@ -1,0 +1,15 @@
+2026-10-20T08:24:26Z Phase 1 regression 'zodl521' (offline-core 0efa16d+worktree)
+2026-10-20T08:25:14Z build pass 48s
+2026-10-20T08:26:36Z unit-tests pass 82s
+2026-10-20T08:26:49Z clippy pass 13s
+2026-10-20T08:26:58Z p1g1t2 pass 9s
+2026-10-20T08:26:59Z p1g2t3 pass 1s
+2026-10-20T08:27:09Z p1g6-fix pass 10s
+2026-10-20T08:27:54Z p1g6 pass 45s
+2026-10-20T08:28:41Z p1g5 pass 47s
+2026-10-20T08:36:47Z stopped during p1g2t2 (400/1000 clean) to fund emulators; remaining steps re-run separately
+2026-10-20T08:37:24Z build pass 14s
+2026-10-20T08:54:47Z p1g2t2 pass 1043s
+2026-10-20T09:01:29Z p1g5t4 pass 402s
+2026-10-20T09:09:04Z gate-p1 FAIL(1) 455s
+2026-10-20T09:22:30Z gate-p1 (from D) exit 0

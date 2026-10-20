@@ -4,7 +4,9 @@ use std::path::PathBuf;
 
 use clap::{Parser, Subcommand};
 use offline_core::{
-    NoteStatus, WalletStore, devtool_keys::seed_from_devtool_wallet, split::plan_split,
+    WalletStore,
+    devtool_keys::seed_from_devtool_wallet,
+    split::zec,
     wallet::parse_network,
 };
 use secrecy::ExposeSecret;
@@ -89,6 +91,21 @@ enum Command {
     /// Read expiry, actions and fee from raw transaction bytes.
     InspectRaw { raw: PathBuf },
     /// Write-before-send: verify a signed PCZT and store it so its notes become spent-offline.
+    /// TEST ONLY: build and sign a payment like `pay` but do NOT store it; writes the PCZT.
+    /// Its notes stay available, so the PCZT must never be broadcast. For the store crash test.
+    BuildPczt {
+        #[arg(long)]
+        account: String,
+        #[arg(long)]
+        to: String,
+        #[arg(long)]
+        amount: u64,
+        #[arg(short, long)]
+        identity: PathBuf,
+        /// Where to write the signed PCZT.
+        #[arg(long)]
+        out: PathBuf,
+    },
     StorePczt {
         /// Path to the combined (proven + signed) PCZT.
         pczt: PathBuf,
@@ -145,23 +162,12 @@ fn main() -> anyhow::Result<()> {
             }
         }
         Command::PlanSplit { account, address, json } => {
-            let notes: Vec<_> = store
-                .notes()?
-                .into_iter()
-                .filter(|n| {
-                    n.account_uuid == account && n.pool == "ironwood" && n.status == NoteStatus::Available
-                })
-                .collect();
-            let total: u64 = notes.iter().map(|n| n.value).sum();
-            let plan = plan_split(total, notes.len())?;
-            let uri = zip321_uri(&address, &plan.payments());
+            let req = store.plan_split_request(&account, &address)?;
+            let (plan, uri) = (&req.plan, &req.zip321);
             if json {
-                let out = serde_json::json!({
-                    "input_notes": notes.len(), "input_total": total, "plan": plan, "zip321": uri,
-                });
-                println!("{}", serde_json::to_string_pretty(&out)?);
+                println!("{}", serde_json::to_string_pretty(&req)?);
             } else {
-                println!("inputs: {} notes, {} ZEC", notes.len(), zec(total));
+                println!("inputs: {} notes, {} ZEC", req.input_notes, zec(req.input_total));
                 for d in &plan.denominations {
                     println!("  {}", zec(*d));
                 }
@@ -216,6 +222,12 @@ fn main() -> anyhow::Result<()> {
             let info = offline_core::pay::inspect_raw(&std::fs::read(&raw)?)?;
             println!("{}", serde_json::to_string_pretty(&info)?);
         }
+        Command::BuildPczt { account, to, amount, identity, out } => {
+            let seed = seed_from_devtool_wallet(&cli.wallet_dir, &identity)?;
+            let signed = store.build_signed_pczt(seed.expose_secret(), &account, &to, amount, None)?;
+            std::fs::write(&out, &signed.pczt)?;
+            println!("signed PCZT (not stored): {} bytes, fee {}", signed.pczt.len(), signed.fee);
+        }
         Command::StorePczt { pczt, raw_out } => {
             let bytes = std::fs::read(&pczt)?;
             let (txid, raw) = store.store_signed(&bytes)?;
@@ -226,25 +238,4 @@ fn main() -> anyhow::Result<()> {
         }
     }
     Ok(())
-}
-
-/// ZIP 321 request paying each amount to `address`. The remainder is left for the wallet's change.
-fn zip321_uri(address: &str, amounts: &[u64]) -> String {
-    let parts: Vec<String> = amounts
-        .iter()
-        .enumerate()
-        .map(|(i, z)| {
-            let amount = zec(*z).trim_end_matches('0').trim_end_matches('.').to_string();
-            if i == 0 {
-                format!("address={address}&amount={amount}")
-            } else {
-                format!("address.{i}={address}&amount.{i}={amount}")
-            }
-        })
-        .collect();
-    format!("zcash:?{}", parts.join("&"))
-}
-
-fn zec(zats: u64) -> String {
-    format!("{}.{:08}", zats / 100_000_000, zats % 100_000_000)
 }
