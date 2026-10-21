@@ -1,0 +1,5 @@
+00:31:01 inject on Y: {"status":"stored","txid":"220e92c5c456588bea422d0a2c037d2629ff3d4526840fce23a049caeca420cf","reason":null,"at":1792542660365}
+00:31:31 X: 10-21 01:31:01.621  5851  6110 I MESH    : REFUSED role=server peer=2481df3061f82f1d reason="protocol version mismatch: peer speaks v1, this phone v2; update the older app"
+00:31:31 Y: 10-21 01:31:00.661 28542 28665 I MESH    : REFUSED role=client peer=91ae091197a9e4ce reason="protocol version mismatch: peer speaks v2, this phone v1; update the older app"
+00:31:37 after both on v1: X holds tx = yes
+00:31:37 PASS

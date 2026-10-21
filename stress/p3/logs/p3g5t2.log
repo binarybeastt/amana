@@ -1,0 +1,5 @@
+00:57:11 X (91ae091197a9e4ce) deep idle state: IDLE; screen: mWakefulness=Asleep
+00:57:12 Y queued: {"status":"stored","txid":"220e92c5c456588bea422d0a2c037d2629ff3d4526840fce23a049caeca420cf","reason":null,"at":1792544231687}
+00:57:14 X received while 'IDLE': 10-21 01:57:13.534  8671  8868 I MESH    : RECV txid=220e92c5c456588bea422d0a2c037d2629ff3d4526840fce23a049caeca420cf from=2481df3061f82f1d hops=2 status=stored ms=191 reason=""
+00:57:38 Z: 10-21 01:57:36.266 22554 22852 I MESH    : RECV txid=220e92c5c456588bea422d0a2c037d2629ff3d4526840fce23a049caeca420cf from=91ae091197a9e4ce hops=3 status=stored ms=685 reason="" (20 s after Z's Bluetooth came on); X still 'IDLE'
+00:57:39 PASS

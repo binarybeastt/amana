@@ -65,6 +65,8 @@ import dev.offlinezec.wallet.App
 import dev.offlinezec.wallet.AppController
 import dev.offlinezec.wallet.PayState
 import dev.offlinezec.wallet.ReceiveState
+import dev.offlinezec.wallet.mesh.Mesh
+import dev.offlinezec.wallet.mesh.RelayQueue
 import dev.offlinezec.wallet.qr.FrameEncoder
 import dev.offlinezec.wallet.qr.QrAnalyzer
 import dev.offlinezec.wallet.qr.qrBitmap
@@ -84,6 +86,14 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val c = App.controller(this)
+        // Bluetooth relaying needs these; the mesh starts as soon as they are granted.
+        val missing = Mesh.PERMISSIONS.filter { ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED }
+        if (missing.isNotEmpty()) {
+            registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { c.mesh.permissionsChanged() }
+                .launch(missing.toTypedArray())
+        } else {
+            c.mesh.permissionsChanged()
+        }
         setContent {
             val dark = isSystemInDarkTheme()
             MaterialTheme(colorScheme = if (dark) darkColorScheme() else lightColorScheme()) {
@@ -185,11 +195,41 @@ fun HomeScreen(c: AppController, go: (Screen) -> Unit) {
             Text("Payments (${pending.size} to send, ${received.count { !it.settled }} unsettled)")
         }
         OutlinedButton(onClick = { c.broadcastNow() }, Modifier.fillMaxWidth().testTag("broadcast_now")) { Text("Broadcast now") }
+        MeshCard(c)
         msg?.let { Text(it, style = MaterialTheme.typography.bodySmall, modifier = Modifier.testTag("message")) }
         Text("Your address", style = MaterialTheme.typography.titleSmall)
         QrImage(w.address, 260)
         Text(w.address, fontFamily = FontFamily.Monospace, fontSize = 10.sp, modifier = Modifier.testTag("address"))
     }
+}
+
+@Composable
+fun MeshCard(c: AppController) {
+    val m by c.meshInfo.collectAsState()
+    val unsettled = m.queue.count { it.unsettled }
+    val status = when {
+        !m.permitted -> "Bluetooth permission needed to relay payments"
+        !m.bluetooth -> "Bluetooth is off: not relaying"
+        !m.running -> "Bluetooth relay starting…"
+        else -> "Bluetooth relay on · ${m.peers} phone${if (m.peers == 1) "" else "s"} nearby"
+    }
+    Card(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(status, fontWeight = FontWeight.Bold, modifier = Modifier.testTag("mesh_status"))
+            Text(
+                "Carrying ${m.queue.size} payment${if (m.queue.size == 1) "" else "s"} ($unsettled not yet settled) · " +
+                    if (m.online) "online: broadcasting" else "offline",
+                style = MaterialTheme.typography.bodySmall, modifier = Modifier.testTag("mesh_queue"),
+            )
+        }
+    }
+}
+
+fun relayLabel(e: RelayQueue.Entry): String = when (e.state) {
+    RelayQueue.State.QUEUED -> "waiting for a connection"
+    RelayQueue.State.SENT -> "broadcast, waiting to be mined"
+    RelayQueue.State.SETTLED -> "settled" + (e.minedHeight?.let { " at block $it" } ?: "")
+    RelayQueue.State.REJECTED -> "rejected by the network"
 }
 
 @Composable
@@ -312,7 +352,7 @@ fun PaymentQr(c: AppController, p: PayState.Ready, back: () -> Unit) {
         Text("${zec(p.payment.amount)} ZEC · fee ${zec(p.payment.fee)}", modifier = Modifier.testTag("pay_summary"))
         QrImage(frame, 330, tag = "payment_qr")
         Text("frame ${shown + 1} · ${encoder.seqLen} parts", style = MaterialTheme.typography.bodySmall)
-        Text("Signed and saved. Your notes are spent; this phone or the receiver's will broadcast it once online.",
+        Text("Signed and saved. Your notes are spent. It is also going out over Bluetooth to nearby phones; whichever gets online first broadcasts it.",
             style = MaterialTheme.typography.bodySmall)
         Text(p.payment.txid, fontFamily = FontFamily.Monospace, fontSize = 10.sp, modifier = Modifier.testTag("pay_txid"))
         Button(onClick = { c.clearPay(); back() }, Modifier.fillMaxWidth().testTag("pay_done")) { Text("Done") }
@@ -373,6 +413,19 @@ fun PaymentsScreen(c: AppController, back: () -> Unit) {
                     Text(r.txid, fontFamily = FontFamily.Monospace, fontSize = 10.sp)
                 }
             }
+        }
+        Spacer(Modifier.height(8.dp))
+        val m by c.meshInfo.collectAsState()
+        Text("Carrying for the mesh", style = MaterialTheme.typography.titleSmall)
+        if (m.queue.isEmpty()) Text("none")
+        m.queue.sortedByDescending { it.firstSeen }.forEach { e ->
+            val who = when {
+                e.mine -> "yours"
+                e.forUs -> "to you"
+                else -> "a stranger's (contents hidden)"
+            }
+            Text("$who · ${e.hops} hop${if (e.hops == 1) "" else "s"} · ${relayLabel(e)}", fontWeight = FontWeight.Bold)
+            Text(e.txid, fontFamily = FontFamily.Monospace, fontSize = 10.sp)
         }
         OutlinedButton(onClick = { c.broadcastNow() }, Modifier.fillMaxWidth()) { Text("Broadcast now") }
         OutlinedButton(onClick = back, Modifier.fillMaxWidth()) { Text("Back") }

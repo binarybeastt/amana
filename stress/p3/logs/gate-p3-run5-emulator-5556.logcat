@@ -1,0 +1,29 @@
+10-21 03:43:25.903 10818 12389 I MESH    : HELLO role=server peer=25e0cb9d32e548bd v=1
+10-21 03:43:26.225 10818 12389 I MESH    : RECEIVED txid=557575e969c8f9902ef86e241b7f59cd9eafab2256f6a1096768379f905d252d amount=1000000 via=bluetooth
+10-21 03:43:26.225 10818 12389 I MESH    : RECV txid=557575e969c8f9902ef86e241b7f59cd9eafab2256f6a1096768379f905d252d from=25e0cb9d32e548bd hops=1 status=stored ms=72 reason=""
+10-21 03:43:34.898 10818 10818 I MESH    : PEER_ADDR node=91ae091197a9e4ce 7D:AA:D9:E7:89:C0 -> 48:AA:9F:37:1F:F1
+10-21 03:43:46.207 10818 11182 I MESH    : SESSION peer=91ae091197a9e4ce result="failed: timeout waiting for Mtu" ms=20004
+10-21 03:44:06.214 10818 11182 I MESH    : SESSION peer=25e0cb9d32e548bd result="failed: timeout waiting for Mtu" ms=20007
+10-21 03:44:07.379 10818 11182 I MESH    : HELLO role=client peer=91ae091197a9e4ce v=1
+10-21 03:44:07.743 10818 11182 I MESH    : FWD txid=557575e969c8f9902ef86e241b7f59cd9eafab2256f6a1096768379f905d252d to=91ae091197a9e4ce hops=2 status=stored ms=344 reason=""
+10-21 03:44:07.745 10818 11182 I MESH    : SESSION peer=91ae091197a9e4ce result="ok pushed=1" ms=527
+10-21 03:45:27.883 10818 11182 I MESH    : SESSION peer=91ae091197a9e4ce result="failed: timeout waiting for Mtu" ms=20006
+10-21 03:45:46.344 10818 10976 I MESH    : CONNECTIVITY online=true
+10-21 03:45:46.537 10818 10818 I MESH    : PEER_FOUND node=91ae091197a9e4ce v=1 addr=62:FF:26:78:7D:20
+10-21 03:45:46.754 10818 11182 I MESH    : HELLO role=client peer=91ae091197a9e4ce v=1
+10-21 03:45:46.790 10818 11182 I MESH    : SESSION peer=91ae091197a9e4ce result="ok pushed=0" ms=252
+10-21 03:45:48.373 10818 10818 I MESH    : PEER_FOUND node=25e0cb9d32e548bd v=1 addr=63:A0:49:F3:1F:7E
+10-21 03:45:48.685 10818 11182 I MESH    : HELLO role=client peer=25e0cb9d32e548bd v=1
+10-21 03:45:48.711 10818 11182 I MESH    : SESSION peer=25e0cb9d32e548bd result="ok pushed=0" ms=338
+10-21 03:45:48.732 10818 11579 I MESH    : BROADCAST 557575e969c8f9902ef86e241b7f59cd9eafab2256f6a1096768379f905d252d unreachable ((-1) any transaction with the same effects will be rejected from the mempool until a chain reset: transaction was committed to the best chain)
+10-21 03:45:48.732 10818 11579 I MESH    : BACKOFF 2000ms ((-1) any transaction with the same effects will be rejected from the mempool until a chain reset: transaction was committed to the best chain)
+10-21 03:45:48.888 10818 12533 I MESH    : HELLO role=server peer=25e0cb9d32e548bd v=1
+10-21 03:45:49.691 10818 10818 V offline-zec: BlockBatch(order=1, range=BlockHeight(value=4524100)..BlockHeight(value=4524103), size=4)
+10-21 03:45:50.428 10818 10968 I MESH    : BROADCAST 557575e969c8f9902ef86e241b7f59cd9eafab2256f6a1096768379f905d252d unreachable ((-1) any transaction with the same effects will be rejected from the mempool until a chain reset: transaction was committed to the best chain)
+10-21 03:45:50.428 10818 10968 I MESH    : BACKOFF 4000ms ((-1) any transaction with the same effects will be rejected from the mempool until a chain reset: transaction was committed to the best chain)
+10-21 03:45:53.589 10818 11579 E offline-zec: dev.offlinezec.wallet       DefaultDispatcher-worker-1     SubmitTransaction.toSubmitResult(): FAILURE! submit transaction 557575e969c8f9902ef86e241b7f59cd9eafab2256f6a1096768379f905d252d completed with response: -1: any transaction with the same effects will be rejected from the mempool until a chain reset: transaction was committed to the best chain
+10-21 03:45:54.994 10818 11830 I offline-zec: dev.offlinezec.wallet       DefaultDispatcher-worker-2     SubmitTransaction.submitTransaction(): SUCCESS (verified known to server): submit transaction for: 557575e969c8f9902ef86e241b7f59cd9eafab2256f6a1096768379f905d252d
+10-21 03:45:55.001 10818 11830 I Settler : broadcast 557575e969c8f9902ef86e241b7f59cd9eafab2256f6a1096768379f905d252d (received): sent
+10-21 03:45:56.524 10818 10974 I MESH    : BROADCAST 557575e969c8f9902ef86e241b7f59cd9eafab2256f6a1096768379f905d252d unreachable ((-1) any transaction with the same effects will be rejected from the mempool until a chain reset: transaction was committed to the best chain)
+10-21 03:45:56.524 10818 10974 I MESH    : BACKOFF 8000ms ((-1) any transaction with the same effects will be rejected from the mempool until a chain reset: transaction was committed to the best chain)
+10-21 03:45:59.572 10818 10818 V offline-zec: BlockBatch(order=1, range=BlockHeight(value=4524104)..BlockHeight(value=4524104), size=1)

@@ -1,0 +1,23 @@
+00:34:03 flip 1: rejected - invalid transaction: NativeCoreException: invalid proof or signature
+00:34:03 flip 2: rejected - invalid transaction: NativeCoreException: invalid proof or signature
+00:34:03 flip 3: rejected - invalid transaction: NativeCoreException: invalid proof or signature
+00:34:03 flip 4: rejected - invalid transaction: NativeCoreException: invalid proof or signature
+00:34:04 flip 5: rejected - invalid transaction: NativeCoreException: invalid proof or signature
+00:34:04 flip 6: rejected - invalid transaction: NativeCoreException: invalid proof or signature
+00:34:04 flip 7: rejected - invalid transaction: NativeCoreException: invalid proof or signature
+00:34:04 flip 8: rejected - invalid transaction: NativeCoreException: invalid proof or signature
+00:34:04 flip 9: rejected - invalid transaction: NativeCoreException: invalid proof or signature
+00:34:05 flip 10: rejected - invalid transaction: NativeCoreException: invalid proof or signature
+00:34:05 flip 11: rejected - invalid transaction: NativeCoreException: invalid proof or signature
+00:34:05 flip 12: rejected - invalid transaction: NativeCoreException: invalid proof or signature
+00:34:05 flip 13: rejected - invalid transaction: NativeCoreException: invalid proof or signature
+00:34:06 flip 14: rejected - invalid transaction: NativeCoreException: invalid proof or signature
+00:34:06 flip 15: rejected - invalid transaction: NativeCoreException: invalid proof or signature
+00:34:06 flip 16: rejected - invalid transaction: NativeCoreException: invalid proof or signature
+00:34:06 flip 17: rejected - invalid transaction: NativeCoreException: invalid proof or signature
+00:34:06 flip 18: rejected - invalid transaction: NativeCoreException: invalid proof or signature
+00:34:07 flip 19: rejected - invalid transaction: NativeCoreException: invalid proof or signature
+00:34:07 flip 20: rejected - invalid transaction: NativeCoreException: invalid proof or signature
+00:34:17 rejected 20/20; queue on phone: 0; on peer: 0
+00:34:18 untampered: {"status":"stored","txid":"220e92c5c456588bea422d0a2c037d2629ff3d4526840fce23a049caeca420cf","reason":null,"at":1792542858020}
+00:34:18 PASS

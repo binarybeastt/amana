@@ -1,0 +1,11 @@
+00:33:01 inject 1: {"status":"stored","txid":"220e92c5c456588bea422d0a2c037d2629ff3d4526840fce23a049caeca420cf","reason":null,"at":1792542781426}
+00:33:03 inject 2: {"status":"stored","txid":"2982d2088b7c51649047aa6d99ba85ac348efc01c58672c86bdb4cc00dd7070f","reason":null,"at":1792542782722}
+00:33:04 inject 3: {"status":"stored","txid":"2f8aad15cfbd7b951de458d72f9ce28a479aff0dd84d805cd295db330f7b6ac3","reason":null,"at":1792542784049}
+00:33:05 inject 4: {"status":"stored","txid":"51c75f9873ab70bef423a28d46d71d9fd8de96471798a3038257884e59f37b4d","reason":null,"at":1792542785348}
+00:33:07 inject 5: {"status":"stored","txid":"54bfd562e2e50f63264acb71dcf863b2e4ffbf34c6b760f3c6bb0182055426ca","reason":null,"at":1792542786680}
+00:33:11 queued before reboot: 5 entries
+00:33:21 booted; internet=no bluetooth=on
+00:33:34 app pid after boot: 2932; state written 18 s after boot
+00:33:34 10-21 01:33:30.579  2932  2932 I MESH    : BOOT android.intent.action.BOOT_COMPLETED 10-21 01:33:30.678  2932  2932 I MESH    : FOREGROUND started 10-21 01:33:32.803  2932  3158 I MESH    : START node=91ae091197a9e4ce v=1 net=test 
+00:33:34 queued after reboot: 5; same set: yes; app opened by test: no
+00:33:34 PASS

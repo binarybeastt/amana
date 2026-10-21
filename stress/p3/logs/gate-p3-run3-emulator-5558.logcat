@@ -1,0 +1,20 @@
+10-21 03:36:51.109  3291  3291 I MESH    : START node=91ae091197a9e4ce v=1 net=test
+10-21 03:36:51.111  3291  3291 I MESH    : ADVERTISING node=91ae091197a9e4ce
+10-21 03:36:51.126  3291  3291 I MESH    : PEER_FOUND node=8e123c1eca3fde21 v=1 addr=47:3D:56:72:1E:04
+10-21 03:36:51.191  3291  3291 I MESH    : PEER_FOUND node=25e0cb9d32e548bd v=1 addr=58:5B:1F:E0:8B:6A
+10-21 03:37:24.623  3291  7359 I MESH    : HELLO role=server peer=8e123c1eca3fde21 v=1
+10-21 03:37:24.991  3291  7359 I MESH    : RECV txid=ac47c6cc0f3f00f2a56891c48066a9cf2c7f78d17e4b2e474d2ada88b153b8e5 from=8e123c1eca3fde21 hops=2 status=stored ms=49 reason=""
+10-21 03:37:27.821  3291  3291 I MESH    : STOP reason=bluetooth off
+10-21 03:37:27.824  3291  7296 I MESH    : SESSION peer=25e0cb9d32e548bd result="failed: connect failed: -1" ms=2833
+10-21 03:37:28.074  7229  7229 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-21 03:37:29.705  3291  3450 I MESH    : CONNECTIVITY online=true
+10-21 03:37:31.439  3291  4250 I MESH    : BROADCAST ac47c6cc0f3f00f2a56891c48066a9cf2c7f78d17e4b2e474d2ada88b153b8e5 sent
+10-21 03:37:32.323  3291  3291 V offline-zec: BlockBatch(order=1, range=BlockHeight(value=4524089)..BlockHeight(value=4524093), size=5)
+10-21 03:38:38.400  3291  3444 I MESH    : SETTLED ac47c6cc0f3f00f2a56891c48066a9cf2c7f78d17e4b2e474d2ada88b153b8e5 height=4524094
+10-21 03:38:42.362  3291  3291 V offline-zec: BlockBatch(order=1, range=BlockHeight(value=4524094)..BlockHeight(value=4524096), size=3)
+10-21 03:38:42.520  3291  3291 I MESH    : START node=91ae091197a9e4ce v=1 net=test
+10-21 03:38:42.531  3291  3291 I MESH    : ADVERTISING node=91ae091197a9e4ce
+10-21 03:38:42.588  3291  3291 I MESH    : PEER_FOUND node=8e123c1eca3fde21 v=1 addr=47:3D:56:72:1E:04
+10-21 03:38:44.171  3291  3291 I MESH    : PEER_FOUND node=25e0cb9d32e548bd v=1 addr=7F:AE:81:60:B8:11
+10-21 03:38:44.453  3291  7676 I MESH    : HELLO role=server peer=25e0cb9d32e548bd v=1
+10-21 03:38:47.436  3291  7680 I MESH    : HELLO role=server peer=8e123c1eca3fde21 v=1

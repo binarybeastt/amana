@@ -1,0 +1,21 @@
+00:39:53 building 5 payments of 990000 zats to emulator-5554 (utest16lfnyj9mzpfxue7hhc9mwv5cwm4rdapfrt4wgsrvkrck2c42uj5gpuf2cj2f4m0mlehpvqcswrewajeqxh4cw89jca5hwnj6qhdrzvv3ahmp90xhqjxvv8tfqg09y3sg48mdtv7xdqm8n6vc5t9pza59qstgty2kf53cycxxhtm6ydevvr7sgqs74zm2cuv63cnfmju4w9pj7xpknxe)
+00:40:03 built 1 from account A: c8c7efba6c186da50935be7c01300404c6935f6f34064a91684695a80beda80a (9166 bytes)
+00:40:06 built 2 from account A: 92f9863f0ae3e5074eefe042f7436d0d0fe939433f57cb33a18d068b7f516ce0 (9166 bytes)
+00:40:09 built 3 from account B: bf4e721563103d9d676be3770845813a68a2874cebafd411554d29e29c2c8e75 (9166 bytes)
+00:40:11 built 4 from account C: 47bc668d4b157a36ff28d2c1b0fcb0c5e7b47f3be0d8eec2e93413f877f2735a (9166 bytes)
+00:40:14 built 5 from account D: 35a30b3c83aa9989d9814e68c5f3fad5fc6b8c93849dad09bda0ac43a4758393 (9166 bytes)
+00:40:21 queue 1: {"status":"stored","txid":"c8c7efba6c186da50935be7c01300404c6935f6f34064a91684695a80beda80a","reason":null,"at":1792543220541}
+00:40:22 queue 2: {"status":"stored","txid":"92f9863f0ae3e5074eefe042f7436d0d0fe939433f57cb33a18d068b7f516ce0","reason":null,"at":1792543221724}
+00:40:23 queue 3: {"status":"stored","txid":"bf4e721563103d9d676be3770845813a68a2874cebafd411554d29e29c2c8e75","reason":null,"at":1792543222969}
+00:40:24 queue 4: {"status":"stored","txid":"47bc668d4b157a36ff28d2c1b0fcb0c5e7b47f3be0d8eec2e93413f877f2735a","reason":null,"at":1792543224191}
+00:40:26 queue 5: {"status":"stored","txid":"35a30b3c83aa9989d9814e68c5f3fad5fc6b8c93849dad09bda0ac43a4758393","reason":null,"at":1792543225441}
+00:40:30 queued on emulator-5558: 5; mesh sees online=False
+00:40:43 broadcast 5/5 within 12723 ms of airplane mode off
+10-21 01:40:32.051  5593  5695 I MESH    : CONNECTIVITY online=true
+10-21 01:40:35.323  5593  5686 I MESH    : BROADCAST c8c7efba6c186da50935be7c01300404c6935f6f34064a91684695a80beda80a sent
+10-21 01:40:36.529  5593  6128 I MESH    : BROADCAST 92f9863f0ae3e5074eefe042f7436d0d0fe939433f57cb33a18d068b7f516ce0 sent
+10-21 01:40:40.084  5593  5686 I MESH    : BROADCAST bf4e721563103d9d676be3770845813a68a2874cebafd411554d29e29c2c8e75 sent
+10-21 01:40:41.910  5593  5688 I MESH    : BROADCAST 47bc668d4b157a36ff28d2c1b0fcb0c5e7b47f3be0d8eec2e93413f877f2735a sent
+10-21 01:40:43.223  5593  6128 I MESH    : BROADCAST 35a30b3c83aa9989d9814e68c5f3fad5fc6b8c93849dad09bda0ac43a4758393 sent
+00:41:53 all mined: [4523831, 4523831, 4523831, 4523831, 4523831]
+00:41:55 PASS

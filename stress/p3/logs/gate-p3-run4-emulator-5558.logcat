@@ -1,0 +1,20 @@
+10-21 03:39:58.326  3291  3291 I MESH    : START node=91ae091197a9e4ce v=1 net=test
+10-21 03:39:58.330  3291  3291 I MESH    : ADVERTISING node=91ae091197a9e4ce
+10-21 03:39:58.346  3291  3291 I MESH    : PEER_FOUND node=25e0cb9d32e548bd v=1 addr=7F:AE:81:60:B8:11
+10-21 03:39:58.391  3291  3291 I MESH    : PEER_FOUND node=8e123c1eca3fde21 v=1 addr=47:3D:56:72:1E:04
+10-21 03:40:14.532  3291  7908 I MESH    : HELLO role=server peer=8e123c1eca3fde21 v=1
+10-21 03:40:14.889  3291  7908 I MESH    : RECV txid=50ec24bd7b697319a62b584999fae0be90ce996b65e1eb9ee8b5dd378b19515f from=8e123c1eca3fde21 hops=2 status=stored ms=41 reason=""
+10-21 03:40:16.690  3291  3291 I MESH    : STOP reason=bluetooth off
+10-21 03:40:16.692  3291  7863 I MESH    : SESSION peer=25e0cb9d32e548bd result="failed: disconnected: -1" ms=1803
+10-21 03:40:18.526  3291  3450 I MESH    : CONNECTIVITY online=true
+10-21 03:40:18.838  7796  7805 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-21 03:40:20.508  3291  4250 I MESH    : BROADCAST 50ec24bd7b697319a62b584999fae0be90ce996b65e1eb9ee8b5dd378b19515f sent
+10-21 03:40:22.281  3291  3291 V offline-zec: BlockBatch(order=1, range=BlockHeight(value=4524097)..BlockHeight(value=4524098), size=2)
+10-21 03:42:40.311  3291  3444 I MESH    : SETTLED 50ec24bd7b697319a62b584999fae0be90ce996b65e1eb9ee8b5dd378b19515f height=4524099
+10-21 03:42:41.272  3291  3291 I MESH    : START node=91ae091197a9e4ce v=1 net=test
+10-21 03:42:41.279  3291  3291 I MESH    : ADVERTISING node=91ae091197a9e4ce
+10-21 03:42:41.328  3291  3291 I MESH    : PEER_FOUND node=8e123c1eca3fde21 v=1 addr=47:3D:56:72:1E:04
+10-21 03:42:41.488  3291  8327 I MESH    : HELLO role=server peer=8e123c1eca3fde21 v=1
+10-21 03:42:42.646  3291  3291 I MESH    : PEER_FOUND node=25e0cb9d32e548bd v=1 addr=58:6E:9B:99:6E:33
+10-21 03:42:42.977  3291  8335 I MESH    : HELLO role=server peer=25e0cb9d32e548bd v=1
+10-21 03:42:45.721  3291  3291 V offline-zec: BlockBatch(order=1, range=BlockHeight(value=4524099)..BlockHeight(value=4524099), size=1)

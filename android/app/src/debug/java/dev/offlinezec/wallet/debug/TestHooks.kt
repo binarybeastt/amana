@@ -5,10 +5,12 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import dev.offlinezec.wallet.App
+import dev.offlinezec.wallet.core.hexToBytes
 import dev.offlinezec.wallet.wallet.WalletState
 import dev.offlinezec.wallet.wallet.toJson
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import org.json.JSONObject
 import java.io.File
 
 /**
@@ -50,6 +52,27 @@ class TestHooks : BroadcastReceiver() {
                         val w = (c.wallet.state.first { it is WalletState.Ready } as WalletState.Ready).wallet
                         File(files, "core_status.json").writeText(c.wallet.core.statusJson(w.dbPath).toString(2))
                         File(files, "core_notes.json").writeText(c.wallet.core.notes(w.dbPath).toJson().toString(2))
+                    }
+                    // Mesh: a tx from files/in_tx.hex enters the relay exactly as one from a peer
+                    // would (verified first). Result in files/inject_result.json.
+                    "RELAY_INJECT" -> {
+                        val raw = File(files, intent.getStringExtra("file") ?: "in_tx.hex").readText().trim().hexToBytes()
+                        val hops = intent.getStringExtra("hops")?.toInt() ?: 1
+                        val r = c.mesh.relay.ingest(intent.getStringExtra("txid"), hops, raw, intent.getStringExtra("from") ?: "test")
+                        val out = JSONObject().put("status", r.wire).put("txid", r.txid).put("reason", r.reason ?: JSONObject.NULL)
+                            .put("at", System.currentTimeMillis())
+                        val tmp = File(files, "inject_result.json.tmp")
+                        tmp.writeText(out.toString())
+                        tmp.renameTo(File(files, "inject_result.json"))
+                    }
+                    "RELAY_CLEAR" -> c.mesh.queue.clear()
+                    "MESH_STOP" -> c.mesh.ble.stop("test hook")
+                    "MESH_START" -> c.mesh.permissionsChanged()
+                    // P3.G2.T3 on devices: speak another protocol version (restarts Bluetooth).
+                    "MESH_VERSION" -> {
+                        c.mesh.ble.stop("version change")
+                        c.mesh.ble.protoVersion = intent.getStringExtra("v")!!.toInt()
+                        c.mesh.permissionsChanged()
                     }
                     "CORE_VERSION" -> File(files, "core_version.txt").writeText(c.wallet.core.version())
                     // P2.G1.T3: 0 = Rust error, 1 = Rust panic, 2 = core process killed.

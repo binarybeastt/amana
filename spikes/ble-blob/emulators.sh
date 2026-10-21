@@ -13,7 +13,10 @@ case "${1:-}" in
     shift
     [ $# -gt 0 ] || { echo "usage: $0 start <avd>..." >&2; exit 2; }
     for avd in "$@"; do
-      "$EMU" -avd "$avd" -no-window -no-audio -no-boot-anim -no-snapshot-save >"/tmp/emu-$avd.log" 2>&1 &
+      # -no-snapshot: cold boot from the AVD's disk and keep every write. (With a quick-boot
+      # snapshot plus -no-snapshot-save, stopping the emulator throws away everything since the
+      # snapshot, wallets included: lost 5554's and 5556's Phase 2 wallets on 2026-10-21.)
+      "$EMU" -avd "$avd" -no-window -no-audio -no-boot-anim -no-snapshot >"/tmp/emu-$avd.log" 2>&1 &
       echo "booting $avd (log /tmp/emu-$avd.log)"
       sleep 5
     done

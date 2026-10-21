@@ -1,0 +1,51 @@
+10-21 03:33:59.561 16978 16978 I MESH    : FOREGROUND started
+10-21 03:34:00.908 20609 20609 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+10-21 03:34:00.923 20609 20609 I AndroidRuntime: Using default boot image
+10-21 03:34:00.923 20609 20609 I AndroidRuntime: Leaving lock profiling enabled
+10-21 03:34:01.171 20609 20609 D AndroidRuntime: Calling main entry com.android.commands.uiautomator.Launcher
+10-21 03:34:02.244 20609 20609 D AndroidRuntime: Shutting down VM
+10-21 03:34:04.268 20632 20632 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+10-21 03:34:04.272 20632 20632 I AndroidRuntime: Using default boot image
+10-21 03:34:04.272 20632 20632 I AndroidRuntime: Leaving lock profiling enabled
+10-21 03:34:04.361 20632 20632 D AndroidRuntime: Calling main entry com.android.commands.uiautomator.Launcher
+10-21 03:34:05.417 20632 20632 D AndroidRuntime: Shutting down VM
+10-21 03:34:10.273 20682 20682 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+10-21 03:34:10.278 20682 20682 I AndroidRuntime: Using default boot image
+10-21 03:34:10.278 20682 20682 I AndroidRuntime: Leaving lock profiling enabled
+10-21 03:34:10.517 20682 20682 D AndroidRuntime: Calling main entry com.android.commands.uiautomator.Launcher
+10-21 03:34:11.579 20682 20682 D AndroidRuntime: Shutting down VM
+10-21 03:34:14.535 20728 20728 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+10-21 03:34:14.538 20728 20728 I AndroidRuntime: Using default boot image
+10-21 03:34:14.538 20728 20728 I AndroidRuntime: Leaving lock profiling enabled
+10-21 03:34:14.625 20728 20728 D AndroidRuntime: Calling main entry com.android.commands.uiautomator.Launcher
+10-21 03:34:15.671 20728 20728 D AndroidRuntime: Shutting down VM
+10-21 03:34:31.137 16978 17374 I AppController: paid 1000000 zats, txid e05c302fc2a8f7888b3451f68e5f52c01eb3cb9d37f044261c3b682f41faf643, notes [f78d260be7ddcd199ba78509beb40d054fa2ffe21047d698fe6c12e3089c23cb:1]
+10-21 03:34:31.295 16978 17834 I AppController: QR_SHOWN txid=e05c302fc2a8f7888b3451f68e5f52c01eb3cb9d37f044261c3b682f41faf643 spent_notes=[f78d260be7ddcd199ba78509beb40d054fa2ffe21047d698fe6c12e3089c23cb:1=spent-offline]
+10-21 03:34:31.474 16978 20465 I MESH    : HELLO role=client peer=8e123c1eca3fde21 v=1
+10-21 03:34:31.845 16978 20465 I MESH    : FWD txid=e05c302fc2a8f7888b3451f68e5f52c01eb3cb9d37f044261c3b682f41faf643 to=8e123c1eca3fde21 hops=1 status=stored ms=325 reason=""
+10-21 03:34:31.846 16978 20465 I MESH    : SESSION peer=8e123c1eca3fde21 result="ok pushed=1" ms=659
+10-21 03:34:35.575 16978 16978 I MESH    : STOP reason=bluetooth off
+10-21 03:34:35.588 16978 20465 I MESH    : SESSION peer=91ae091197a9e4ce result="failed: connect failed: -1" ms=2742
+10-21 03:34:35.911 20343 20343 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-21 03:35:48.763 16978 17098 I MESH    : CONNECTIVITY online=true
+10-21 03:35:49.931 16978 16978 I MESH    : START node=25e0cb9d32e548bd v=1 net=test
+10-21 03:35:49.937 16978 16978 I MESH    : ADVERTISING node=25e0cb9d32e548bd
+10-21 03:35:49.995 16978 16978 I MESH    : PEER_FOUND node=8e123c1eca3fde21 v=1 addr=47:3D:56:72:1E:04
+10-21 03:35:50.130 16978 16978 I MESH    : PEER_FOUND node=91ae091197a9e4ce v=1 addr=7C:2A:31:18:C5:EC
+10-21 03:35:50.166 16978 20976 I MESH    : HELLO role=server peer=8e123c1eca3fde21 v=1
+10-21 03:35:50.189 16978 20966 I MESH    : HELLO role=client peer=8e123c1eca3fde21 v=1
+10-21 03:35:50.217 16978 20966 I MESH    : SESSION peer=8e123c1eca3fde21 result="ok pushed=0" ms=222
+10-21 03:35:50.497 16978 20966 I MESH    : HELLO role=client peer=91ae091197a9e4ce v=1
+10-21 03:35:50.527 16978 20966 I MESH    : SESSION peer=91ae091197a9e4ce result="ok pushed=0" ms=309
+10-21 03:35:52.065 16978 19463 I MESH    : BROADCAST e05c302fc2a8f7888b3451f68e5f52c01eb3cb9d37f044261c3b682f41faf643 unreachable ((-1) any transaction with the same effects will be rejected from the mempool until a chain reset: transaction was committed to the best chain)
+10-21 03:35:52.065 16978 19463 I MESH    : BACKOFF 2000ms ((-1) any transaction with the same effects will be rejected from the mempool until a chain reset: transaction was committed to the best chain)
+10-21 03:35:52.513 16978 17834 I MESH    : BROADCAST e05c302fc2a8f7888b3451f68e5f52c01eb3cb9d37f044261c3b682f41faf643 unreachable ((-1) any transaction with the same effects will be rejected from the mempool until a chain reset: transaction was committed to the best chain)
+10-21 03:35:52.520 16978 17834 I MESH    : BACKOFF 4000ms ((-1) any transaction with the same effects will be rejected from the mempool until a chain reset: transaction was committed to the best chain)
+10-21 03:35:52.653 16978 16978 V offline-zec: BlockBatch(order=1, range=BlockHeight(value=4524084)..BlockHeight(value=4524084), size=1)
+10-21 03:35:52.653 16978 16978 V offline-zec: BlockBatch(order=2, range=BlockHeight(value=4524085)..BlockHeight(value=4524088), size=4)
+10-21 03:35:54.943 16978 17092 E offline-zec: dev.offlinezec.wallet       DefaultDispatcher-worker-4     SubmitTransaction.toSubmitResult(): FAILURE! submit transaction e05c302fc2a8f7888b3451f68e5f52c01eb3cb9d37f044261c3b682f41faf643 completed with response: -1: any transaction with the same effects will be rejected from the mempool until a chain reset: transaction was committed to the best chain
+10-21 03:35:57.913 16978 17092 I offline-zec: dev.offlinezec.wallet       DefaultDispatcher-worker-4     SubmitTransaction.submitTransaction(): SUCCESS (verified known to server): submit transaction for: e05c302fc2a8f7888b3451f68e5f52c01eb3cb9d37f044261c3b682f41faf643
+10-21 03:35:57.921 16978 17092 I Settler : broadcast e05c302fc2a8f7888b3451f68e5f52c01eb3cb9d37f044261c3b682f41faf643 (ours): sent
+10-21 03:35:58.755 16978 17374 I MESH    : BROADCAST e05c302fc2a8f7888b3451f68e5f52c01eb3cb9d37f044261c3b682f41faf643 unreachable ((-1) any transaction with the same effects will be rejected from the mempool until a chain reset: transaction was committed to the best chain)
+10-21 03:35:58.755 16978 17374 I MESH    : BACKOFF 8000ms ((-1) any transaction with the same effects will be rejected from the mempool until a chain reset: transaction was committed to the best chain)
+10-21 03:36:04.425 16978 17098 I MESH    : CONNECTIVITY online=false

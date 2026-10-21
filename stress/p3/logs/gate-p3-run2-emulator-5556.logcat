@@ -1,0 +1,27 @@
+10-21 03:34:30.938 10818 11597 I MESH    : HELLO role=server peer=25e0cb9d32e548bd v=1
+10-21 03:34:31.307 10818 11597 I MESH    : RECEIVED txid=e05c302fc2a8f7888b3451f68e5f52c01eb3cb9d37f044261c3b682f41faf643 amount=1000000 via=bluetooth
+10-21 03:34:31.307 10818 11597 I MESH    : RECV txid=e05c302fc2a8f7888b3451f68e5f52c01eb3cb9d37f044261c3b682f41faf643 from=25e0cb9d32e548bd hops=1 status=stored ms=63 reason=""
+10-21 03:34:38.037 10818 10818 I MESH    : PEER_ADDR node=91ae091197a9e4ce 7E:F2:3D:AE:7A:D8 -> 53:F2:35:0A:0C:84
+10-21 03:34:51.295 10818 11182 I MESH    : SESSION peer=91ae091197a9e4ce result="failed: timeout waiting for Mtu" ms=20008
+10-21 03:35:11.300 10818 11182 I MESH    : SESSION peer=25e0cb9d32e548bd result="failed: timeout waiting for Mtu" ms=20005
+10-21 03:35:12.439 10818 11182 I MESH    : HELLO role=client peer=91ae091197a9e4ce v=1
+10-21 03:35:12.822 10818 11182 I MESH    : FWD txid=e05c302fc2a8f7888b3451f68e5f52c01eb3cb9d37f044261c3b682f41faf643 to=91ae091197a9e4ce hops=2 status=stored ms=366 reason=""
+10-21 03:35:12.825 10818 11182 I MESH    : SESSION peer=91ae091197a9e4ce result="ok pushed=1" ms=522
+10-21 03:35:46.785 10818 10976 I MESH    : CONNECTIVITY online=true
+10-21 03:35:47.093 10818 10818 I MESH    : PEER_ADDR node=91ae091197a9e4ce 53:F2:35:0A:0C:84 -> 7C:2A:31:18:C5:EC
+10-21 03:35:48.343 10818 10913 I MESH    : BROADCAST e05c302fc2a8f7888b3451f68e5f52c01eb3cb9d37f044261c3b682f41faf643 unreachable ((-1) any transaction with the same effects will be rejected from the mempool until a chain reset: transaction was committed to the best chain)
+10-21 03:35:48.343 10818 10913 I MESH    : BACKOFF 2000ms ((-1) any transaction with the same effects will be rejected from the mempool until a chain reset: transaction was committed to the best chain)
+10-21 03:35:48.802 10818 11579 I MESH    : BROADCAST e05c302fc2a8f7888b3451f68e5f52c01eb3cb9d37f044261c3b682f41faf643 unreachable ((-1) any transaction with the same effects will be rejected from the mempool until a chain reset: transaction was committed to the best chain)
+10-21 03:35:48.802 10818 11579 I MESH    : BACKOFF 4000ms ((-1) any transaction with the same effects will be rejected from the mempool until a chain reset: transaction was committed to the best chain)
+10-21 03:35:49.418 10818 10818 I MESH    : PEER_FOUND node=25e0cb9d32e548bd v=1 addr=58:5B:1F:E0:8B:6A
+10-21 03:35:49.649 10818 11182 I MESH    : HELLO role=client peer=25e0cb9d32e548bd v=1
+10-21 03:35:49.650 10818 11705 I MESH    : HELLO role=server peer=25e0cb9d32e548bd v=1
+10-21 03:35:49.678 10818 11182 I MESH    : SESSION peer=25e0cb9d32e548bd result="ok pushed=0" ms=260
+10-21 03:35:54.415 10818 10818 V offline-zec: BlockBatch(order=1, range=BlockHeight(value=4524084)..BlockHeight(value=4524084), size=1)
+10-21 03:35:54.415 10818 10818 V offline-zec: BlockBatch(order=2, range=BlockHeight(value=4524085)..BlockHeight(value=4524088), size=4)
+10-21 03:35:54.890 10818 10913 I MESH    : BROADCAST e05c302fc2a8f7888b3451f68e5f52c01eb3cb9d37f044261c3b682f41faf643 unreachable ((-1) any transaction with the same effects will be rejected from the mempool until a chain reset: transaction was committed to the best chain)
+10-21 03:35:54.890 10818 10913 I MESH    : BACKOFF 8000ms ((-1) any transaction with the same effects will be rejected from the mempool until a chain reset: transaction was committed to the best chain)
+10-21 03:35:58.323 10818 10974 E offline-zec: dev.offlinezec.wallet       DefaultDispatcher-worker-4     SubmitTransaction.toSubmitResult(): FAILURE! submit transaction e05c302fc2a8f7888b3451f68e5f52c01eb3cb9d37f044261c3b682f41faf643 completed with response: -1: any transaction with the same effects will be rejected from the mempool until a chain reset: transaction was committed to the best chain
+10-21 03:35:59.569 10818 11579 I offline-zec: dev.offlinezec.wallet       DefaultDispatcher-worker-1     SubmitTransaction.submitTransaction(): SUCCESS (verified known to server): submit transaction for: e05c302fc2a8f7888b3451f68e5f52c01eb3cb9d37f044261c3b682f41faf643
+10-21 03:35:59.578 10818 11579 I Settler : broadcast e05c302fc2a8f7888b3451f68e5f52c01eb3cb9d37f044261c3b682f41faf643 (received): sent
+10-21 03:36:03.793 10818 10976 I MESH    : CONNECTIVITY online=false

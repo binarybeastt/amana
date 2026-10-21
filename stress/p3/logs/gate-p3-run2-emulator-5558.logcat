@@ -1,0 +1,24 @@
+10-21 03:34:40.327  3291  3291 I MESH    : START node=91ae091197a9e4ce v=1 net=test
+10-21 03:34:40.332  3291  3291 I MESH    : ADVERTISING node=91ae091197a9e4ce
+10-21 03:34:40.356  3291  3291 I MESH    : PEER_FOUND node=8e123c1eca3fde21 v=1 addr=47:3D:56:72:1E:04
+10-21 03:34:40.361  3291  3291 I MESH    : PEER_FOUND node=25e0cb9d32e548bd v=1 addr=48:71:1F:07:C7:F5
+10-21 03:35:14.733  3291  6860 I MESH    : HELLO role=server peer=8e123c1eca3fde21 v=1
+10-21 03:35:15.118  3291  6860 I MESH    : RECV txid=e05c302fc2a8f7888b3451f68e5f52c01eb3cb9d37f044261c3b682f41faf643 from=8e123c1eca3fde21 hops=2 status=stored ms=44 reason=""
+10-21 03:35:20.103  3291  3291 I MESH    : STOP reason=bluetooth off
+10-21 03:35:20.106  3291  6799 I MESH    : SESSION peer=25e0cb9d32e548bd result="failed: connect failed: -1" ms=4989
+10-21 03:35:21.348  6726  6785 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-21 03:35:21.965  3291  3450 I MESH    : CONNECTIVITY online=true
+10-21 03:35:23.700  3291  3436 I MESH    : BROADCAST e05c302fc2a8f7888b3451f68e5f52c01eb3cb9d37f044261c3b682f41faf643 sent
+10-21 03:35:23.930  3291  3291 V offline-zec: BlockBatch(order=1, range=BlockHeight(value=4524084)..BlockHeight(value=4524084), size=1)
+10-21 03:35:23.930  3291  3291 V offline-zec: BlockBatch(order=2, range=BlockHeight(value=4524085)..BlockHeight(value=4524087), size=3)
+10-21 03:35:24.290  3291  3436 I MESH    : BROADCAST e05c302fc2a8f7888b3451f68e5f52c01eb3cb9d37f044261c3b682f41faf643 already known ((-1) transaction already exists in mempool)
+10-21 03:35:46.813  3291  4250 I MESH    : SETTLED e05c302fc2a8f7888b3451f68e5f52c01eb3cb9d37f044261c3b682f41faf643 height=4524088
+10-21 03:35:49.381  3291  3291 I MESH    : START node=91ae091197a9e4ce v=1 net=test
+10-21 03:35:49.388  3291  3291 I MESH    : ADVERTISING node=91ae091197a9e4ce
+10-21 03:35:49.463  3291  3291 I MESH    : PEER_FOUND node=8e123c1eca3fde21 v=1 addr=47:3D:56:72:1E:04
+10-21 03:35:51.722  3291  3291 I MESH    : PEER_FOUND node=25e0cb9d32e548bd v=1 addr=58:5B:1F:E0:8B:6A
+10-21 03:35:52.262  3291  7121 I MESH    : HELLO role=server peer=25e0cb9d32e548bd v=1
+10-21 03:36:00.408  3291  3291 V offline-zec: BlockBatch(order=1, range=BlockHeight(value=4524088)..BlockHeight(value=4524088), size=1)
+10-21 03:36:06.183  3291  3450 I MESH    : CONNECTIVITY online=false
+10-21 03:36:06.358  3291  3291 I MESH    : STOP reason=bluetooth off
+10-21 03:36:07.595  7028  7097 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.

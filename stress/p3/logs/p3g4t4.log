@@ -1,0 +1,8 @@
+00:58:04 queue 1: {"status":"stored","txid":"220e92c5c456588bea422d0a2c037d2629ff3d4526840fce23a049caeca420cf","reason":null,"at":1792544283594}
+00:58:05 queue 2: {"status":"stored","txid":"2982d2088b7c51649047aa6d99ba85ac348efc01c58672c86bdb4cc00dd7070f","reason":null,"at":1792544284904}
+00:58:06 queue 3: {"status":"stored","txid":"2f8aad15cfbd7b951de458d72f9ce28a479aff0dd84d805cd295db330f7b6ac3","reason":null,"at":1792544286164}
+00:58:07 queue 4: {"status":"stored","txid":"51c75f9873ab70bef423a28d46d71d9fd8de96471798a3038257884e59f37b4d","reason":null,"at":1792544287387}
+00:58:09 queue 5: {"status":"stored","txid":"54bfd562e2e50f63264acb71dcf863b2e4ffbf34c6b760f3c6bb0182055426ca","reason":null,"at":1792544288742}
+00:58:13 pid 8671; toggling airplane mode 20 times, 1s apart
+00:59:16 pid after: 8671; connectivity changes seen: 21; queue 5 entries, 5 distinct, 5 files, 0 temp files; received 0 (0 distinct); states ['settled', 'settled', 'settled', 'settled', 'settled']; 7 broadcast attempts, 2 back-offs
+00:59:18 PASS

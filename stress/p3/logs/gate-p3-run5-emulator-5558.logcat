@@ -1,0 +1,22 @@
+10-21 03:43:37.188  3291  3291 I MESH    : START node=91ae091197a9e4ce v=1 net=test
+10-21 03:43:37.190  3291  3291 I MESH    : ADVERTISING node=91ae091197a9e4ce
+10-21 03:43:37.256  3291  3291 I MESH    : PEER_FOUND node=8e123c1eca3fde21 v=1 addr=47:3D:56:72:1E:04
+10-21 03:43:37.271  3291  3291 I MESH    : PEER_FOUND node=25e0cb9d32e548bd v=1 addr=58:6E:9B:99:6E:33
+10-21 03:44:09.676  3291  8581 I MESH    : HELLO role=server peer=8e123c1eca3fde21 v=1
+10-21 03:44:10.041  3291  8581 I MESH    : RECV txid=557575e969c8f9902ef86e241b7f59cd9eafab2256f6a1096768379f905d252d from=8e123c1eca3fde21 hops=2 status=stored ms=49 reason=""
+10-21 03:44:13.826  3291  3291 I MESH    : STOP reason=bluetooth off
+10-21 03:44:13.830  3291  8521 I MESH    : SESSION peer=25e0cb9d32e548bd result="failed: connect failed: -1" ms=3788
+10-21 03:44:14.093  8454  8454 I AndroidRuntime: VM exiting with result code 0, cleanup skipped.
+10-21 03:44:15.690  3291  3450 I MESH    : CONNECTIVITY online=true
+10-21 03:44:17.838  3291  4836 I MESH    : BROADCAST 557575e969c8f9902ef86e241b7f59cd9eafab2256f6a1096768379f905d252d sent
+10-21 03:44:39.272  3291  3291 V offline-zec: BlockBatch(order=1, range=BlockHeight(value=4524100)..BlockHeight(value=4524100), size=1)
+10-21 03:45:03.976  3291  3291 V offline-zec: BlockBatch(order=1, range=BlockHeight(value=4524101)..BlockHeight(value=4524101), size=1)
+10-21 03:45:24.583  3291  3291 V offline-zec: BlockBatch(order=1, range=BlockHeight(value=4524102)..BlockHeight(value=4524102), size=1)
+10-21 03:45:46.142  3291  4250 I MESH    : SETTLED 557575e969c8f9902ef86e241b7f59cd9eafab2256f6a1096768379f905d252d height=4524103
+10-21 03:45:48.810  3291  3291 I MESH    : START node=91ae091197a9e4ce v=1 net=test
+10-21 03:45:48.823  3291  3291 I MESH    : ADVERTISING node=91ae091197a9e4ce
+10-21 03:45:48.879  3291  3291 I MESH    : PEER_FOUND node=8e123c1eca3fde21 v=1 addr=47:3D:56:72:1E:04
+10-21 03:45:49.051  3291  8922 I MESH    : HELLO role=server peer=8e123c1eca3fde21 v=1
+10-21 03:45:50.677  3291  3291 I MESH    : PEER_FOUND node=25e0cb9d32e548bd v=1 addr=63:A0:49:F3:1F:7E
+10-21 03:45:51.006  3291  8944 I MESH    : HELLO role=server peer=25e0cb9d32e548bd v=1
+10-21 03:45:57.655  3291  3291 V offline-zec: BlockBatch(order=1, range=BlockHeight(value=4524103)..BlockHeight(value=4524103), size=1)

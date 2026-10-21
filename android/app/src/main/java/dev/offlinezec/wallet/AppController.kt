@@ -4,6 +4,8 @@ import android.app.Application
 import android.util.Log
 import dev.offlinezec.wallet.core.BuiltPayment
 import dev.offlinezec.wallet.core.toHex
+import dev.offlinezec.wallet.mesh.Mesh
+import dev.offlinezec.wallet.mesh.RelayQueue
 import dev.offlinezec.wallet.qr.FrameDecoder
 import dev.offlinezec.wallet.wallet.Payer
 import dev.offlinezec.wallet.wallet.PrepareStatus
@@ -28,6 +30,16 @@ import kotlinx.coroutines.sync.withLock
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
+
+/** What the home screen shows about the Bluetooth relay. */
+data class MeshInfo(
+    val bluetooth: Boolean = false,
+    val permitted: Boolean = false,
+    val running: Boolean = false,
+    val online: Boolean = false,
+    val peers: Int = 0,
+    val queue: List<RelayQueue.Entry> = emptyList(),
+)
 
 /** What the Pay flow is doing. */
 sealed interface PayState {
@@ -58,6 +70,7 @@ class AppController(private val app: Application) {
     val payer = Payer(wallet)
     val receiver = Receiver(wallet, received)
     val settler = Settler(wallet, received)
+    val mesh = Mesh(app, scope, wallet, received)
 
     private val _prepare = MutableStateFlow<PrepareStatus?>(null)
     val prepare: StateFlow<PrepareStatus?> = _prepare
@@ -79,12 +92,16 @@ class AppController(private val app: Application) {
     private val _pendingSent = MutableStateFlow<List<String>>(emptyList())
     val pendingSent: StateFlow<List<String>> = _pendingSent
 
+    private val _meshInfo = MutableStateFlow(MeshInfo())
+    val meshInfo: StateFlow<MeshInfo> = _meshInfo
+
     /** Debug: what the notes looked like the moment the payment QR was first shown. */
     @Volatile var notesAtQr: JSONObject? = null
 
     fun start() {
         // A state file from an earlier process would look current to the test scripts.
         File(app.filesDir, "state.json").delete()
+        mesh.start()
         scope.launch {
             wallet.start()
             refreshLoop()
@@ -107,6 +124,10 @@ class AppController(private val app: Application) {
                         refresh()
                     }
                 }
+                _meshInfo.value = MeshInfo(
+                    bluetooth = mesh.bluetoothOn(), permitted = Mesh.hasBluetoothPermissions(app), running = mesh.ble.running,
+                    online = mesh.online.value, peers = mesh.ble.peers().size, queue = mesh.queue.all(),
+                )
                 dumpState()
             } catch (e: Exception) {
                 Log.w(TAG, "refresh failed: ${e.message}")
@@ -121,6 +142,10 @@ class AppController(private val app: Application) {
         settler.refreshSettled()
         _payments.value = received.all()
         _pendingSent.value = wallet.core.pendingPayments(w.dbPath).map { it.txid }
+        // Our own and received payments: the wallet sees them mined when it syncs.
+        for (e in mesh.queue.unsettled().filter { it.mine || it.forUs }) {
+            wallet.core.minedHeight(w.dbPath, e.txid)?.let { mesh.queue.markSettled(e.txid, it.toLong()) }
+        }
     }
 
     // ---- Wallet ----
@@ -158,6 +183,8 @@ class AppController(private val app: Application) {
             _pay.value = try {
                 val built = payer.pay(to, amountZats, memo)
                 Log.i(TAG, "paid ${built.amount} zats, txid ${built.txid}, notes ${built.spentNotes}")
+                // Stored (write-before-send): now hand it to every phone in Bluetooth range.
+                mesh.addOwn(built.txid, built.raw)
                 PayState.Ready(built)
             } catch (e: Exception) {
                 Log.e(TAG, "pay failed", e)
@@ -200,7 +227,10 @@ class AppController(private val app: Application) {
                 is FrameDecoder.State.Done -> {
                     _receive.value = ReceiveState.Verifying
                     _receive.value = when (val r = receiver.receive(st.payload)) {
-                        is ReceiveResult.Accepted -> ReceiveState.Accepted(r.payment)
+                        is ReceiveResult.Accepted -> {
+                            mesh.addReceived(r.payment.txid, r.payment.raw, r.check.nullifiers)
+                            ReceiveState.Accepted(r.payment)
+                        }
                         is ReceiveResult.Rejected -> ReceiveState.Rejected(r.reason)
                     }
                     decoder.reset()
@@ -271,10 +301,30 @@ class AppController(private val app: Application) {
             }
         })
         o.put("pending_sent", JSONArray(_pendingSent.value))
+        o.put("mesh", meshJson())
         val f = File(app.filesDir, "state.json")
         val tmp = File(app.filesDir, "state.json.tmp")
         tmp.writeText(o.toString(2))
         tmp.renameTo(f)
+    }
+
+    fun meshJson(): JSONObject {
+        val now = System.currentTimeMillis()
+        val b = mesh.ble
+        return JSONObject().put("node", mesh.nodeId).put("ble_running", b.running).put("bt_on", mesh.bluetoothOn())
+            .put("permissions", Mesh.hasBluetoothPermissions(app)).put("online", mesh.online.value)
+            .put("connectivity_changes", mesh.connectivityChanges).put("ble_error", b.lastError ?: JSONObject.NULL)
+            .put("backoff_ms", mesh.broadcaster.lastBackoffMs)
+            .put("stats", JSONObject().put("sent", b.stats.sent).put("received", b.stats.received)
+                .put("refused", b.stats.refused).put("sessions", b.stats.sessions).put("failed_sessions", b.stats.failedSessions))
+            .put("peers", JSONArray().also { a ->
+                b.peers().forEach { p ->
+                    a.put(JSONObject().put("node", p.node).put("v", p.version).put("seen_ms_ago", now - p.lastSeen)
+                        .put("first_seen", p.firstSeen).put("last_sync", p.lastSync ?: JSONObject.NULL)
+                        .put("last_result", p.lastResult ?: JSONObject.NULL))
+                }
+            })
+            .put("queue", JSONArray().also { a -> mesh.queue.all().forEach { a.put(RelayQueue.toJson(it, withRaw = false)) } })
     }
 
     /** Debug only: writes the current payment's first frames for a test to replay elsewhere. */
