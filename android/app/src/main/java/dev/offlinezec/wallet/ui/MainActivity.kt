@@ -16,6 +16,8 @@ import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -33,7 +35,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -60,6 +61,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.testTag
@@ -144,11 +146,11 @@ fun Root(c: AppController) {
 @Composable
 fun Centered(text: String) {
     Column(
-        Modifier.fillMaxSize().background(Ink.page).padding(24.dp),
+        Modifier.fillMaxSize().background(Ink.black).padding(24.dp),
         verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        ZecLogo(64.dp)
-        Spacer(Modifier.height(20.dp))
+        ZecAvatar(72.dp)
+        Spacer(Modifier.height(24.dp))
         Text(text, style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center, modifier = Modifier.testTag("status_text"))
     }
 }
@@ -156,9 +158,20 @@ fun Centered(text: String) {
 @Composable
 fun fieldColors() = OutlinedTextFieldDefaults.colors(
     focusedBorderColor = Ink.text, unfocusedBorderColor = Ink.line, disabledBorderColor = Ink.card,
-    focusedContainerColor = Ink.card, unfocusedContainerColor = Ink.card, disabledContainerColor = Ink.card,
+    focusedContainerColor = Color.Transparent, unfocusedContainerColor = Color.Transparent, disabledContainerColor = Color.Transparent,
     focusedLabelColor = Ink.text, unfocusedLabelColor = Ink.dim, cursorColor = Ink.text,
 )
+
+/** Big centred screen title with a grey line under it, as on the design's Receive screen. */
+@Composable
+fun BigTitle(title: String, sub: String?, modifier: Modifier = Modifier, tag: String? = null) {
+    Column(modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Text(title, style = MaterialTheme.typography.displayMedium, textAlign = TextAlign.Center,
+            modifier = if (tag != null) Modifier.testTag(tag) else Modifier)
+        if (sub != null) Text(sub, style = MaterialTheme.typography.bodyMedium, color = Ink.dim, textAlign = TextAlign.Center,
+            modifier = Modifier.padding(horizontal = 24.dp))
+    }
+}
 
 @Composable
 fun SetupScreen(c: AppController) {
@@ -166,14 +179,14 @@ fun SetupScreen(c: AppController) {
     var words by rememberSaveable { mutableStateOf("") }
     var birthday by rememberSaveable { mutableStateOf("") }
     val msg by c.message.collectAsState()
-    Page {
-        Spacer(Modifier.height(48.dp))
-        ZecLogo(56.dp)
-        Text("Offline ZEC", style = MaterialTheme.typography.displayMedium)
-        Text("Pay shielded Zcash with no internet. Any phone that gets online later broadcasts it.",
+    Page(bg = Ink.black) {
+        Spacer(Modifier.height(56.dp))
+        ZecAvatar(72.dp)
+        Text("Cash-like Zcash,\nno signal needed.", style = MaterialTheme.typography.displaySmall)
+        Text("Pay shielded ZEC phone to phone with no internet. Whichever phone gets online first settles it.",
             style = MaterialTheme.typography.bodyLarge, color = Ink.dim)
-        Chip("testnet")
-        Spacer(Modifier.height(24.dp))
+        FactPill { Dot(Ink.amber); Text("Testnet", style = MaterialTheme.typography.labelMedium) }
+        Spacer(Modifier.height(32.dp))
         if (!restoring) {
             PrimaryButton("Create a new wallet", { c.createWallet() }, Modifier.testTag("create_wallet"))
             SecondaryButton("Restore from seed phrase", { restoring = true }, Modifier.testTag("restore_wallet"))
@@ -201,13 +214,11 @@ fun SeedWarningDialog(c: AppController) {
     val w by c.seedWarning.collectAsState()
     val warning = w ?: return
     Dialog(onDismissRequest = {}, properties = DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false)) {
-        DarkCard(Modifier.semantics { testTagsAsResourceId = true }.testTag("seed_warning"), color = Ink.raised, padding = 24.dp) {
-            Box(Modifier.size(48.dp).clip(CircleShape).background(Ink.redCard), contentAlignment = Alignment.Center) {
-                Text("!", color = Ink.red, fontSize = 24.sp, fontWeight = FontWeight.Black)
-            }
+        DarkCard(Modifier.semantics { testTagsAsResourceId = true }.testTag("seed_warning"), color = Ink.sheet, padding = 26.dp, gap = 14.dp) {
+            Avatar(Glyph.Warning, Ink.red)
             Text(
                 if (warning == SeedWarning.RESTORED) "Is this seed on another phone?" else "You're offline: one phone per seed",
-                style = MaterialTheme.typography.titleLarge, modifier = Modifier.testTag("seed_warning_title"),
+                style = MaterialTheme.typography.headlineMedium, modifier = Modifier.testTag("seed_warning_title"),
             )
             Text(
                 if (warning == SeedWarning.RESTORED)
@@ -227,13 +238,14 @@ fun SeedWarningDialog(c: AppController) {
 @Composable
 fun WalletScreens(c: AppController) {
     var screen by rememberSaveable { mutableStateOf(Screen.Home) }
+    var payScan by rememberSaveable { mutableStateOf(false) }
     BackHandler(enabled = screen != Screen.Home) { screen = Screen.Home }
     when (screen) {
-        Screen.Home -> HomeScreen(c) { screen = it }
+        Screen.Home -> HomeScreen(c) { s, scan -> payScan = scan; screen = s }
         Screen.Prepare -> PrepareScreen(c) { screen = Screen.Home }
-        Screen.Pay -> PayScreen(c, prepare = { screen = Screen.Prepare }) { screen = Screen.Home }
+        Screen.Pay -> PayScreen(c, payScan, prepare = { screen = Screen.Prepare }) { screen = Screen.Home }
         Screen.Receive -> ReceiveScreen(c) { screen = Screen.Home }
-        Screen.Payments -> PaymentsScreen(c, showQr = { screen = Screen.Pay }) { screen = Screen.Home }
+        Screen.Payments -> PaymentsScreen(c, showQr = { payScan = false; screen = Screen.Pay }) { screen = Screen.Home }
         Screen.Limits -> LimitsScreen(c) { screen = Screen.Home }
     }
 }
@@ -242,21 +254,25 @@ fun WalletScreens(c: AppController) {
 fun syncText(s: SyncInfo): String {
     val at = s.scannedHeight?.let { "%,d".format(it) } ?: "?"
     return when {
-        s.status == "SYNCING" && s.networkHeight != null ->
-            "Syncing · ${(s.progress * 100).toInt()}% · block $at of ${"%,d".format(s.networkHeight)}"
-        s.networkHeight == null || s.status == "DISCONNECTED" -> "Offline · last synced at block $at"
+        s.status == "SYNCING" && s.networkHeight != null -> "Syncing · ${(s.progress * 100).toInt()}% · block $at"
+        isOffline(s) -> "Offline · last synced at block $at"
         s.atTip -> "Online · synced to block $at"
         else -> "${s.status.lowercase().replaceFirstChar { it.uppercase() }} · block $at"
     }
 }
 
-fun zecText(zats: Long, big: Boolean = false): AnnotatedString = buildAnnotatedString {
+fun isOffline(s: SyncInfo) = s.networkHeight == null || s.status == "DISCONNECTED"
+
+/** "0.0036 ZEC" with the unit smaller and grey. */
+fun zecText(zats: Long, unitSize: Int = 22): AnnotatedString = buildAnnotatedString {
     append(zec(zats))
-    withStyle(SpanStyle(color = Ink.dim, fontSize = if (big) 24.sp else 14.sp, fontWeight = FontWeight.SemiBold)) { append(" ZEC") }
+    withStyle(SpanStyle(color = Ink.dim, fontSize = unitSize.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp)) { append(" ZEC") }
 }
 
+// ---------------------------------------------------------------- Home
+
 @Composable
-fun HomeScreen(c: AppController, go: (Screen) -> Unit) {
+fun HomeScreen(c: AppController, go: (Screen, Boolean) -> Unit) {
     c.wallet.wallet ?: return
     val sync by c.wallet.sync.collectAsState()
     val prep by c.prepare.collectAsState()
@@ -267,124 +283,151 @@ fun HomeScreen(c: AppController, go: (Screen) -> Unit) {
     val amounts by c.sentAmounts.collectAsState()
     val msg by c.message.collectAsState()
     val caps by c.capsState.collectAsState()
+    var filter by rememberSaveable { mutableStateOf(PaymentFilter.ALL) }
     val split = balanceSplit(notes, sync.networkHeight ?: sync.scannedHeight)
-    Page {
-        Row(Modifier.fillMaxWidth().padding(top = 12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            ZecLogo(32.dp)
-            Text("Offline ZEC", style = MaterialTheme.typography.titleMedium)
-            Chip("testnet")
+    val now = c.now()
+    val rows = paymentRows(pending, received, m.queue, amounts, now)
+    Page(gap = 14.dp) {
+        // The design's minimal bar: a status dot, one action in the middle, a round profile control.
+        Row(Modifier.fillMaxWidth().padding(top = 8.dp, start = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+            Dot(if (isOffline(sync)) Ink.amber else Ink.green, 8.dp)
             Spacer(Modifier.weight(1f))
-            RoundIcon("⚙", { go(Screen.Limits) }, tag = "nav_limits")
+            IconButton(Glyph.Scan, { c.clearPay(); go(Screen.Pay, true) }, tag = "nav_scan", filled = false)
+            Spacer(Modifier.weight(1f))
+            IconButton(Glyph.Profile, { go(Screen.Limits, false) }, tag = "nav_limits", filled = false)
         }
         ConflictBanner(c)
-        BalanceCard(c, sync, split, received)
+        HeroCard(sync, split, prep)
+        // P4.G4: received offline but unmined is shown apart from the balance; conflicted never counts.
+        val incoming = incomingUnsettled(received)
+        if (incoming > 0) FactPill(Modifier.fillMaxWidth()) {
+            Dot(Ink.amber)
+            Text("Received offline, not yet settled: ${zec(incoming)}", style = MaterialTheme.typography.labelMedium,
+                color = Ink.amber, modifier = Modifier.testTag("balance_incoming"))
+        }
+        val lost = received.filter { it.conflicted }
+        if (lost.isNotEmpty()) FactPill(Modifier.fillMaxWidth(), bg = Ink.redCard) {
+            Dot(Ink.red)
+            Text(
+                "Conflicted, not counted: ${zec(lost.sumOf { it.amount })} (${lost.size} double spend${if (lost.size == 1) "" else "s"})",
+                style = MaterialTheme.typography.labelMedium, color = Ink.red, modifier = Modifier.testTag("balance_conflicted"),
+            )
+        }
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            PrimaryButton("↑  Pay", { c.clearPay(); go(Screen.Pay) }, Modifier.weight(1f).testTag("nav_pay"))
-            SecondaryButton("↓  Receive", { c.resetReceive(); go(Screen.Receive) }, Modifier.weight(1f).height(60.dp).testTag("nav_receive"))
+            PrimaryButton("Pay", { c.clearPay(); go(Screen.Pay, false) }, Modifier.weight(1f).testTag("nav_pay"))
+            SecondaryButton("Receive", { c.resetReceive(); go(Screen.Receive, false) }, Modifier.weight(1f).testTag("nav_receive"))
         }
-        // Prepare for offline: a secondary card with where it stands.
-        val (prepChip, prepLine) = when (val p = prep) {
-            is PrepareStatus.Waiting -> "confirming" to "Split sent, waiting to be mined"
-            is PrepareStatus.Idle -> when {
-                p.ready -> "ready" to "${p.notes.size} notes · pay exact amounts with no internet"
-                p.notes.isEmpty() -> "not ready" to "Needs a connection: splits your balance into notes"
-                else -> "confirming" to "${p.notes.size} notes · waiting for $SPEND_CONFIRMATIONS confirmations"
+        // Prepare and Payments side by side, so both are on the first screen.
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            val (prepText, prepColor) = when (val p = prep) {
+                is PrepareStatus.Waiting -> "confirming" to Ink.amber
+                is PrepareStatus.Idle -> when {
+                    p.ready -> "ready" to Ink.green
+                    p.notes.isEmpty() -> "not prepared" to Ink.dim
+                    else -> "confirming" to Ink.amber
+                }
+                null -> "…" to Ink.dim
             }
-            null -> "…" to ""
+            Tile(Glyph.Notes, Ink.zec, "Offline notes", prepText, prepColor, Modifier.weight(1f).testTag("nav_prepare")) { go(Screen.Prepare, false) }
+            val mine = rows.filter { it.direction != Direction.RELAY }
+            val waiting = mine.count { it.status == PayStatus.PENDING || it.status == PayStatus.RELAYED }
+            val bad = mine.count { it.status == PayStatus.CONFLICTED || it.status == PayStatus.REJECTED }
+            Tile(
+                Glyph.Swap, Ink.blue, "Payments",
+                if (bad > 0) "$bad conflicted" else if (waiting > 0) "$waiting unsettled" else "all settled",
+                if (bad > 0) Ink.red else if (waiting > 0) Ink.amber else Ink.green,
+                Modifier.weight(1f).testTag("nav_payments"),
+            ) { go(Screen.Payments, false) }
         }
-        DarkCard(Modifier.testTag("nav_prepare"), onClick = { go(Screen.Prepare) }) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text("Prepare for offline", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
-                Chip(prepChip, color = if (prepChip == "ready") Ink.green else Ink.amber)
-                Text("›", fontSize = 24.sp, color = Ink.dim)
-            }
-            Text(prepLine, style = MaterialTheme.typography.bodySmall)
-        }
-        val rows = paymentRows(pending, received, m.queue, amounts, c.now()).filter { it.direction != Direction.RELAY }
-        DarkCard(Modifier.testTag("nav_payments"), onClick = { go(Screen.Payments) }) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Payments", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
-                val waiting = rows.count { it.status == PayStatus.PENDING || it.status == PayStatus.RELAYED }
-                val lost = rows.count { it.status == PayStatus.CONFLICTED || it.status == PayStatus.REJECTED }
-                if (waiting > 0) Chip("$waiting unsettled", color = Ink.amber)
-                if (lost > 0) Chip("$lost conflicted", color = Ink.red)
-                Text("›", fontSize = 24.sp, color = Ink.dim)
-            }
-            if (rows.isEmpty()) Text("Nothing yet. Payments you send or receive show up here.", style = MaterialTheme.typography.bodySmall)
-            rows.take(2).forEach { PaymentLine(it, c.now()) }
-        }
-        MeshCard(c)
+        RelayRow(c)
         if (caps.enabled) Text("Offline limits on: ${zec(caps.perPayment)} ZEC per payment", style = MaterialTheme.typography.bodySmall)
         msg?.let { Text(it, style = MaterialTheme.typography.bodySmall, modifier = Modifier.testTag("message")) }
+        // Activity: the design's filter chips over token-style rows.
+        Spacer(Modifier.height(4.dp))
+        FilterChips(filter) { filter = it }
+        val shown = rows.filter { filter.keeps(it) }
+        if (shown.isEmpty()) Text("Nothing here yet. Payments you send, receive or carry show up here.",
+            style = MaterialTheme.typography.bodyMedium, color = Ink.dim, modifier = Modifier.padding(vertical = 12.dp))
+        Column {
+            shown.take(8).forEach { PaymentListRow(it) { go(Screen.Payments, false) } }
+        }
+        if (shown.size > 8) Text("See all ${shown.size}", style = MaterialTheme.typography.titleSmall, color = Ink.dim,
+            modifier = Modifier.clip(Pill).clickable { go(Screen.Payments, false) }.padding(vertical = 8.dp))
         Spacer(Modifier.height(16.dp))
     }
 }
 
+/** The black hero card: coin, total, the P5.G2 split, sync state, and the offline notes as bars. */
 @Composable
-fun BalanceCard(c: AppController, sync: SyncInfo, split: BalanceSplit, received: List<dev.offlinezec.wallet.wallet.Received>) {
-    DarkCard(padding = 22.dp) {
-        Text("Balance", style = MaterialTheme.typography.bodyMedium, color = Ink.dim)
-        Text(zecText(split.total, big = true), style = MaterialTheme.typography.displayLarge, modifier = Modifier.testTag("balance_total"))
-        val offline = sync.networkHeight == null || sync.status == "DISCONNECTED"
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Box(Modifier.size(8.dp).clip(CircleShape).background(if (offline) Ink.amber else Ink.green))
-            Text(syncText(sync), style = MaterialTheme.typography.bodySmall, modifier = Modifier.testTag("sync_status"))
+fun HeroCard(sync: SyncInfo, split: BalanceSplit, prep: PrepareStatus?) {
+    DarkCard(color = Ink.black, padding = 24.dp, gap = 0.dp) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+            ZecAvatar(52.dp)
+            Column(Modifier.weight(1f)) {
+                Text("Zcash", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Medium)
+                Text("ZEC · shielded", style = MaterialTheme.typography.bodyLarge, color = Ink.dim)
+            }
+            FactPill(bg = Ink.card) { Dot(Ink.zec, 6.dp); Text("testnet", fontSize = 13.sp, fontWeight = FontWeight.Medium) }
+        }
+        Spacer(Modifier.height(26.dp))
+        Text(zecText(split.total), style = MaterialTheme.typography.displayMedium, maxLines = 1, modifier = Modifier.testTag("balance_total"))
+        Spacer(Modifier.height(18.dp))
+        Row(Modifier.fillMaxWidth()) {
+            Stat("Offline ready", zec(split.available), Ink.green, Modifier.weight(1f).testTag("balance_offline"))
+            Stat("Confirming", zec(split.locked), Ink.text, Modifier.weight(1f).testTag("balance_ironwood"))
+            Stat("Change due", zec(split.pending), Ink.text, Modifier.weight(1f).testTag("balance_pending"))
+        }
+        if (split.inPayments > 0) {
+            Spacer(Modifier.height(10.dp))
+            Text("Paid offline, settling: ${zec(split.inPayments)} ZEC (not in the total)", style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.testTag("balance_in_payments"))
+        }
+        Spacer(Modifier.height(20.dp))
+        FactPill(bg = Ink.card) {
+            Dot(if (isOffline(sync)) Ink.amber else Ink.green, 6.dp)
+            Text(syncText(sync), fontSize = 13.sp, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.testTag("sync_status"))
         }
         // Only a real sync shows progress; an offline phone shows a plain line, never a stuck bar.
-        if (sync.status == "SYNCING") LinearProgressIndicator(
-            progress = { sync.progress }, modifier = Modifier.fillMaxWidth().clip(Pill), color = Ink.text, trackColor = Ink.raised,
-        )
-        Spacer(Modifier.height(4.dp))
-        ValueRow("Ready to pay offline", zec(split.available), Modifier.testTag("balance_offline"), color = Ink.green)
-        if (split.locked > 0) ValueRow("Confirming or not prepared", zec(split.locked), Modifier.testTag("balance_ironwood"))
-        if (split.pending > 0) ValueRow("Change on its way", zec(split.pending), Modifier.testTag("balance_pending"))
-        HorizontalDivider(color = Ink.line)
-        ValueRow("Total", "${zec(split.total)} ZEC", Modifier.testTag("balance_split_total"), labelColor = Ink.text)
-        if (split.inPayments > 0) ValueRow("Paid offline, settling", "−${zec(split.inPayments)}", Modifier.testTag("balance_in_payments"), color = Ink.dim)
-        // P4.G4: received offline but unmined is shown apart from the balance; conflicted never counts.
-        val incoming = incomingUnsettled(received)
-        if (incoming > 0) Text("Received offline, not yet settled: ${zec(incoming)}", style = MaterialTheme.typography.bodyMedium,
-            color = Ink.amber, modifier = Modifier.testTag("balance_incoming"))
-        val lost = received.filter { it.conflicted }
-        if (lost.isNotEmpty()) Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Ink.redCard).padding(12.dp)) {
-            Text(
-                "Conflicted, not counted: ${zec(lost.sumOf { it.amount })} (${lost.size} double spend${if (lost.size == 1) "" else "s"})",
-                color = Ink.red, fontWeight = FontWeight.SemiBold, modifier = Modifier.testTag("balance_conflicted"),
-            )
-        }
-    }
-}
-
-/** One payment, compact: arrow disc, title and short txid, amount and status chip. */
-@Composable
-fun PaymentLine(r: PaymentRow, now: Long, modifier: Modifier = Modifier, labelTag: String? = null) {
-    Row(modifier.fillMaxWidth().padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        val (glyph, title) = when (r.direction) {
-            Direction.SENT -> "↑" to "Sent"
-            Direction.RECEIVED -> "↓" to "Received"
-            Direction.RELAY -> "⇄" to "Relaying"
-        }
-        Box(Modifier.size(44.dp).clip(CircleShape).background(r.status.color().copy(alpha = 0.16f)), contentAlignment = Alignment.Center) {
-            Text(glyph, color = r.status.color(), fontSize = 20.sp, fontWeight = FontWeight.Bold)
-        }
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text(title + if (r.direction == Direction.RELAY) " · ${r.hops} hop${if (r.hops == 1) "" else "s"}" else "", style = MaterialTheme.typography.titleMedium)
-            Text(shortTxid(r.txid), style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace, fontSize = 12.sp, maxLines = 1)
-            Text(ago(r.since, now), style = MaterialTheme.typography.bodySmall, fontSize = 12.sp, maxLines = 1, modifier = Modifier.testTag("age_${r.txid.take(16)}"))
-        }
-        Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(
-                r.amount?.let { (if (r.direction == Direction.SENT) "−" else "+") + zec(it) } ?: "—",
-                style = MaterialTheme.typography.titleMedium,
-                color = if (r.status == PayStatus.CONFLICTED || r.status == PayStatus.REJECTED) Ink.red else Ink.text,
-            )
-            StatusChip(r.status, Modifier.testTag("status_${r.txid.take(16)}"))
+        if (sync.status == "SYNCING") {
+            Spacer(Modifier.height(12.dp))
+            LinearProgressIndicator(progress = { sync.progress }, modifier = Modifier.fillMaxWidth().clip(Pill), color = Ink.text, trackColor = Ink.raised)
         }
     }
 }
 
 @Composable
-fun MeshCard(c: AppController) {
+fun Stat(label: String, value: String, color: Color, modifier: Modifier = Modifier) {
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(3.dp)) {
+        Text(label, style = MaterialTheme.typography.bodySmall)
+        Text(value, style = MaterialTheme.typography.titleMedium, color = color, maxLines = 1)
+    }
+}
+
+/** A square-ish shortcut card: avatar, name, coloured status. */
+@Composable
+fun Tile(g: Glyph, tint: Color, title: String, status: String, statusColor: Color, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    Column(
+        modifier.clip(RoundedCornerShape(28.dp)).background(Ink.card).clickable(onClick = onClick).padding(18.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Avatar(g, tint, 40.dp)
+            Spacer(Modifier.weight(1f))
+            LineIcon(Glyph.ChevronRight, size = 18.dp, color = Ink.dim)
+        }
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(title, style = MaterialTheme.typography.titleMedium)
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                Dot(statusColor, 6.dp)
+                Text(status, fontSize = 13.sp, color = statusColor, fontWeight = FontWeight.Medium, maxLines = 1)
+            }
+        }
+    }
+}
+
+@Composable
+fun RelayRow(c: AppController) {
     val m by c.meshInfo.collectAsState()
     val unsettled = m.queue.count { it.unsettled }
     val on = m.permitted && m.bluetooth && m.running
@@ -392,19 +435,25 @@ fun MeshCard(c: AppController) {
         !m.permitted -> "Bluetooth permission needed to relay payments"
         !m.bluetooth -> "Bluetooth is off: not relaying"
         !m.running -> "Bluetooth relay starting…"
-        else -> "Bluetooth relay on · ${m.peers} phone${if (m.peers == 1) "" else "s"} nearby"
+        else -> "${m.peers} phone${if (m.peers == 1) "" else "s"} nearby"
     }
-    DarkCard {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text("Bluetooth relay", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
-            Chip(if (on) "on" else "off", color = if (on) Ink.green else Ink.dim)
+    Row(
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(28.dp)).background(Ink.card).padding(horizontal = 18.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp),
+    ) {
+        Avatar(Glyph.Bluetooth, if (on) Ink.blue else Ink.dim, 40.dp)
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text("Bluetooth relay", style = MaterialTheme.typography.titleMedium, maxLines = 1)
+            Text(status, style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.testTag("mesh_status"))
+            Text(
+                "$unsettled unsettled · " + if (m.online) "broadcasting" else "offline",
+                style = MaterialTheme.typography.bodySmall, maxLines = 1, modifier = Modifier.testTag("mesh_queue"),
+            )
         }
-        Text(status, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.testTag("mesh_status"))
-        Text(
-            "Carrying ${m.queue.size} payment${if (m.queue.size == 1) "" else "s"} ($unsettled not yet settled) · " +
-                if (m.online) "online: broadcasting" else "offline",
-            style = MaterialTheme.typography.bodySmall, modifier = Modifier.testTag("mesh_queue"),
-        )
+        Column(horizontalAlignment = Alignment.End) {
+            Text("${m.queue.size}", style = MaterialTheme.typography.titleLarge)
+            Text("carried", style = MaterialTheme.typography.bodySmall)
+        }
     }
 }
 
@@ -414,11 +463,14 @@ fun ConflictBanner(c: AppController) {
     val m by c.meshInfo.collectAsState()
     if (m.conflicts.isEmpty()) return
     val ours = m.queue.filter { it.mine || it.forUs }.associateBy { it.txid }
-    DarkCard(Modifier.testTag("conflict_alert"), color = Ink.redCard) {
-        Text(
-            "⚠ Double spend detected" + if (m.conflicts.size > 1) " (${m.conflicts.size})" else "",
-            style = MaterialTheme.typography.titleMedium, color = Ink.red,
-        )
+    DarkCard(Modifier.testTag("conflict_alert"), color = Ink.redCard, border = Ink.red.copy(alpha = 0.5f)) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Avatar(Glyph.Warning, Ink.red, 40.dp)
+            Text(
+                "Double spend detected" + if (m.conflicts.size > 1) " (${m.conflicts.size})" else "",
+                style = MaterialTheme.typography.titleMedium, color = Ink.red,
+            )
+        }
         m.conflicts.sortedByDescending { it.detectedAt }.take(3).forEach { k ->
             val involved = k.txids.mapNotNull { ours[it] }
             val text = buildString {
@@ -436,6 +488,58 @@ fun ConflictBanner(c: AppController) {
     }
 }
 
+enum class PaymentFilter(val title: String) {
+    ALL("All"), SENT("Sent"), RECEIVED("Received"), RELAY("Relaying");
+
+    fun keeps(r: PaymentRow) = when (this) {
+        ALL -> true
+        SENT -> r.direction == Direction.SENT
+        RECEIVED -> r.direction == Direction.RECEIVED
+        RELAY -> r.direction == Direction.RELAY
+    }
+}
+
+@Composable
+fun FilterChips(filter: PaymentFilter, set: (PaymentFilter) -> Unit) {
+    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        PaymentFilter.entries.forEach { f ->
+            Chip(f.title, Modifier.testTag("filter_${f.name.lowercase()}"), selected = filter == f, onClick = { set(f) })
+        }
+    }
+}
+
+fun PaymentRow.glyph() = when (direction) { Direction.SENT -> Glyph.Up; Direction.RECEIVED -> Glyph.Down; Direction.RELAY -> Glyph.Relay }
+
+fun PaymentRow.tint() = when {
+    status == PayStatus.CONFLICTED || status == PayStatus.REJECTED -> Ink.red
+    direction == Direction.SENT -> Ink.text
+    direction == Direction.RECEIVED -> Ink.green
+    else -> Ink.blue
+}
+
+fun PaymentRow.title() = when (direction) {
+    Direction.SENT -> "Sent"
+    Direction.RECEIVED -> "Received"
+    Direction.RELAY -> "Relaying · $hops hop${if (hops == 1) "" else "s"}"
+}
+
+fun PaymentRow.value() = amount?.let { (if (direction == Direction.SENT) "−" else "+") + zec(it) } ?: "—"
+
+/** One payment as the design's token row. */
+@Composable
+fun PaymentListRow(r: PaymentRow, modifier: Modifier = Modifier, onClick: (() -> Unit)? = null) {
+    val bad = r.status == PayStatus.CONFLICTED || r.status == PayStatus.REJECTED
+    ListRow(
+        avatar = { Avatar(r.glyph(), r.tint()) },
+        title = r.title(), tag = shortTxid(r.txid), tagMono = true,
+        value = r.value(), valueColor = if (bad) Ink.red else Ink.text,
+        status = { StatusText(r.status, Modifier.testTag("status_${r.txid.take(16)}")) },
+        modifier = modifier, onClick = onClick,
+    )
+}
+
+// ---------------------------------------------------------------- Prepare
+
 @Composable
 fun PrepareScreen(c: AppController, back: () -> Unit) {
     val prep by c.prepare.collectAsState()
@@ -446,38 +550,46 @@ fun PrepareScreen(c: AppController, back: () -> Unit) {
     // The split spends everything, so every note must be spendable by the SDK's rules first.
     val allSpendable = sync.ironwoodAvailable > 0 && sync.ironwoodAvailable == sync.ironwoodTotal
     Page {
-        SheetHeader("Prepare for offline", back)
+        SheetTop(back)
+        Text("Prepare for offline", style = MaterialTheme.typography.headlineLarge)
         Text("Splits your balance into cash-like notes (two each of 0.01 ZEC upward, plus small fee notes) so you can pay exact amounts with no internet. Needs a connection; takes a few minutes to confirm.",
             style = MaterialTheme.typography.bodyMedium, color = Ink.dim)
-        DarkCard {
+        DarkCard(color = Ink.black, padding = 24.dp) {
             when (val p = prep) {
                 is PrepareStatus.Waiting -> {
                     Text("Waiting for the split to be mined…", style = MaterialTheme.typography.titleLarge, modifier = Modifier.testTag("prepare_state"))
-                    Text(shortTxid(p.txid), style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace)
+                    Tag(shortTxid(p.txid), mono = true)
                     LinearProgressIndicator(Modifier.fillMaxWidth().clip(Pill), color = Ink.text, trackColor = Ink.raised)
                 }
                 is PrepareStatus.Idle -> {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(zecText(p.notes.sumOf { it.value }), style = MaterialTheme.typography.displaySmall)
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Dot(if (p.ready) Ink.green else Ink.amber, 6.dp)
                         Text(if (p.ready) "Ready for offline" else if (p.notes.isEmpty()) "No spendable notes yet" else "Confirming notes…",
-                            style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f).testTag("prepare_state"))
-                        if (p.ready) Chip("ready", color = Ink.green)
+                            style = MaterialTheme.typography.titleSmall, color = if (p.ready) Ink.green else Ink.amber,
+                            modifier = Modifier.testTag("prepare_state"))
                     }
-                    if (p.notes.isNotEmpty()) {
-                        Text("${zec(p.notes.sumOf { it.value })} ZEC in ${p.notes.size} notes", style = MaterialTheme.typography.bodySmall)
-                        HorizontalDivider(color = Ink.line)
-                    }
-                    // One row per note size: "0.01 ZEC × 2  ✓" (✓ = spendable offline).
-                    p.notes.groupBy { it.value }.toSortedMap(compareByDescending { it }).forEach { (value, notes) ->
-                        val conf = notes.minOf { n ->
-                            if (n.minedHeight != null && p.tip != null) (p.tip - n.minedHeight + 1).coerceAtLeast(0) else 0
-                        }
-                        val ok = conf >= SPEND_CONFIRMATIONS
-                        Text("${zec(value)} ZEC × ${notes.size}   ${if (ok) "✓" else "$conf/$SPEND_CONFIRMATIONS"}",
-                            fontFamily = FontFamily.Monospace, color = if (ok) Ink.text else Ink.amber,
-                            modifier = Modifier.padding(vertical = 2.dp).testTag("denomination"))
-                    }
+                    if (p.notes.isNotEmpty()) Text("${p.notes.size} notes · pay exact amounts with no internet", style = MaterialTheme.typography.bodySmall)
                 }
                 null -> Text("…")
+            }
+        }
+        (prep as? PrepareStatus.Idle)?.let { p ->
+            // One row per note size: "0.01 ZEC × 2" and whether it can be spent offline yet.
+            p.notes.groupBy { it.value }.toSortedMap(compareByDescending { it }).forEach { (value, notes) ->
+                val conf = notes.minOf { n ->
+                    if (n.minedHeight != null && p.tip != null) (p.tip - n.minedHeight + 1).coerceAtLeast(0) else 0
+                }
+                val ok = conf >= SPEND_CONFIRMATIONS
+                Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Avatar(Glyph.Notes, Ink.zec, 44.dp)
+                    Text("${zec(value)} ZEC × ${notes.size}", style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.weight(1f).testTag("denomination"))
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Dot(if (ok) Ink.green else Ink.amber, 6.dp)
+                        Text(if (ok) "ready" else "$conf/$SPEND_CONFIRMATIONS", color = if (ok) Ink.green else Ink.amber, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                    }
+                }
             }
         }
         val hint = when {
@@ -492,8 +604,11 @@ fun PrepareScreen(c: AppController, back: () -> Unit) {
             enabled = !busy && !waiting && sync.atTip && allSpendable,
         )
         msg?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
+        Spacer(Modifier.height(12.dp))
     }
 }
+
+// ---------------------------------------------------------------- Pay
 
 /** ZEC decimal text to zatoshis, or null if invalid. */
 fun parseZec(s: String): Long? = try {
@@ -503,13 +618,13 @@ fun parseZec(s: String): Long? = try {
 }
 
 @Composable
-fun PayScreen(c: AppController, prepare: () -> Unit, back: () -> Unit) {
+fun PayScreen(c: AppController, scanFirst: Boolean, prepare: () -> Unit, back: () -> Unit) {
     val pay by c.pay.collectAsState()
     var to by rememberSaveable { mutableStateOf("") }
     var amount by rememberSaveable { mutableStateOf("") }
     var memo by rememberSaveable { mutableStateOf("") }
     var withMemo by rememberSaveable { mutableStateOf(false) }
-    var scanning by remember { mutableStateOf(false) }
+    var scanning by rememberSaveable { mutableStateOf(scanFirst) }
     val notes by c.notes.collectAsState()
     val sync by c.wallet.sync.collectAsState()
     val caps by c.capsState.collectAsState()
@@ -519,59 +634,67 @@ fun PayScreen(c: AppController, prepare: () -> Unit, back: () -> Unit) {
         PaymentQr(c, pay as PayState.Ready, back)
         return
     }
+    val small = LocalConfiguration.current.screenHeightDp < 760
     val ready = balanceSplit(notes, sync.networkHeight ?: sync.scannedHeight).available
-    Page(gap = 10.dp) {
-        SheetHeader("Pay", back, compact = true)
-        // Amount first: big, typed on the keypad below.
-        DarkCard(padding = 14.dp) {
-            Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Row(
-                    Modifier.clip(Pill).background(Ink.raised).padding(start = 6.dp, end = 12.dp, top = 5.dp, bottom = 5.dp),
-                    verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp),
-                ) { ZecLogo(20.dp); Text("ZEC", style = MaterialTheme.typography.labelMedium) }
+    Page(gap = if (small) 10.dp else 14.dp) {
+        SheetTop(back) {
+            if (!withMemo) Chip("+ Memo", Modifier.testTag("pay_add_memo"), onClick = { withMemo = true })
+        }
+        // Amount first, on the design's lighter sheet card.
+        DarkCard(color = Ink.sheet, padding = if (small) 18.dp else 28.dp) {
+            Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(if (small) 8.dp else 14.dp)) {
+                FactPill(bg = Ink.raised) { ZecAvatar(20.dp); Text("ZEC", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold) }
                 Text(
-                    amount.ifEmpty { "0" }, style = MaterialTheme.typography.displayLarge, maxLines = 1,
-                    color = if (amount.isEmpty()) Ink.faint else Ink.text, modifier = Modifier.testTag("pay_amount"),
+                    amount.ifEmpty { "0" }, style = if (small) MaterialTheme.typography.displayMedium else MaterialTheme.typography.displayLarge,
+                    maxLines = 1, color = if (amount.isEmpty()) Ink.faint else Ink.text, modifier = Modifier.testTag("pay_amount"),
                 )
-                Text("${zec(ready)} ZEC ready to pay offline", style = MaterialTheme.typography.bodySmall)
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    LineIcon(Glyph.Notes, size = 16.dp, color = Ink.dim)
+                    Text("${zec(ready)} ready offline", style = MaterialTheme.typography.bodyMedium, color = Ink.dim)
+                }
             }
         }
         if (scanning) {
-            DarkCard(padding = 12.dp) {
-                CameraScanner(260) { text ->
+            DarkCard(color = Ink.black, border = Ink.line, padding = 12.dp) {
+                CameraScanner(260, inverted = true) { text ->
                     val addr = text.removePrefix("zcash:").substringBefore('?')
                     if (addr.startsWith("utest") || addr.startsWith("u1")) {
                         to = addr
                         scanning = false
                     }
                 }
-                SecondaryButton("Cancel scan", { scanning = false })
+                Text("Point at the receiver's address QR", style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
             }
+            SecondaryButton("Cancel scan", { scanning = false })
         } else {
-            // Recipient: one pill row; type, paste or scan.
+            // The recipient, styled as the design's bank row.
             Row(
-                Modifier.fillMaxWidth().clip(Pill).background(Ink.card).padding(start = 20.dp, end = 6.dp, top = 6.dp, bottom = 6.dp),
-                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp),
+                Modifier.fillMaxWidth().padding(vertical = 2.dp),
+                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp),
             ) {
-                Box(Modifier.weight(1f)) {
-                    if (to.isEmpty()) Text("Receiver's address", color = Ink.dim, style = MaterialTheme.typography.bodyLarge)
-                    BasicTextField(
-                        to, { to = it.trim() }, singleLine = true, cursorBrush = SolidColor(Ink.text),
-                        textStyle = MaterialTheme.typography.bodyLarge.copy(color = Ink.text, fontFamily = FontFamily.Monospace),
-                        modifier = Modifier.fillMaxWidth().testTag("pay_to"),
-                    )
+                Box(Modifier.size(52.dp).clip(CircleShape).background(Ink.card), contentAlignment = Alignment.Center) {
+                    LineIcon(Glyph.Up, size = 22.dp)
+                }
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text("SEND TO", style = MaterialTheme.typography.titleSmall, letterSpacing = 0.3.sp)
+                    Box {
+                        if (to.isEmpty()) Text("Paste or scan", color = Ink.dim, style = MaterialTheme.typography.bodyMedium)
+                        BasicTextField(
+                            to, { to = it.trim() }, singleLine = true, cursorBrush = SolidColor(Ink.text),
+                            textStyle = MaterialTheme.typography.bodyMedium.copy(color = Ink.dim, fontFamily = FontFamily.Monospace, fontSize = 14.sp),
+                            modifier = Modifier.fillMaxWidth().testTag("pay_to"),
+                        )
+                    }
                 }
                 if (to.isEmpty()) Chip("Paste", onClick = { clipboard.getText()?.text?.trim()?.let { to = it } })
-                else Chip("Clear", onClick = { to = "" })
-                Chip("Scan", Modifier.testTag("pay_scan_address"), onClick = { scanning = true })
+                else IconButton(Glyph.Close, { to = "" }, size = 40.dp)
+                IconButton(Glyph.Scan, { scanning = true }, tag = "pay_scan_address", size = 40.dp)
             }
             if (withMemo) {
                 OutlinedTextField(memo, { memo = it }, label = { Text("Memo (optional)") }, shape = RoundedCornerShape(20.dp),
                     colors = fieldColors(), singleLine = true, modifier = Modifier.fillMaxWidth().testTag("pay_memo"))
-            } else {
-                Chip("+ Add a memo (optional)", Modifier.testTag("pay_add_memo"), onClick = { withMemo = true })
             }
-            Keypad({ k -> amount = keypadInput(amount, k) })
+            Keypad({ k -> amount = keypadInput(amount, k) }, keyHeight = if (small) 46.dp else 62.dp)
         }
         val zats = parseZec(amount)
         if (caps.enabled) {
@@ -584,15 +707,14 @@ fun PayScreen(c: AppController, prepare: () -> Unit, back: () -> Unit) {
         val building = pay is PayState.Building
         // The button says why it can't pay yet.
         val why = when {
-            building -> "Signing… (no internet needed)"
+            building -> "Signing… no internet needed"
             zats == null -> "Enter an amount"
             to.isBlank() -> "Add the receiver's address"
-            ready == 0L -> "Nothing ready offline: prepare first"
+            ready == 0L -> "Nothing ready offline yet"
             zats > ready -> "Only ${zec(ready)} ZEC is ready offline"
             else -> null
         }
-        PrimaryButton(why ?: "Pay ${zec(zats!!)} ZEC offline", { c.payOffline(to, zats!!, memo.ifBlank { null }) },
-            Modifier.testTag("pay_go"), enabled = why == null)
+        PrimaryButton(why ?: "Pay", { c.payOffline(to, zats!!, memo.ifBlank { null }) }, Modifier.testTag("pay_go"), enabled = why == null)
         if (!building && ready == 0L) SecondaryButton("Prepare for offline", prepare)
         if (building) LinearProgressIndicator(Modifier.fillMaxWidth().clip(Pill), color = Ink.text, trackColor = Ink.raised)
         if (pay is PayState.Failed) Text((pay as PayState.Failed).error, color = Ink.red, modifier = Modifier.testTag("pay_error"))
@@ -615,21 +737,21 @@ fun PaymentQr(c: AppController, p: PayState.Ready, back: () -> Unit) {
         }
     }
     Page {
-        SheetHeader("Show the receiver", { c.clearPay(); back() })
-        DarkCard(padding = 20.dp) {
-            Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text(zecText(p.payment.amount, big = true), style = MaterialTheme.typography.displayMedium, modifier = Modifier.testTag("pay_summary"))
-                Text("fee ${zec(p.payment.fee)} ZEC", style = MaterialTheme.typography.bodySmall)
-                QrTile(frame, 320.dp, tag = "payment_qr")
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        SheetTop({ c.clearPay(); back() })
+        DarkCard(color = Ink.sheet, padding = 22.dp) {
+            Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                FactPill(bg = Ink.raised) { ZecAvatar(20.dp); Text("ZEC", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold) }
+                Text(zecText(p.payment.amount, 24), style = MaterialTheme.typography.displayMedium, modifier = Modifier.testTag("pay_summary"))
+                Text("fee ${zec(p.payment.fee)} ZEC · ${shortTxid(p.payment.txid)}", style = MaterialTheme.typography.bodySmall, modifier = Modifier.testTag("pay_txid"))
+                Spacer(Modifier.height(2.dp))
+                QrTile(frame, 290.dp, tag = "payment_qr")
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                     StatusChip(PayStatus.PENDING)
-                    Chip("frame ${shown + 1} · ${encoder.seqLen} parts")
+                    FactPill(bg = Ink.raised) { Text("frame ${shown + 1} · ${encoder.seqLen} parts", fontSize = 13.sp, color = Ink.dim) }
                 }
             }
         }
-        Text("Signed and saved; your notes are spent. It also goes out over Bluetooth to nearby phones, and whichever gets online first broadcasts it.",
-            style = MaterialTheme.typography.bodySmall)
-        Text(shortTxid(p.payment.txid), style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace, modifier = Modifier.testTag("pay_txid"))
+        BigTitle("Show the receiver", "Signed and saved; your notes are spent. It also goes out over Bluetooth, and whichever phone gets online first broadcasts it.")
         PrimaryButton("Done", { c.clearPay(); back() }, Modifier.testTag("pay_done"))
         Spacer(Modifier.height(8.dp))
     }
@@ -637,69 +759,79 @@ fun PaymentQr(c: AppController, p: PayState.Ready, back: () -> Unit) {
 
 private const val FRAME_MS = 200L
 
+// ---------------------------------------------------------------- Receive
+
 @Composable
 fun ReceiveScreen(c: AppController, back: () -> Unit) {
     val w = c.wallet.wallet ?: return
     val st by c.receive.collectAsState()
     var scan by rememberSaveable { mutableStateOf(false) }
+    var full by remember { mutableStateOf(false) }
     @Suppress("DEPRECATION") val clipboard = LocalClipboardManager.current
     var copied by remember { mutableStateOf(false) }
-    Page {
-        SheetHeader("Receive", back)
+    Page(bg = Ink.black, gap = 22.dp) {
+        SheetTop(back)
         when (val s = st) {
             is ReceiveState.Scanning -> {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Chip("1  Your address", Modifier.testTag("recv_tab_address"), selected = !scan, onClick = { scan = false })
-                    Chip("2  Scan the payment", Modifier.testTag("recv_tab_scan"), selected = scan, onClick = { scan = true })
+                // The design's address pill: short address; tap for the whole thing.
+                Row(
+                    Modifier.align(Alignment.CenterHorizontally).clip(Pill).border(1.dp, Ink.line, Pill).clickable { full = !full }
+                        .padding(horizontal = 22.dp, vertical = 13.dp),
+                    verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp),
+                ) {
+                    Text(shortAddress(w.address), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Medium, modifier = Modifier.testTag("address"))
+                    LineIcon(Glyph.ChevronDown, size = 18.dp, color = Ink.dim)
                 }
-                if (!scan) {
-                    DarkCard(padding = 20.dp) {
-                        Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                            Text(shortAddress(w.address), fontFamily = FontFamily.Monospace, style = MaterialTheme.typography.bodyLarge,
-                                modifier = Modifier.clip(Pill).background(Ink.raised).padding(horizontal = 18.dp, vertical = 10.dp).testTag("address"))
-                            QrTile(w.address, 280.dp, logo = true)
-                            Text("Let the payer scan your address", style = MaterialTheme.typography.bodySmall)
-                        }
+                if (full) Text(w.address, fontFamily = FontFamily.Monospace, fontSize = 12.sp, color = Ink.dim, modifier = Modifier.padding(horizontal = 8.dp))
+                DarkCard(color = Ink.black, border = Ink.line, padding = if (scan) 12.dp else 30.dp) {
+                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                        if (!scan) AddressQr(w.address, 250.dp)
+                        else CameraScanner(300) { c.onFrame(it) }
                     }
-                    PrimaryButton(if (copied) "Copied" else "Copy address", {
-                        clipboard.setText(AnnotatedString(w.address)); copied = true
-                    }, Modifier.testTag("copy_address"))
-                    SecondaryButton("Next: scan the payer's QR", { scan = true })
-                } else {
-                    DarkCard(padding = 12.dp) {
-                        CameraScanner(300) { c.onFrame(it) }
-                        LinearProgressIndicator(progress = { s.progress.toFloat() }, color = Ink.text, trackColor = Ink.raised,
-                            modifier = Modifier.fillMaxWidth().clip(Pill).testTag("receive_progress"))
-                        Text(if (s.progress > 0) "Reading… ${(s.progress * 100).toInt()}%" else "Point the camera at the payer's moving QR code. Missed frames fill in by themselves.",
-                            style = MaterialTheme.typography.bodySmall)
+                    if (scan) LinearProgressIndicator(progress = { s.progress.toFloat() }, color = Ink.text, trackColor = Ink.raised,
+                        modifier = Modifier.fillMaxWidth().clip(Pill).testTag("receive_progress"))
+                }
+                if (!scan) BigTitle("Receive", "Scan the QR code or copy the address to receive ZEC")
+                else BigTitle("Scan payment", if (s.progress > 0) "Reading… ${(s.progress * 100).toInt()}%" else "Point the camera at the payer's moving QR code. Missed frames fill in by themselves.")
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    if (!scan) {
+                        SecondaryButton("Scan", { scan = true }, Modifier.weight(1f).testTag("recv_tab_scan"), glyph = Glyph.Scan)
+                        PrimaryButton(if (copied) "Copied" else "Copy", {
+                            clipboard.setText(AnnotatedString(w.address)); copied = true
+                        }, Modifier.weight(1f).testTag("copy_address"))
+                    } else {
+                        SecondaryButton("Show my address", { scan = false }, Modifier.testTag("recv_tab_address"))
                     }
                 }
             }
-            ReceiveState.Verifying -> DarkCard {
-                Text("Checking the payment…", style = MaterialTheme.typography.titleLarge, modifier = Modifier.testTag("receive_state"))
-                LinearProgressIndicator(Modifier.fillMaxWidth().clip(Pill), color = Ink.text, trackColor = Ink.raised)
+            ReceiveState.Verifying -> {
+                DarkCard(color = Ink.black, border = Ink.line, padding = 30.dp) {
+                    LinearProgressIndicator(Modifier.fillMaxWidth().clip(Pill), color = Ink.text, trackColor = Ink.raised)
+                }
+                BigTitle("Checking…", "Verifying proofs and signatures on this phone", tag = "receive_state")
             }
             is ReceiveState.Accepted -> {
-                DarkCard(padding = 24.dp) {
-                    Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Text("You received", style = MaterialTheme.typography.bodyMedium, color = Ink.dim)
+                DarkCard(color = Ink.black, border = Ink.line, padding = 30.dp) {
+                    Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                        Avatar(Glyph.Check, Ink.green, 64.dp)
                         Text("${zec(s.payment.amount)} ZEC", style = MaterialTheme.typography.displayMedium, modifier = Modifier.testTag("received_amount"))
                         StatusChip(PayStatus.PENDING)
-                        Text(receivedLabel(s.payment), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.testTag("received_status"))
+                        Text(receivedLabel(s.payment), style = MaterialTheme.typography.bodyMedium, color = Ink.dim, modifier = Modifier.testTag("received_status"))
                         s.payment.memo?.let { Text("“$it”", style = MaterialTheme.typography.bodyLarge) }
                     }
                 }
                 s.warning?.let {
-                    DarkCard(Modifier.testTag("receive_warning"), color = Ink.redCard, padding = 16.dp) {
-                        Text("⚠ $it", color = MaterialTheme.colorScheme.onErrorContainer)
+                    DarkCard(Modifier.testTag("receive_warning"), color = Ink.redCard, padding = 18.dp) {
+                        Text(it, color = MaterialTheme.colorScheme.onErrorContainer)
                     }
                 }
-                Text("Proofs and signatures verified offline. It settles once either phone broadcasts it.", style = MaterialTheme.typography.bodySmall)
+                BigTitle("Received", "Verified offline. It settles once either phone gets online and broadcasts it.")
                 PrimaryButton("Receive another", { c.resetReceive() })
             }
             is ReceiveState.Rejected -> {
-                DarkCard(color = Ink.redCard) {
-                    Text("Not accepted", style = MaterialTheme.typography.titleLarge, color = Ink.red, modifier = Modifier.testTag("receive_state"))
+                DarkCard(color = Ink.redCard, border = Ink.red.copy(alpha = 0.5f), padding = 26.dp) {
+                    Avatar(Glyph.Close, Ink.red, 56.dp)
+                    Text("Not accepted", style = MaterialTheme.typography.headlineMedium, color = Ink.red, modifier = Modifier.testTag("receive_state"))
                     Text(s.reason, color = MaterialTheme.colorScheme.onErrorContainer, modifier = Modifier.testTag("receive_reason"))
                 }
                 PrimaryButton("Scan again", { c.resetReceive() })
@@ -708,6 +840,8 @@ fun ReceiveScreen(c: AppController, back: () -> Unit) {
         Spacer(Modifier.height(8.dp))
     }
 }
+
+// ---------------------------------------------------------------- Limits
 
 /** P4.G3: optional caps on paying offline, and a warning on large incoming payments. Off by default. */
 @Composable
@@ -718,17 +852,23 @@ fun LimitsScreen(c: AppController, back: () -> Unit) {
     var perSession by rememberSaveable { mutableStateOf(zec(caps.perSession)) }
     var saved by remember { mutableStateOf(false) }
     Page {
-        SheetHeader("Offline limits", back)
+        SheetTop(back)
+        Text("Offline limits", style = MaterialTheme.typography.headlineLarge)
         Text("An offline payment is final only once it settles. Limits cap how much rides on unsettled payments: " +
             "this phone won't sign above them, and warns when it receives more than the per-payment limit.",
             style = MaterialTheme.typography.bodyMedium, color = Ink.dim)
-        DarkCard {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Use limits", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+        DarkCard(gap = 16.dp) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                Avatar(Glyph.Notes, Ink.zec, 44.dp)
+                Column(Modifier.weight(1f)) {
+                    Text("Use limits", style = MaterialTheme.typography.titleMedium)
+                    Text(if (on) "On" else "Off · default", style = MaterialTheme.typography.bodySmall)
+                }
                 Switch(on, { on = it; saved = false }, Modifier.testTag("limits_on"),
                     colors = SwitchDefaults.colors(checkedTrackColor = Ink.text, checkedThumbColor = Color.Black,
                         uncheckedTrackColor = Ink.raised, uncheckedThumbColor = Ink.dim, uncheckedBorderColor = Ink.line))
             }
+            HorizontalDivider(color = Ink.line)
             OutlinedTextField(perPayment, { perPayment = it; saved = false }, label = { Text("Per payment (ZEC)") }, shape = RoundedCornerShape(18.dp),
                 colors = fieldColors(), enabled = on, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 modifier = Modifier.fillMaxWidth().testTag("limits_per_payment"))
@@ -747,7 +887,7 @@ fun LimitsScreen(c: AppController, back: () -> Unit) {
     }
 }
 
-enum class PaymentFilter(val title: String) { ALL("All"), SENT("Sent"), RECEIVED("Received"), RELAY("Relaying") }
+// ---------------------------------------------------------------- Payments
 
 @Composable
 fun PaymentsScreen(c: AppController, showQr: () -> Unit, back: () -> Unit) {
@@ -758,36 +898,37 @@ fun PaymentsScreen(c: AppController, showQr: () -> Unit, back: () -> Unit) {
     var filter by rememberSaveable { mutableStateOf(PaymentFilter.ALL) }
     val now = c.now()
     val rows = paymentRows(pending, received, m.queue, amounts, now)
-    Page {
-        SheetHeader("Payments", back)
-        Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            PaymentFilter.entries.forEach { f ->
-                Chip(f.title, Modifier.testTag("filter_${f.name.lowercase()}"), selected = filter == f, onClick = { filter = f })
-            }
-        }
-        val shown = rows.filter {
-            when (filter) {
-                PaymentFilter.ALL -> true
-                PaymentFilter.SENT -> it.direction == Direction.SENT
-                PaymentFilter.RECEIVED -> it.direction == Direction.RECEIVED
-                PaymentFilter.RELAY -> it.direction == Direction.RELAY
-            }
-        }
-        if (shown.isEmpty()) DarkCard { Text("No payments here yet.", color = Ink.dim) }
+    Page(gap = 12.dp) {
+        SheetTop(back)
+        Text("Payments", style = MaterialTheme.typography.headlineLarge)
+        FilterChips(filter) { filter = it }
+        val shown = rows.filter { filter.keeps(it) }
+        if (shown.isEmpty()) Text("No payments here yet.", color = Ink.dim, modifier = Modifier.padding(vertical = 12.dp))
         shown.forEach { r ->
             val key = r.txid.take(16)
             val tag = when (r.direction) { Direction.SENT -> "sent_$key"; Direction.RECEIVED -> "received_$key"; Direction.RELAY -> "relay_$key" }
             val bad = r.status == PayStatus.CONFLICTED || r.status == PayStatus.REJECTED
-            DarkCard(Modifier.testTag(tag), color = if (bad) Ink.redCard else Ink.card, padding = 16.dp) {
-                PaymentLine(r, now)
-                Text(
-                    r.label, style = MaterialTheme.typography.bodySmall, color = if (bad) Ink.red else Ink.dim,
-                    modifier = if (r.direction == Direction.RECEIVED) Modifier.testTag("received_label_$key") else Modifier,
-                )
-                r.memo?.let { Text("“$it”", style = MaterialTheme.typography.bodyMedium) }
-                if (r.canShowQr) {
-                    SecondaryButton("Show QR to the receiver again", { c.showPending(r.txid); showQr() }, Modifier.height(48.dp).testTag("pending_show_$key"))
+            Column(
+                Modifier.fillMaxWidth().let { if (bad) it.clip(RoundedCornerShape(26.dp)).background(Ink.redCard).padding(horizontal = 14.dp) else it }
+                    .padding(vertical = 2.dp).testTag(tag),
+            ) {
+                PaymentListRow(r)
+                Row(Modifier.fillMaxWidth().padding(start = 68.dp, bottom = 6.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text(
+                        r.label, style = MaterialTheme.typography.bodySmall, color = if (bad) Ink.red else Ink.dim,
+                        modifier = Modifier.weight(1f).let { if (r.direction == Direction.RECEIVED) it.testTag("received_label_$key") else it },
+                    )
+                    Text(ago(r.since, now), style = MaterialTheme.typography.bodySmall, maxLines = 1, modifier = Modifier.testTag("age_$key"))
                 }
+                r.memo?.let { Text("“$it”", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(start = 68.dp, bottom = 6.dp)) }
+                if (r.canShowQr) {
+                    Box(
+                        Modifier.padding(start = 68.dp, bottom = 10.dp).clip(Pill).background(Color.White)
+                            .clickable { c.showPending(r.txid); showQr() }.padding(horizontal = 16.dp, vertical = 9.dp)
+                            .testTag("pending_show_$key"),
+                    ) { Text("Show QR to the receiver again", color = Color.Black, fontSize = 14.sp, fontWeight = FontWeight.SemiBold) }
+                }
+                HorizontalDivider(color = Ink.card, modifier = Modifier.padding(start = 68.dp))
             }
         }
         // Debug builds: push everything to the network now instead of waiting for the next try.
@@ -798,9 +939,14 @@ fun PaymentsScreen(c: AppController, showQr: () -> Unit, back: () -> Unit) {
     }
 }
 
-/** Camera preview that reports every decoded QR text. Asks for the camera permission. */
+// ---------------------------------------------------------------- Camera
+
+/**
+ * Camera preview that reports every decoded QR text. Asks for the camera permission.
+ * [inverted]: also read light-on-dark codes (address QRs drawn like this app's).
+ */
 @Composable
-fun CameraScanner(heightDp: Int, onText: (String) -> Unit) {
+fun CameraScanner(heightDp: Int, inverted: Boolean = false, onText: (String) -> Unit) {
     val ctx = LocalContext.current
     val owner = LocalLifecycleOwner.current
     var granted by remember {
@@ -817,7 +963,7 @@ fun CameraScanner(heightDp: Int, onText: (String) -> Unit) {
     AndroidView(
         // COMPATIBLE = a TextureView: it clips to the rounded card and stays under the header,
         // where the default SurfaceView drew over the Back control.
-        modifier = Modifier.fillMaxWidth().height(heightDp.dp).clip(RoundedCornerShape(20.dp)).testTag("camera"),
+        modifier = Modifier.fillMaxWidth().height(heightDp.dp).clip(RoundedCornerShape(22.dp)).testTag("camera"),
         factory = { context ->
             val view = PreviewView(context).apply {
                 implementationMode = PreviewView.ImplementationMode.COMPATIBLE
@@ -829,7 +975,7 @@ fun CameraScanner(heightDp: Int, onText: (String) -> Unit) {
                 val preview = Preview.Builder().build().also { it.surfaceProvider = view.surfaceProvider }
                 val analysis = ImageAnalysis.Builder()
                     .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                    .build().also { it.setAnalyzer(executor, QrAnalyzer(onText = onText)) }
+                    .build().also { it.setAnalyzer(executor, QrAnalyzer(inverted = inverted, onText = onText)) }
                 provider.unbindAll()
                 provider.bindToLifecycle(owner, CameraSelector.DEFAULT_BACK_CAMERA, preview, analysis)
             }, ContextCompat.getMainExecutor(context))

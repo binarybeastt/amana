@@ -5,27 +5,43 @@ import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.ExperimentalTextApi
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontVariation
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import dev.offlinezec.wallet.R
 
-/** The look: near-black page, slightly lighter rounded cards, white text, grey secondary text. */
+/**
+ * The design's palette: a dark grey page, a deeper black for the hero card, a lighter grey for
+ * sheet cards (the amount card), hairline outlines, white text and quiet grey secondary text.
+ */
 object Ink {
-    val page = Color(0xFF0B0B0C)
-    val card = Color(0xFF18181A)
-    val raised = Color(0xFF242427)
-    val line = Color(0xFF2E2E32)
+    val page = Color(0xFF161617)
+    val black = Color(0xFF050505)
+    val card = Color(0xFF1F1F21)
+    val sheet = Color(0xFF2A2A2D)
+    val raised = Color(0xFF2C2C2F)
+    val line = Color(0xFF3A3A3D)
     val text = Color(0xFFFFFFFF)
     val dim = Color(0xFF8E8E93)
-    val faint = Color(0xFF5C5C61)
-    val red = Color(0xFFFF5A5F)
-    val redCard = Color(0xFF3B1214)
-    val green = Color(0xFF4CD787)
-    val amber = Color(0xFFFFB547)
-    val blue = Color(0xFF6EA8FF)
-    /** Zcash yellow, for the logo only. */
+    val faint = Color(0xFF5A5A5F)
+    val red = Color(0xFFFF6B4A)
+    val redCard = Color(0xFF2A1210)
+    val green = Color(0xFF5BD6A0)
+    val amber = Color(0xFFF2B84B)
+    val blue = Color(0xFF7FA8FF)
+    /** Zcash yellow, for the logo and its avatar. */
     val zec = Color(0xFFF4B728)
 }
+
+@OptIn(ExperimentalTextApi::class)
+private fun inter(w: Int) = Font(R.font.inter, FontWeight(w), variationSettings = FontVariation.Settings(FontVariation.weight(w)))
+
+/** Inter, the design's typeface (variable font in res/font). */
+val Inter = FontFamily(inter(400), inter(500), inter(600), inter(700), inter(800))
 
 private val scheme = darkColorScheme(
     primary = Ink.text,
@@ -46,20 +62,27 @@ private val scheme = darkColorScheme(
     error = Ink.red,
     onError = Color.Black,
     errorContainer = Ink.redCard,
-    onErrorContainer = Color(0xFFFFD9DA),
+    onErrorContainer = Color(0xFFFFD6CC),
 )
 
+private fun t(size: Int, w: FontWeight = FontWeight.Normal, track: Double = 0.0, color: Color = Color.Unspecified) =
+    TextStyle(fontFamily = Inter, fontSize = size.sp, fontWeight = w, letterSpacing = track.sp, color = color)
+
 private val type = Typography(
-    displayLarge = TextStyle(fontSize = 52.sp, fontWeight = FontWeight.Bold, letterSpacing = (-1.5).sp),
-    displayMedium = TextStyle(fontSize = 40.sp, fontWeight = FontWeight.Bold, letterSpacing = (-1).sp),
-    headlineLarge = TextStyle(fontSize = 34.sp, fontWeight = FontWeight.Bold, letterSpacing = (-0.5).sp),
-    titleLarge = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.SemiBold),
-    titleMedium = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.SemiBold),
-    bodyLarge = TextStyle(fontSize = 16.sp),
-    bodyMedium = TextStyle(fontSize = 14.sp),
-    bodySmall = TextStyle(fontSize = 13.sp, color = Ink.dim),
-    labelLarge = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.SemiBold),
-    labelMedium = TextStyle(fontSize = 13.sp, fontWeight = FontWeight.Medium),
+    displayLarge = t(60, FontWeight.Bold, -2.0),
+    displayMedium = t(44, FontWeight.Bold, -1.4),
+    displaySmall = t(36, FontWeight.Bold, -1.0),
+    headlineLarge = t(32, FontWeight.Bold, -0.8),
+    headlineMedium = t(26, FontWeight.Bold, -0.5),
+    titleLarge = t(20, FontWeight.SemiBold, -0.2),
+    titleMedium = t(16, FontWeight.SemiBold),
+    titleSmall = t(15, FontWeight.Medium),
+    bodyLarge = t(16),
+    bodyMedium = t(15),
+    bodySmall = t(13, color = Ink.dim),
+    labelLarge = t(17, FontWeight.SemiBold),
+    labelMedium = t(14, FontWeight.Medium),
+    labelSmall = t(12, FontWeight.Medium),
 )
 
 @Composable

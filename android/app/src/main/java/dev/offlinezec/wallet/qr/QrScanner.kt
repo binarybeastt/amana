@@ -16,9 +16,15 @@ import com.google.zxing.qrcode.QRCodeReader
  * CameraX analyzer: decodes a QR code from a camera frame's luminance plane and reports its
  * text. Decodes at most [maxPerSecond] frames (the sender shows 5 QR frames a second) and reuses
  * its buffer: allocating a fresh luminance copy per camera frame kept low-memory phones in
- * constant garbage collection.
+ * constant garbage collection. [inverted]: also read light-on-dark codes (the app's address QR),
+ * on frames where the normal read finds nothing; off for the animated payment QR, where every
+ * frame's time counts.
  */
-class QrAnalyzer(private val maxPerSecond: Int = 12, private val onText: (String) -> Unit) : ImageAnalysis.Analyzer {
+class QrAnalyzer(
+    private val maxPerSecond: Int = 12,
+    private val inverted: Boolean = false,
+    private val onText: (String) -> Unit,
+) : ImageAnalysis.Analyzer {
     private val reader = QRCodeReader()
     private val hints = mapOf(DecodeHintType.CHARACTER_SET to "ISO-8859-1")
     private var buffer = ByteArray(0)
@@ -37,7 +43,13 @@ class QrAnalyzer(private val maxPerSecond: Int = 12, private val onText: (String
             val source = PlanarYUVLuminanceSource(
                 buffer, plane.rowStride, image.height, 0, 0, image.width, image.height, false,
             )
-            val result = reader.decode(BinaryBitmap(HybridBinarizer(source)), hints)
+            val result = try {
+                reader.decode(BinaryBitmap(HybridBinarizer(source)), hints)
+            } catch (e: NotFoundException) {
+                if (!inverted) throw e
+                reader.reset()
+                reader.decode(BinaryBitmap(HybridBinarizer(source.invert())), hints)
+            }
             onText(result.text)
         } catch (_: NotFoundException) {
         } catch (_: ChecksumException) {

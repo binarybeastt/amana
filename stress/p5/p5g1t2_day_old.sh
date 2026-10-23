@@ -52,10 +52,11 @@ case "$OUT" in *"ROWS ok"*) ;; *) ok=False;; esac
 bars=$(python3 -c "import glob; print(sum(open(f).read().count('class=\"android.widget.ProgressBar\"') for f in glob.glob('$UI/home*.xml') + glob.glob('$UI/pay*.xml')))")
 say "progress bars on Home/Payments: $bars"
 [ "$bars" = 0 ] || ok=False
-# Same Home 10 s apart (timestamps in the dump aside): nothing is animating or waiting.
+# Same Home 10 s apart (the sync line's block number aside): nothing is animating or waiting.
 same=$(python3 -c "
 import re,sys
-a,b=[re.sub(r' (bounds|focused|selected)=\"[^\"]*\"','',open(f).read()) for f in sys.argv[1:]]
+# The sync line's block number moves on an online phone; that is progress, not a spinner.
+a,b=[re.sub(r'text=\"[^\"]*\"( resource-id=\"sync_status\")', r'\1', re.sub(r' (bounds|focused|selected)=\"[^\"]*\"','',open(f).read())) for f in sys.argv[1:]]
 print(a==b)" "$UI/home1.xml" "$UI/home2.xml")
 say "home unchanged after 10 s: $same"
 [ "$same" = True ] || ok=False

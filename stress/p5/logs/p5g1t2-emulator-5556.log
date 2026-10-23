@@ -1,0 +1,8 @@
+2026-10-23T21:03:11Z P5.G1.T2 on emulator-5556
+unsettled own payments: 67227381270e1889df7b495d3562b7cff8e72ec7413993ba2db1e24f760c0a10
+clock skew: 86594891 ms (24.05 h)
+67227381270e… age='1 d 0 h ago' chip='settled' show_qr=False BAD
+ROWS BAD
+progress bars on Home/Payments: 0
+home unchanged after 10 s: True
+FAIL
