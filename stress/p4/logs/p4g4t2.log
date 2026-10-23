@@ -1,0 +1,15 @@
+12:22:09 pair: tx1=e432a9fe5dffc433… (pays this phone) tx2=d4cd78512f268d72… nullifier 1162c859441281d6…
+12:22:30 phone synced to 4532410 (desktop 4532403), now offline
+12:22:35 before: total=4960000 incoming_unsettled=0 conflicted_not_counted=0
+12:22:36 inject tx1: {"status":"stored","txid":"e432a9fe5dffc4331d3284796867ad1c0cb867ac123069d6e66f92685b632460","reason":null,"at":1792758115231}
+12:22:36 tx1 received: 100000 zats, incoming_unsettled 0 → 100000
+12:22:37 inject tx2: {"status":"stored","txid":"d4cd78512f268d72dfebcba2dc443a2a21f4105ded06375627bca12c7d89158a","reason":null,"at":1792758116598}
+12:22:41 P4.G2 alert up; tx1 still queued (nothing mined yet)
+12:22:44 tx1 conflicted after 3 s: queue state conflicted, conflicted: mined d4cd78512f268d72dfebcba2dc443a2a21f4105ded06375627bca12c7d89158a
+12:22:44 after: label='conflicted: double spend, will never settle (not counted)' total=4960000 incoming_unsettled=0 conflicted_not_counted=100000
+10-23 13:22:01.010 18937 18975 I AppController: RECONCILE txid=e432a9fe5dffc4331d3284796867ad1c0cb867ac123069d6e66f92685b632460 CONFLICTED (conflicted: mined d4cd78512f268d72dfebcba2dc443a2a21f4105ded06375627bca12c7d89158a) mine=false for_us=true
+10-23 13:22:01.069 18937 18975 W AppController: RECONCILE received txid=e432a9fe5dffc4331d3284796867ad1c0cb867ac123069d6e66f92685b632460 conflicted: not counted
+12:23:01 home: 0.0496 ZEC |  | Conflicted, not counted: 0.001 (1 double spend)
+12:23:12 payments screen, tx1: '0.001 ZEC · conflicted: double spend, will never settle (not counted)'
+12:23:16 PASS
+12:23:20 clean-up: tx1/tx2 removed (queue has tx1: )

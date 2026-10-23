@@ -78,6 +78,15 @@ class TestHooks : BroadcastReceiver() {
                         tmp.renameTo(File(files, "inject_result.json"))
                     }
                     "RELAY_CLEAR" -> c.mesh.queue.clear()
+                    // P4.G4: a simulated chain fact, "lightwalletd says <txid> was mined at <height>",
+                    // applied exactly as the broadcaster applies a real one (queue settled → nullifier set).
+                    "RELAY_SETTLE" -> {
+                        c.mesh.queue.markSettled(intent.getStringExtra("txid")!!, intent.getStringExtra("height")?.toLong())
+                        c.refresh()
+                    }
+                    "RELAY_REMOVE" -> c.mesh.queue.forget(intent.getStringExtra("txid")!!)
+                    // P4.G4: forget a received payment (test clean-up: a fixture must never be carried online).
+                    "RECEIVED_DELETE" -> File(files, "received/${intent.getStringExtra("txid")!!}.json").delete()
                     // P4.G2: forget nullifier claims and conflict alerts (start a test clean).
                     "CONFLICTS_CLEAR" -> c.mesh.nullifiers.clear()
                     "MESH_STOP" -> c.mesh.ble.stop("test hook")

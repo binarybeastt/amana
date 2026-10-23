@@ -80,7 +80,12 @@ class Preparer(private val mgr: WalletManager) {
 }
 
 /** Builds offline payments. Only one at a time. [caps] = the user's offline limits (P4.G3). */
-class Payer(private val mgr: WalletManager, private val caps: () -> Caps = { Caps() }) {
+class Payer(
+    private val mgr: WalletManager,
+    private val caps: () -> Caps = { Caps() },
+    /** Conflicted payments of ours (P4.G4) never settle, so they no longer use up the session cap. */
+    private val conflicted: () -> Set<String> = { emptySet() },
+) {
     private val mutex = Mutex()
 
     /**
@@ -91,7 +96,8 @@ class Payer(private val mgr: WalletManager, private val caps: () -> Caps = { Cap
         val w = mgr.wallet ?: error("no wallet")
         // Under the lock, so two payments can't both fit under the session cap's last room.
         caps().takeIf { it.enabled }?.let { c ->
-            Limits.refusal(c, mgr.core.pendingPayments(w.dbPath), amount)?.let { throw LimitException(it) }
+            val pending = mgr.core.pendingPayments(w.dbPath).let { p -> conflicted().let { k -> p.filter { it.txid !in k } } }
+            Limits.refusal(c, pending, amount)?.let { throw LimitException(it) }
         }
         // The SDK may hold a write lock (e.g. finishing a sync) longer than offline-core waits.
         // Nothing is stored until the last step, so retrying a "database is locked" build is safe.
@@ -123,8 +129,12 @@ data class Received(
     val receivedAt: Long,
     val raw: ByteArray,
     val minedHeight: Int? = null,
+    /** P4.G4: why it can never settle (the mined txid that beat it, or the double-spend rejection). */
+    val conflictedBy: String? = null,
 ) {
     val settled get() = minedHeight != null
+    /** Seen mined wins: a settled payment is never shown as conflicted. */
+    val conflicted get() = !settled && conflictedBy != null
 }
 
 /** Received payments, one JSON file each under files/received/. */
@@ -142,6 +152,7 @@ class ReceivedStore(context: Context) {
             .put("txid", r.txid).put("amount", r.amount).put("memo", r.memo ?: JSONObject.NULL)
             .put("received_at", r.receivedAt).put("raw_hex", r.raw.toHex())
             .put("mined_height", r.minedHeight ?: JSONObject.NULL)
+            .put("conflicted_by", r.conflictedBy ?: JSONObject.NULL)
         val tmp = File(dir, "${r.txid}.json.tmp")
         tmp.writeText(o.toString())
         tmp.renameTo(File(dir, "${r.txid}.json"))
@@ -154,6 +165,7 @@ class ReceivedStore(context: Context) {
         receivedAt = o.getLong("received_at"),
         raw = o.getString("raw_hex").hexToBytes(),
         minedHeight = if (o.isNull("mined_height")) null else o.getInt("mined_height"),
+        conflictedBy = if (o.isNull("conflicted_by")) null else o.optString("conflicted_by", "").ifEmpty { null },
     )
 }
 
@@ -196,13 +208,19 @@ data class Outgoing(val txid: String, val raw: ByteArray?, val mine: Boolean)
  * Broadcasts every unmined payment this phone holds, and marks received ones settled once the
  * wallet has seen them mined. Duplicate sends are harmless ("already in mempool / state").
  */
-class Settler(private val mgr: WalletManager, private val store: ReceivedStore) {
+class Settler(
+    private val mgr: WalletManager,
+    private val store: ReceivedStore,
+    /** Our own payments known conflicted (P4.G4): they can never be mined, so stop sending them. */
+    private val conflicted: () -> Set<String> = { emptySet() },
+) {
     private val mutex = Mutex()
 
     suspend fun outgoing(): List<Outgoing> {
         val w = mgr.wallet ?: return emptyList()
-        val mine = mgr.core.pendingPayments(w.dbPath).map { Outgoing(it.txid, null, true) }
-        val received = store.all().filter { !it.settled }.map { Outgoing(it.txid, it.raw, false) }
+        val skip = conflicted()
+        val mine = mgr.core.pendingPayments(w.dbPath).filter { it.txid !in skip }.map { Outgoing(it.txid, null, true) }
+        val received = store.all().filter { !it.settled && !it.conflicted }.map { Outgoing(it.txid, it.raw, false) }
         return (mine + received).distinctBy { it.txid }
     }
 

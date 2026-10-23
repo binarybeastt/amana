@@ -21,6 +21,8 @@ data class Note(
     val minedHeight: Int?,
     val status: String,
     val spentBy: String?,
+    /** Hex, as offline-core and the nullifier set write it. Unknown until the note is mined. */
+    val nullifier: String? = null,
 ) {
     val key get() = "$txid:$outputIndex"
 }
@@ -132,6 +134,7 @@ class Core(context: Context, private val network: String = "test") {
                 minedHeight = if (o.isNull("mined_height")) null else o.getInt("mined_height"),
                 status = o.getString("status"),
                 spentBy = if (o.isNull("spent_by")) null else o.getString("spent_by"),
+                nullifier = if (o.isNull("nullifier")) null else o.optString("nullifier", "").ifEmpty { null },
             )
         }
     }

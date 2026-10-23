@@ -35,8 +35,7 @@ interface ChainNode {
             return when {
                 // First: "another transaction in the mempool has already spent some of its inputs"
                 // also says "already … mempool", but it is a double spend.
-                "double-spend" in m || "duplicate nullifier" in m || "spent some of its inputs" in m ||
-                    "bad-txns" in m || "invalid" in m || "incorrect consensus branch" in m -> Submit.Rejected(message)
+                isDoubleSpend(m) || "bad-txns" in m || "invalid" in m || "incorrect consensus branch" in m -> Submit.Rejected(message)
                 "already" in m && ("in state" in m || "in the state" in m || "mined" in m || "in block" in m) ->
                     Submit.AlreadyKnown(message, mined = true)
                 // Zebra's mempool, for a tx already in a block (seen in Gate P3 on 2026-10-21).
@@ -45,6 +44,13 @@ interface ChainNode {
                     Submit.AlreadyKnown(message, mined = false)
                 else -> Submit.Retry(message)
             }
+        }
+
+        /** The node refused a tx because another one already spends one of its notes (P4.G4). */
+        fun isDoubleSpend(message: String): Boolean {
+            val m = message.lowercase()
+            return "double-spend" in m || "double spend" in m || "duplicate nullifier" in m ||
+                "spent some of its inputs" in m || "already spent" in m
         }
     }
 }
@@ -116,7 +122,17 @@ class Broadcaster(
                     }
                 }
                 is ChainNode.Submit.Rejected -> {
-                    queue.update(e.txid) { it.copy(state = RelayQueue.State.REJECTED, attempts = it.attempts + 1, lastResult = "rejected: ${r.message}") }
+                    // A double spend can never be mined: conflicted (P4.G4); anything else is just refused.
+                    val st = if (ChainNode.isDoubleSpend(r.message)) RelayQueue.State.CONFLICTED else RelayQueue.State.REJECTED
+                    // Seen mined wins: a node may refuse our own tx as a double spend once it is in a block.
+                    val m = if (st == RelayQueue.State.CONFLICTED) node().mined(e.txid) as? ChainNode.Mined.Height else null
+                    if (m != null) {
+                        queue.markSettled(e.txid, m.height)
+                        log("SETTLED ${e.txid} height=${m.height} (refused as a double spend of itself)")
+                        settled++
+                        continue
+                    }
+                    queue.update(e.txid) { it.copy(state = st, attempts = it.attempts + 1, lastResult = "rejected: ${r.message}") }
                     log("BROADCAST ${e.txid} rejected (${r.message})")
                     rejected++
                 }

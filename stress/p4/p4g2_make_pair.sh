@@ -6,6 +6,8 @@
 # broadcast. Do not run while another job syncs or sends from wallets/testnet-a.
 #   ./p4g2_make_pair.sh [out-dir=stress/p4/logs/p4g2-pair]
 # Writes tx1.hex / tx2.hex (raw tx as hex, for `inject`) and pair.env (TX1, TX2, SHARED_NF).
+# TO1 / TO2 (env) override the recipients (default desktop accounts A and B), e.g. P4.G4.T2
+# pays an emulator's wallet with tx1.
 set -euo pipefail
 source "$(dirname "$0")/../../spikes/zcash/env.sh"
 CLI="$ROOT/offline-core/target/release/offline-cli"
@@ -13,8 +15,8 @@ OUT="${1:-$ROOT/stress/p4/logs/p4g2-pair}"
 rm -rf "$OUT"; mkdir -p "$OUT/w1" "$OUT/w2"
 for d in w1 w2; do cp "$W/data.sqlite" "$W/keys.toml" "$OUT/$d/"; done
 
-nonet "$CLI" -w "$OUT/w1" pay --account "$ACCT_D" --to "$ADDR_A" --amount 100000 -i "$ID" --raw-out "$OUT/tx1.raw" >"$OUT/tx1.json"
-nonet "$CLI" -w "$OUT/w2" pay --account "$ACCT_D" --to "$ADDR_B" --amount 110000 -i "$ID" --raw-out "$OUT/tx2.raw" >"$OUT/tx2.json"
+nonet "$CLI" -w "$OUT/w1" pay --account "$ACCT_D" --to "${TO1:-$ADDR_A}" --amount 100000 -i "$ID" --raw-out "$OUT/tx1.raw" >"$OUT/tx1.json"
+nonet "$CLI" -w "$OUT/w2" pay --account "$ACCT_D" --to "${TO2:-$ADDR_B}" --amount 110000 -i "$ID" --raw-out "$OUT/tx2.raw" >"$OUT/tx2.json"
 for t in tx1 tx2; do python3 -c "import sys; print(open(sys.argv[1], 'rb').read().hex())" "$OUT/$t.raw" >"$OUT/$t.hex"; done
 
 TX1=$(python3 -c "import json; print(json.load(open('$OUT/tx1.json'))['txid'])")

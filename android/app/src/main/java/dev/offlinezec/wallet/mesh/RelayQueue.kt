@@ -21,7 +21,8 @@ class RelayQueue(
     private val maxBytes: Long = 8L * 1024 * 1024,
     private val now: () -> Long = System::currentTimeMillis,
 ) {
-    enum class State { QUEUED, SENT, SETTLED, REJECTED }
+    /** CONFLICTED: a double spend that lost (P4.G4); kept for the record, no longer carried. */
+    enum class State { QUEUED, SENT, SETTLED, REJECTED, CONFLICTED }
 
     data class Entry(
         val txid: String,
@@ -122,6 +123,18 @@ class RelayQueue(
     fun markSettled(txid: String, height: Long?): Entry? = update(txid) {
         if (it.state == State.SETTLED && (height == null || it.minedHeight == height)) it
         else it.copy(state = State.SETTLED, minedHeight = height ?: it.minedHeight, settledAt = it.settledAt ?: now())
+    }
+
+    /** [txid] can never be mined: [why] (the mined txid that beat it, or the rejection). */
+    fun markConflicted(txid: String, why: String): Entry? = update(txid) {
+        if (it.state == State.CONFLICTED || it.state == State.SETTLED) it
+        else it.copy(state = State.CONFLICTED, lastResult = "conflicted: $why")
+    }
+
+    /** Debug: drop one entry (test clean-up). */
+    fun forget(txid: String) = synchronized(lock) {
+        remove(txid)
+        version++
     }
 
     fun clear() = synchronized(lock) {

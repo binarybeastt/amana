@@ -51,6 +51,7 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
@@ -72,7 +73,9 @@ import dev.offlinezec.wallet.mesh.RelayQueue
 import dev.offlinezec.wallet.qr.FrameEncoder
 import dev.offlinezec.wallet.qr.QrAnalyzer
 import dev.offlinezec.wallet.qr.qrBitmap
+import dev.offlinezec.wallet.incomingUnsettled
 import dev.offlinezec.wallet.receivedLabel
+import dev.offlinezec.wallet.sentLabel
 import dev.offlinezec.wallet.wallet.Caps
 import dev.offlinezec.wallet.wallet.Limits
 import dev.offlinezec.wallet.wallet.PrepareStatus
@@ -184,6 +187,14 @@ fun HomeScreen(c: AppController, go: (Screen) -> Unit) {
                 Text("${zec(sync.shieldedTotal)} ZEC", style = MaterialTheme.typography.headlineMedium, modifier = Modifier.testTag("balance_total"))
                 Text("Ironwood spendable ${zec(sync.ironwoodAvailable)}", modifier = Modifier.testTag("balance_ironwood"))
                 offlineAvailable?.let { Text("Ready for offline: ${zec(it)}", modifier = Modifier.testTag("balance_offline")) }
+                // P4.G4: received offline but unmined is shown apart from the balance; conflicted never counts.
+                val incoming = incomingUnsettled(received)
+                if (incoming > 0) Text("Received offline, not yet settled: ${zec(incoming)}", modifier = Modifier.testTag("balance_incoming"))
+                val lost = received.filter { it.conflicted }
+                if (lost.isNotEmpty()) Text(
+                    "Conflicted, not counted: ${zec(lost.sumOf { it.amount })} (${lost.size} double spend${if (lost.size == 1) "" else "s"})",
+                    color = MaterialTheme.colorScheme.error, modifier = Modifier.testTag("balance_conflicted"),
+                )
                 val pct = (sync.progress * 100).toInt()
                 Text(
                     "${sync.status.lowercase()} · $pct% · block ${sync.scannedHeight ?: "?"} of ${sync.networkHeight ?: "?"}",
@@ -198,7 +209,9 @@ fun HomeScreen(c: AppController, go: (Screen) -> Unit) {
             Button(onClick = { c.resetReceive(); go(Screen.Receive) }, Modifier.weight(1f).testTag("nav_receive")) { Text("Receive") }
         }
         OutlinedButton(onClick = { go(Screen.Payments) }, Modifier.fillMaxWidth().testTag("nav_payments")) {
-            Text("Payments (${pending.size} to send, ${received.count { !it.settled }} unsettled)")
+            val lost = c.meshInfo.collectAsState().value.queue.count { it.mine && it.state == RelayQueue.State.CONFLICTED } + received.count { it.conflicted }
+            Text("Payments (${pending.size - c.conflictedSent().size} to send, ${received.count { !it.settled && !it.conflicted }} unsettled" +
+                (if (lost > 0) ", $lost conflicted" else "") + ")")
         }
         OutlinedButton(onClick = { c.broadcastNow() }, Modifier.fillMaxWidth().testTag("broadcast_now")) { Text("Broadcast now") }
         val caps by c.capsState.collectAsState()
@@ -273,6 +286,7 @@ fun relayLabel(e: RelayQueue.Entry): String = when (e.state) {
     RelayQueue.State.SENT -> "broadcast, waiting to be mined"
     RelayQueue.State.SETTLED -> "settled" + (e.minedHeight?.let { " at block $it" } ?: "")
     RelayQueue.State.REJECTED -> "rejected by the network"
+    RelayQueue.State.CONFLICTED -> "conflicted: double spend, will never settle"
 }
 
 @Composable
@@ -494,15 +508,18 @@ fun PaymentsScreen(c: AppController, showQr: () -> Unit, back: () -> Unit) {
         Text("Payments", style = MaterialTheme.typography.titleLarge)
         Text("Sent, waiting to reach the network", style = MaterialTheme.typography.titleSmall)
         if (pending.isEmpty()) Text("none")
+        val m by c.meshInfo.collectAsState()
+        val lostSent = m.queue.filter { it.mine && it.state == RelayQueue.State.CONFLICTED }.map { it.txid }.toSet()
         pending.forEach { p ->
-            Card(Modifier.fillMaxWidth()) {
+            val lost = p.txid in lostSent
+            Card(Modifier.fillMaxWidth().testTag("sent_${p.txid.take(16)}")) {
                 Column(Modifier.padding(12.dp)) {
                     Text(
-                        if (p.offline) "${zec(p.amount)} ZEC · signed offline, not yet settled" else "online transaction, waiting to be mined",
-                        fontWeight = FontWeight.Bold,
+                        if (p.offline) "${zec(p.amount)} ZEC · ${sentLabel(lost)}" else "online transaction, waiting to be mined",
+                        fontWeight = FontWeight.Bold, color = if (lost) MaterialTheme.colorScheme.error else Color.Unspecified,
                     )
                     Text(p.txid, fontFamily = FontFamily.Monospace, fontSize = 10.sp)
-                    if (p.offline) {
+                    if (p.offline && !lost) {
                         OutlinedButton(
                             onClick = { c.showPending(p.txid); showQr() },
                             Modifier.fillMaxWidth().testTag("pending_show_${p.txid.take(16)}"),
@@ -515,16 +532,19 @@ fun PaymentsScreen(c: AppController, showQr: () -> Unit, back: () -> Unit) {
         Text("Received", style = MaterialTheme.typography.titleSmall)
         if (received.isEmpty()) Text("none")
         received.forEach { r ->
-            Card(Modifier.fillMaxWidth()) {
+            Card(Modifier.fillMaxWidth().testTag("received_${r.txid.take(16)}")) {
                 Column(Modifier.padding(12.dp)) {
-                    Text("${zec(r.amount)} ZEC · ${receivedLabel(r)}", fontWeight = FontWeight.Bold)
+                    Text(
+                        "${zec(r.amount)} ZEC · ${receivedLabel(r)}", fontWeight = FontWeight.Bold,
+                        color = if (r.conflicted) MaterialTheme.colorScheme.error else Color.Unspecified,
+                        modifier = Modifier.testTag("received_label_${r.txid.take(16)}"),
+                    )
                     r.memo?.let { Text("“$it”") }
                     Text(r.txid, fontFamily = FontFamily.Monospace, fontSize = 10.sp)
                 }
             }
         }
         Spacer(Modifier.height(8.dp))
-        val m by c.meshInfo.collectAsState()
         Text("Carrying for the mesh", style = MaterialTheme.typography.titleSmall)
         if (m.queue.isEmpty()) Text("none")
         m.queue.sortedByDescending { it.firstSeen }.forEach { e ->

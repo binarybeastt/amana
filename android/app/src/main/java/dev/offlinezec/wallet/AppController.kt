@@ -19,6 +19,8 @@ import dev.offlinezec.wallet.wallet.ReceiveResult
 import dev.offlinezec.wallet.wallet.Received
 import dev.offlinezec.wallet.wallet.ReceivedStore
 import dev.offlinezec.wallet.wallet.Receiver
+import dev.offlinezec.wallet.wallet.Reconcile
+import dev.offlinezec.wallet.mesh.ChainNode
 import dev.offlinezec.wallet.wallet.Settler
 import dev.offlinezec.wallet.wallet.WalletManager
 import dev.offlinezec.wallet.wallet.WalletState
@@ -76,10 +78,10 @@ class AppController(private val app: Application) {
     val received = ReceivedStore(app)
     val preparer = Preparer(wallet)
     val caps = CapsStore(app)
-    val payer = Payer(wallet) { caps.get() }
-    val receiver = Receiver(wallet, received)
-    val settler = Settler(wallet, received)
     val mesh = Mesh(app, scope, wallet, received)
+    val payer = Payer(wallet, { caps.get() }, ::conflictedSent)
+    val receiver = Receiver(wallet, received)
+    val settler = Settler(wallet, received, ::conflictedSent)
 
     private val _prepare = MutableStateFlow<PrepareStatus?>(null)
     val prepare: StateFlow<PrepareStatus?> = _prepare
@@ -129,7 +131,7 @@ class AppController(private val app: Application) {
                     val now = System.currentTimeMillis()
                     if (online && now - lastBroadcast > BROADCAST_EVERY_MS && settler.outgoing().isNotEmpty()) {
                         lastBroadcast = now
-                        settler.broadcastAll()
+                        applyBroadcast(settler.broadcastAll())
                         refresh()
                     }
                 }
@@ -158,9 +160,40 @@ class AppController(private val app: Application) {
             mesh.addOwn(p.txid, wallet.core.pendingRaw(w.dbPath, p.txid))
             Log.i(TAG, "RECOVERED txid=${p.txid}: stored payment added to the relay queue")
         }
-        // Our own and received payments: the wallet sees them mined when it syncs.
-        for (e in mesh.queue.unsettled().filter { it.mine || it.forUs }) {
-            wallet.core.minedHeight(w.dbPath, e.txid)?.let { mesh.queue.markSettled(e.txid, it.toLong()) }
+        reconcile(w.dbPath)
+        _payments.value = received.all()
+    }
+
+    /** Our own payments that can never be mined (P4.G4): not rebroadcast, not shown as pending. */
+    fun conflictedSent(): Set<String> =
+        mesh.queue.all().filter { it.mine && it.state == RelayQueue.State.CONFLICTED }.mapTo(HashSet()) { it.txid }
+
+    /**
+     * P4.G4, reconciliation: every payment this phone knows of (the relay queue holds them all:
+     * own, received, relayed) ends settled, conflicted or still pending, from chain facts
+     * ([Reconcile]). Own and received ones are seen mined by the wallet (it syncs); relays learn
+     * it from lightwalletd (Broadcaster). Conflicts come from the wallet seeing one of our notes
+     * spent by a different mined tx, the nullifier set knowing a different mined tx with a
+     * shared nullifier, or a double-spend rejection. Seen mined always wins.
+     */
+    private suspend fun reconcile(db: String) {
+        val minedSpends = wallet.core.notes(db)
+            .filter { it.status == "spent" && it.nullifier != null && it.spentBy != null }
+            .associate { it.nullifier!! to it.spentBy!! }
+        val changed = Reconcile.apply(mesh.queue, mesh.nullifiers.conflicts(), minedSpends) { wallet.core.minedHeight(db, it.txid)?.toLong() }
+        for ((e, o) in changed) Log.i(TAG, "RECONCILE txid=${e.txid} $o (${e.lastResult}) mine=${e.mine} for_us=${e.forUs}")
+        // Received payments carry their outcome, so the label and balance never depend on the queue.
+        for (r in received.all().filter { !it.settled && it.conflictedBy == null }) {
+            val e = mesh.queue.get(r.txid)?.takeIf { it.state == RelayQueue.State.CONFLICTED } ?: continue
+            received.put(r.copy(conflictedBy = e.lastResult?.removePrefix("conflicted: ") ?: "double spend"))
+            Log.w(TAG, "RECONCILE received txid=${r.txid} conflicted: not counted")
+        }
+    }
+
+    /** Broadcast results from the wallet path: a double-spend rejection is a chain fact too. */
+    private fun applyBroadcast(results: Map<String, String>) {
+        for ((txid, text) in results) {
+            if (text.startsWith("failed") && ChainNode.isDoubleSpend(text)) mesh.queue.markConflicted(txid, "rejected as a double spend: $text")
         }
     }
 
@@ -281,7 +314,7 @@ class AppController(private val app: Application) {
     }
 
     fun broadcastNow() = scope.launch {
-        val r = settler.broadcastAll()
+        val r = settler.broadcastAll().also(::applyBroadcast)
         say(if (r.isEmpty()) "Nothing to broadcast" else r.entries.joinToString("\n") { "${it.key.take(12)}…: ${it.value}" })
         refresh()
     }
@@ -338,10 +371,15 @@ class AppController(private val app: Application) {
         o.put("received", JSONArray().also { a ->
             _payments.value.forEach { r ->
                 a.put(JSONObject().put("txid", r.txid).put("amount", r.amount).put("settled", r.settled)
+                    .put("conflicted", r.conflicted).put("conflicted_by", r.conflictedBy ?: JSONObject.NULL)
                     .put("mined_height", r.minedHeight ?: JSONObject.NULL).put("label", receivedLabel(r)))
             }
         })
         o.put("pending_sent", JSONArray(_pendingSent.value.map { it.txid }))
+        o.put("conflicted_sent", JSONArray(conflictedSent().toList()))
+        o.put("balance", JSONObject().put("total", wallet.sync.value.shieldedTotal)
+            .put("incoming_unsettled", incomingUnsettled(_payments.value))
+            .put("conflicted_not_counted", _payments.value.filter { it.conflicted }.sumOf { it.amount }))
         _caps.value.let { c ->
             o.put("caps", JSONObject().put("enabled", c.enabled).put("per_payment", c.perPayment)
                 .put("per_session", c.perSession).put("unsettled", Limits.unsettled(_pendingSent.value)))
@@ -405,8 +443,16 @@ class AppController(private val app: Application) {
     }
 }
 
-fun receivedLabel(r: Received): String =
-    if (r.settled) "settled" else "received, not yet settled"
+fun receivedLabel(r: Received): String = receivedResult(r).label
+
+fun receivedResult(r: Received): Reconcile.Result =
+    Reconcile.reconcile(Reconcile.Role.RECEIVER, Reconcile.Facts(r.minedHeight?.toLong(), r.conflictedBy))
+
+/** Received offline, not yet settled, and not conflicted: the only received sum shown (P4.G4). */
+fun incomingUnsettled(rs: List<Received>): Long = rs.filter { receivedResult(it).countsAsIncoming }.sumOf { it.amount }
+
+fun sentLabel(conflicted: Boolean): String =
+    Reconcile.reconcile(Reconcile.Role.SENDER, Reconcile.Facts(doubleSpendRejected = conflicted)).label
 
 fun zec(zats: Long): String {
     val s = "%d.%08d".format(zats / 100_000_000, zats % 100_000_000)
