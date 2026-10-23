@@ -126,12 +126,40 @@ pub extern "system" fn Java_dev_offlinezec_wallet_core_NativeCore_planSplit(
     network: JString,
     account: JString,
     address: JString,
+    target: jni::sys::jlong,
 ) -> jstring {
     run(&mut env, |env| {
         let store = open(env, &db, &network)?;
         let (account, address) = (string(env, &account)?, string(env, &address)?);
-        json(&store.plan_split_request(&account, &address)?)
+        // target <= 0: the whole balance
+        let target = u64::try_from(target).ok().filter(|t| *t > 0);
+        json(&store.plan_split_request(&account, &address, target)?)
     })
+}
+
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_dev_offlinezec_wallet_core_NativeCore_lockOfflineNotes(
+    mut env: JNIEnv,
+    _: JClass,
+    db: JString,
+    network: JString,
+    account: JString,
+) -> jstring {
+    run(&mut env, |env| {
+        let mut store = open(env, &db, &network)?;
+        let account = string(env, &account)?;
+        json(&store.lock_offline_notes(&account)?)
+    })
+}
+
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_dev_offlinezec_wallet_core_NativeCore_releaseSelectionLocks(
+    mut env: JNIEnv,
+    _: JClass,
+    db: JString,
+    network: JString,
+) -> jstring {
+    run(&mut env, |env| json(&open(env, &db, &network)?.release_selection_locks()?))
 }
 
 #[unsafe(no_mangle)]

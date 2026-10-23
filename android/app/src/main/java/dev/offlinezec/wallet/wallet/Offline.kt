@@ -24,8 +24,11 @@ const val SPEND_CONFIRMATIONS = 10
 
 /** Where "prepare for offline" stands, derived from the wallet DB every time (it is the truth). */
 sealed interface PrepareStatus {
-    /** No split in flight. [notes] = available Ironwood notes; [ready] = all have 10 confirmations. */
-    data class Idle(val notes: List<Note>, val tip: Long?, val ready: Boolean) : PrepareStatus
+    /**
+     * No split in flight. [notes] = available Ironwood notes in the offline pocket; [ready] = all
+     * have 10 confirmations. [wallet] = available Ironwood value outside it, which can be prepared.
+     */
+    data class Idle(val notes: List<Note>, val tip: Long?, val ready: Boolean, val wallet: Long = 0) : PrepareStatus
     /** A split (or other online tx of ours) is waiting to be mined. */
     data class Waiting(val txid: String) : PrepareStatus
 }
@@ -46,25 +49,35 @@ class Preparer(private val mgr: WalletManager) {
         val inFlight = mgr.core.inFlightOnlineTxs(w.dbPath)
         if (inFlight.isNotEmpty()) return PrepareStatus.Waiting(inFlight.first())
         val tip = mgr.sync.value.networkHeight ?: mgr.sync.value.scannedHeight
-        val notes = mgr.core.notes(w.dbPath)
+        val (notes, outside) = mgr.core.notes(w.dbPath)
             .filter { it.accountUuid == w.accountUuid && it.pool == "ironwood" && it.status == "available" }
             .sortedByDescending { it.value }
+            .partition { it.offline }
         val ready = notes.isNotEmpty() && tip != null &&
             notes.all { n -> n.minedHeight != null && n.minedHeight + SPEND_CONFIRMATIONS <= tip + 1 }
-        return PrepareStatus.Idle(notes, tip, ready)
+        return PrepareStatus.Idle(notes, tip, ready, outside.sumOf { it.value })
     }
 
-    /** Sends the split. Returns its txid, or the txid of the split already in flight. */
-    suspend fun prepare(): String = mutex.withLock {
+    /**
+     * Sends the split: [target] zatoshis into the offline pocket, or everything outside it when
+     * null. Returns its txid, or the txid of the split already in flight.
+     */
+    suspend fun prepare(target: Long? = null): String = mutex.withLock {
         val w = mgr.wallet ?: error("no wallet")
         mgr.core.inFlightOnlineTxs(w.dbPath).firstOrNull()?.let {
             Log.i(TAG, "prepare: split $it already in flight; not sending another")
             return it
         }
-        val req = mgr.core.planSplit(w.dbPath, w.accountUuid, w.address)
-        Log.i(TAG, "prepare: ${req.inputNotes} notes, ${req.inputTotal} zats, fee ${req.fee}")
-        val proposal = w.synchronizer.proposeFulfillingPaymentUri(w.account, req.zip321)
-        val results = w.synchronizer.createProposedTransactions(proposal, mgr.spendingKey()).toList()
+        val req = mgr.core.planSplit(w.dbPath, w.accountUuid, w.address, target)
+        Log.i(TAG, "prepare: ${req.inputNotes} notes, ${req.inputTotal} zats, fee ${req.fee}, target $target")
+        // The SDK picks its own inputs: keep the pocket out of its reach while it builds.
+        val locked = mgr.core.lockOfflineNotes(w.dbPath, w.accountUuid)
+        val results = try {
+            val proposal = w.synchronizer.proposeFulfillingPaymentUri(w.account, req.zip321)
+            w.synchronizer.createProposedTransactions(proposal, mgr.spendingKey()).toList()
+        } finally {
+            if (locked > 0) mgr.core.releaseSelectionLocks(w.dbPath)
+        }
         val txid = results.firstOrNull()?.txIdString() ?: error("SDK created no transaction")
         results.filterIsInstance<TransactionSubmitResult.Failure>().forEach {
             // Stored but not sent: the SDK resubmits unmined txs with expiry > tip on its own.

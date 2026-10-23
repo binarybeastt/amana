@@ -23,6 +23,8 @@ data class Note(
     val spentBy: String?,
     /** Hex, as offline-core and the nullifier set write it. Unknown until the note is mined. */
     val nullifier: String? = null,
+    /** In the offline pocket: only these are spent offline (offline-core's `NoteInfo.offline`). */
+    val offline: Boolean = true,
 ) {
     val key get() = "$txid:$outputIndex"
 }
@@ -135,14 +137,17 @@ class Core(context: Context, private val network: String = "test") {
                 status = o.getString("status"),
                 spentBy = if (o.isNull("spent_by")) null else o.getString("spent_by"),
                 nullifier = if (o.isNull("nullifier")) null else o.optString("nullifier", "").ifEmpty { null },
+                offline = o.optBoolean("offline", true),
             )
         }
     }
 
-    suspend fun planSplit(db: String, account: String, address: String): SplitRequest {
+    /** [target]: zatoshis to add to the offline pocket; null = everything outside it. */
+    suspend fun planSplit(db: String, account: String, address: String, target: Long? = null): SplitRequest {
         val o = JSONObject(call("planSplit", dbArgs(db).apply {
             putString(CoreProvider.KEY_ACCOUNT, account)
             putString(CoreProvider.KEY_ADDRESS, address)
+            putLong(CoreProvider.KEY_AMOUNT, target ?: 0)
         }))
         return SplitRequest(
             inputNotes = o.getInt("input_notes"),
@@ -151,6 +156,11 @@ class Core(context: Context, private val network: String = "test") {
             zip321 = o.getString("zip321"),
         )
     }
+
+    suspend fun lockOfflineNotes(db: String, account: String): Int =
+        call("lockOfflineNotes", dbArgs(db).apply { putString(CoreProvider.KEY_ACCOUNT, account) }).toInt()
+
+    suspend fun releaseSelectionLocks(db: String): Int = call("releaseSelectionLocks", dbArgs(db)).toInt()
 
     suspend fun inFlightOnlineTxs(db: String): List<String> {
         val a = JSONArray(call("inFlightOnlineTxs", dbArgs(db)))

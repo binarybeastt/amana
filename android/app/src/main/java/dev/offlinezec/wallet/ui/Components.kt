@@ -51,24 +51,21 @@ val CardShape = RoundedCornerShape(32.dp)
 val ButtonShape = RoundedCornerShape(16.dp)
 val Pill = RoundedCornerShape(50)
 
-/** A screen: background, system-bar padding, a scrolling column with 24 dp gutters (8 pt grid). */
+/** A screen: background, system-bar padding, a scrolling column with 16 dp gutters (8 pt grid). */
 @Composable
 fun Page(bg: Color = Ink.page, scroll: Boolean = true, gap: Dp = 16.dp, content: @Composable ColumnScope.() -> Unit) {
     val m = Modifier.fillMaxSize().background(bg).statusBarsPadding().navigationBarsPadding()
-        .padding(horizontal = 24.dp).let { if (scroll) it.verticalScroll(rememberScrollState()) else it }
+        .padding(horizontal = 16.dp).let { if (scroll) it.verticalScroll(rememberScrollState()) else it }
     Column(m, verticalArrangement = Arrangement.spacedBy(gap), content = content)
 }
 
-/** Top of a sheet-like screen: the grabber line, with a quiet close control at the left. */
+/** Top of a pushed screen: a quiet close control at the left, an optional action at the right. */
 @Composable
 fun SheetTop(close: () -> Unit, trailing: @Composable RowScope.() -> Unit = {}) {
-    Box(Modifier.fillMaxWidth().padding(top = 8.dp)) {
-        Box(Modifier.align(Alignment.TopCenter).width(40.dp).height(4.dp).clip(Pill).background(Ink.line))
-        Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-            IconButton(Glyph.ChevronDown, close, tag = "back", filled = false)
-            Spacer(Modifier.weight(1f))
-            trailing()
-        }
+    Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+        IconButton(Glyph.ChevronDown, close, tag = "back", filled = false)
+        Spacer(Modifier.weight(1f))
+        trailing()
     }
 }
 
@@ -265,8 +262,8 @@ fun ListRow(
 @Composable
 fun ValueRow(label: String, value: String, modifier: Modifier = Modifier, color: Color = Ink.text, labelColor: Color = Ink.dim) {
     Row(modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        Text(label, color = labelColor, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
-        Text(value, color = color, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
+        Text(label, color = labelColor, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Normal, modifier = Modifier.weight(1f))
+        Text(value, color = color, style = MaterialTheme.typography.labelMedium)
     }
 }
 

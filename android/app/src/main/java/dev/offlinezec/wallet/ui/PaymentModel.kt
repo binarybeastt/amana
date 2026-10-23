@@ -117,21 +117,23 @@ fun paymentRows(
 }
 
 /**
- * P5.G2: the wallet's own value, split three ways. Every unspent note of ours falls in exactly
- * one part, so available + locked + pending is the wallet total (what the SDK shows too: notes
- * spent by an offline payment are already gone from it).
+ * P5.G2: the wallet's own value, split four ways. Every unspent note of ours falls in exactly
+ * one part, so available + locked + pending + wallet is the wallet total (what the SDK shows too:
+ * notes spent by an offline payment are already gone from it).
  */
 data class BalanceSplit(
-    /** Mined Ironwood notes with enough confirmations: offline-core can pay with them now. */
+    /** Offline pocket notes, mined, with enough confirmations: offline-core can pay with them now. */
     val available: Long,
-    /** Mined, but not spendable offline yet: too few confirmations, or not in the Ironwood pool. */
+    /** Pocket notes not spendable offline yet: too few confirmations, or not in the Ironwood pool. */
     val locked: Long,
     /** Ours but unmined: change and incoming from transactions still waiting to be mined. */
     val pending: Long,
     /** Value of notes our own unsettled offline payments spend (already paid; not in the total). */
     val inPayments: Long,
+    /** Mined notes outside the offline pocket: spendable online, or after "prepare". */
+    val wallet: Long = 0,
 ) {
-    val total get() = available + locked + pending
+    val total get() = available + locked + pending + wallet
 }
 
 /** [notes]: this account's notes from offline-core; [tip]: the latest height known. */
@@ -140,6 +142,7 @@ fun balanceSplit(notes: List<Note>, tip: Long?): BalanceSplit {
     var locked = 0L
     var pending = 0L
     var inPayments = 0L
+    var wallet = 0L
     for (n in notes) {
         when (n.status) {
             "spent" -> {}
@@ -147,11 +150,12 @@ fun balanceSplit(notes: List<Note>, tip: Long?): BalanceSplit {
             "pending" -> pending += n.value
             else -> {
                 val confirmed = n.minedHeight != null && tip != null && n.minedHeight + SPEND_CONFIRMATIONS <= tip + 1
-                if (n.pool == "ironwood" && confirmed) available += n.value else locked += n.value
+                if (!n.offline) wallet += n.value
+                else if (n.pool == "ironwood" && confirmed) available += n.value else locked += n.value
             }
         }
     }
-    return BalanceSplit(available, locked, pending, inPayments)
+    return BalanceSplit(available, locked, pending, inPayments, wallet)
 }
 
 /** "07daed6f…c8ceac": first 8 and last 6 hex digits. */

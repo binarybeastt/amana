@@ -172,4 +172,22 @@ class PaymentModelTest {
         a = ""; for (k in "007") a = keypadInput(a, k)
         assertEquals("7", a)
     }
+
+    /** Offline cash: only pocket notes are ready offline; the rest is "in wallet", still in the total. */
+    @Test
+    fun onlyPocketNotesAreReadyOffline() {
+        val tip = 1_000L
+        val zec = 100_000_000L
+        val notes = listOf(
+            note("split", 0, 2 * zec / 10, 900, "available"),
+            note("split", 1, 5 * zec / 100, 995, "available"), // too few confirmations
+            Note("acct", "ironwood", "split", 2, 75 * zec / 100, 900, "available", null, offline = false), // leftover change
+            Note("acct", "ironwood", "faucet", 0, zec, 900, "available", null, offline = false),
+        )
+        val s = balanceSplit(notes, tip)
+        assertEquals(2 * zec / 10, s.available)
+        assertEquals(5 * zec / 100, s.locked)
+        assertEquals(175 * zec / 100, s.wallet)
+        assertEquals(notes.sumOf { it.value }, s.total)
+    }
 }

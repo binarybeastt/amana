@@ -91,6 +91,26 @@ fn output_ref(n: &NoteInfo) -> anyhow::Result<OutputRef> {
 }
 
 impl WalletStore {
+    /// Locks every available pocket note of `account_uuid` so an online split (built by the
+    /// wallet SDK, which picks its own inputs) cannot spend them. Undo with
+    /// [`Self::release_selection_locks`]. Returns how many were locked.
+    pub fn lock_offline_notes(&mut self, account_uuid: &str) -> anyhow::Result<usize> {
+        let tip = self.db.chain_height()?.context("wallet has never synced")?;
+        let pocket: Vec<OutputRef> = self
+            .notes()?
+            .iter()
+            .filter(|n| n.account_uuid == account_uuid && n.offline && n.status == NoteStatus::Available)
+            .map(output_ref)
+            .collect::<Result<_, _>>()?;
+        if !pocket.is_empty() {
+            let until = BlockHeight::from(u32::from(tip) + 1_000_000);
+            self.db
+                .lock_outputs(&pocket, SELECTION_LOCK_OWNER, until)
+                .map_err(|e| anyhow!("locking pocket notes: {e:?}"))?;
+        }
+        Ok(pocket.len())
+    }
+
     /// Releases selection locks left behind by an interrupted [`Self::pay_offline`].
     pub fn release_selection_locks(&mut self) -> anyhow::Result<usize> {
         let mut released = 0;
@@ -161,6 +181,7 @@ impl WalletStore {
             .iter()
             .filter(|n| {
                 n.pool == "ironwood"
+                    && n.offline
                     && n.status == NoteStatus::Available
                     && n.mined_height.is_some_and(|h| h + MIN_CONFIRMATIONS <= target)
             })

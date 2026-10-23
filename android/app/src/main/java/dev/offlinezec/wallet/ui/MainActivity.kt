@@ -23,6 +23,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -246,11 +248,22 @@ fun WalletScreens(c: AppController) {
         Screen.Payments -> PaymentsScreen(c, showQr = { payScan = false; screen = Screen.Pay }) { screen = Screen.Home }
         Screen.Limits -> LimitsScreen(c) { screen = Screen.Home }
     }
+    PaymentSounds(c)
 }
+
+/**
+ * Really behind the network, not the SDK's routine catch-up on each new block (~75 s), which
+ * would otherwise flash "Syncing" and a progress bar every minute or so.
+ */
+fun isCatchingUp(s: SyncInfo) = s.status == "SYNCING" && s.networkHeight != null &&
+    (s.scannedHeight == null || s.networkHeight - s.scannedHeight > CATCH_UP_BLOCKS)
+
+private const val CATCH_UP_BLOCKS = 10
 
 /** One word for the connection: "Online", "Offline", "Syncing 42%". Block heights stay out of sight. */
 fun syncText(s: SyncInfo): String = when {
-    s.status == "SYNCING" && s.networkHeight != null -> "Syncing ${(s.progress * 100).toInt()}%"
+    isCatchingUp(s) -> "Syncing ${(s.progress * 100).toInt()}%"
+    s.status == "SYNCING" && !isOffline(s) -> "Online"
     isOffline(s) -> "Offline"
     s.atTip -> "Online"
     else -> s.status.lowercase().replaceFirstChar { it.uppercase() }
@@ -345,39 +358,67 @@ fun TopBar(c: AppController, sync: SyncInfo, go: (Screen, Boolean) -> Unit) {
     }
 }
 
-/** The black hero card: coin, total, what's ready offline. Tap for the rest of the P5.G2 split. */
+/**
+ * The black balance card, the same on Home and Offline cash: coin and name, the amount, then one
+ * row of facts. [extra] goes under that row (Home's split, a progress bar).
+ */
+@Composable
+fun BalanceCard(
+    title: String,
+    sub: String,
+    amount: Long,
+    amountTag: String? = null,
+    onClick: (() -> Unit)? = null,
+    compact: Boolean = false,
+    footer: @Composable RowScope.() -> Unit,
+    extra: @Composable ColumnScope.() -> Unit = {},
+) {
+    // compact (short screens only): no name row and tighter padding, so a keypad still fits below.
+    DarkCard(color = Ink.black, padding = if (compact) 16.dp else 24.dp, gap = 0.dp, onClick = onClick) {
+        if (!compact) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                ZecAvatar(40.dp)
+                Column {
+                    Text(title, style = MaterialTheme.typography.titleMedium)
+                    Text(sub, style = MaterialTheme.typography.bodyMedium, color = Ink.dim)
+                }
+            }
+            Spacer(Modifier.height(32.dp))
+        }
+        Text(zecText(amount), style = MaterialTheme.typography.displayMedium, maxLines = 1,
+            modifier = if (amountTag != null) Modifier.testTag(amountTag) else Modifier)
+        Spacer(Modifier.height(if (compact) 16.dp else 24.dp))
+        Row(Modifier.fillMaxWidth().height(36.dp), verticalAlignment = Alignment.CenterVertically, content = footer)
+        extra()
+    }
+}
+
+/** Home's card: total, what's ready offline. Tap for the rest of the P5.G2 split. */
 @Composable
 fun HeroCard(sync: SyncInfo, split: BalanceSplit) {
     var open by rememberSaveable { mutableStateOf(false) }
-    DarkCard(color = Ink.black, padding = 24.dp, gap = 0.dp, onClick = { open = !open }) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-            ZecAvatar(40.dp)
-            Column {
-                Text("Zcash", style = MaterialTheme.typography.titleMedium)
-                Text("Testnet", style = MaterialTheme.typography.bodyMedium, color = Ink.dim)
-            }
-        }
-        Spacer(Modifier.height(32.dp))
-        Text(zecText(split.total), style = MaterialTheme.typography.displayMedium, maxLines = 1, modifier = Modifier.testTag("balance_total"))
-        Spacer(Modifier.height(24.dp))
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+    BalanceCard(
+        "Zcash", "Testnet", split.total, "balance_total", onClick = { open = !open },
+        footer = {
             FactPill(bg = Ink.card) {
                 Dot(Ink.green, 6.dp)
                 Text("${zec(split.available)} ready offline", style = MaterialTheme.typography.labelMedium, modifier = Modifier.testTag("balance_offline"))
             }
             Spacer(Modifier.weight(1f))
             LineIcon(if (open) Glyph.ChevronDown else Glyph.ChevronRight, size = 20.dp, color = Ink.dim)
-        }
+        },
+    ) {
         if (open) {
             Spacer(Modifier.height(16.dp))
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                ValueRow("In wallet", zec(split.wallet), Modifier.testTag("balance_wallet"))
                 ValueRow("Confirming", zec(split.locked), Modifier.testTag("balance_ironwood"))
                 ValueRow("Change due", zec(split.pending), Modifier.testTag("balance_pending"))
                 if (split.inPayments > 0) ValueRow("Paid, settling", zec(split.inPayments), Modifier.testTag("balance_in_payments"))
             }
         }
         // Only a real sync shows progress; an offline phone shows a plain word, never a stuck bar.
-        if (sync.status == "SYNCING") {
+        if (isCatchingUp(sync)) {
             Spacer(Modifier.height(16.dp))
             LinearProgressIndicator(progress = { sync.progress }, modifier = Modifier.fillMaxWidth().clip(Pill), color = Ink.text, trackColor = Ink.raised)
         }
@@ -466,41 +507,91 @@ fun PrepareScreen(c: AppController, back: () -> Unit) {
     val sync by c.wallet.sync.collectAsState()
     val msg by c.message.collectAsState()
     val waiting = prep is PrepareStatus.Waiting
-    // The split spends everything, so every note must be spendable by the SDK's rules first.
+    // The SDK builds the split, and wants every note spendable by its rules first.
     val allSpendable = sync.ironwoodAvailable > 0 && sync.ironwoodAvailable == sync.ironwoodTotal
-    Page {
+    val idle = prep as? PrepareStatus.Idle
+    val wallet = idle?.wallet ?: 0L
+    // null = all of it (the default, as before); otherwise what was typed on the keypad.
+    var amount by rememberSaveable { mutableStateOf<String?>(null) }
+    val typed = amount?.let(::parseZec)
+    val target = if (amount == null || (typed != null && typed >= wallet)) null else typed
+    val valid = wallet > 0 && (amount == null || (typed != null && typed <= wallet))
+    val small = LocalConfiguration.current.screenHeightDp < 760
+    // Adding (something outside the pocket): a fixed screen like Pay, keypad in the free height.
+    // Otherwise, or after a tap on the card, the pocket's notes as a list.
+    var showNotes by rememberSaveable { mutableStateOf(false) }
+    val adding = !waiting && wallet > 0 && !showNotes
+    Page(scroll = !adding, gap = if (small) 8.dp else 16.dp) {
         SheetTop(back)
-        ScreenTitle("Offline cash", "Exact notes you can spend without signal.")
-        DarkCard(color = Ink.black, padding = 24.dp, gap = 8.dp) {
-            when (val p = prep) {
-                is PrepareStatus.Waiting -> {
-                    Text("Confirming split…", style = MaterialTheme.typography.headlineMedium, modifier = Modifier.testTag("prepare_state"))
-                    Spacer(Modifier.height(8.dp))
-                    LinearProgressIndicator(Modifier.fillMaxWidth().clip(Pill), color = Ink.text, trackColor = Ink.raised)
-                }
-                is PrepareStatus.Idle -> {
-                    Text(zecText(p.notes.sumOf { it.value }), style = MaterialTheme.typography.displayMedium, maxLines = 1)
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        val color = if (p.ready) Ink.green else Ink.dim
-                        Dot(color, 6.dp)
-                        Text(if (p.ready) "Ready" else if (p.notes.isEmpty()) "Not prepared" else "Confirming",
-                            style = MaterialTheme.typography.titleSmall, color = color, modifier = Modifier.testTag("prepare_state"))
-                        if (p.notes.isNotEmpty()) Text("· ${p.notes.size} notes", style = MaterialTheme.typography.titleSmall, color = Ink.dim)
+        val pocket = idle?.notes?.sumOf { it.value } ?: 0L
+        val hasNotes = idle?.notes?.isNotEmpty() == true
+        BalanceCard(
+            "Offline cash", idle?.let { "${it.notes.size} notes" } ?: "Testnet", pocket,
+            compact = small && adding,
+            onClick = if (hasNotes && wallet > 0) ({ showNotes = !showNotes }) else null,
+            footer = {
+                FactPill(bg = Ink.card) {
+                    val (text, color) = when {
+                        waiting -> "Confirming…" to Ink.dim
+                        idle == null -> "…" to Ink.dim
+                        idle.ready -> "Ready" to Ink.green
+                        idle.notes.isEmpty() -> "Empty" to Ink.dim
+                        else -> "Confirming" to Ink.dim
                     }
+                    Dot(color, 6.dp)
+                    Text(text, style = MaterialTheme.typography.labelMedium, modifier = Modifier.testTag("prepare_state"))
                 }
-                null -> Text("…")
+                if (hasNotes && wallet > 0) {
+                    Spacer(Modifier.weight(1f))
+                    LineIcon(if (showNotes) Glyph.ChevronDown else Glyph.ChevronRight, size = 20.dp, color = Ink.dim)
+                }
+            },
+        ) {
+            if (waiting) {
+                Spacer(Modifier.height(16.dp))
+                LinearProgressIndicator(Modifier.fillMaxWidth().clip(Pill), color = Ink.text, trackColor = Ink.raised)
             }
         }
-        (prep as? PrepareStatus.Idle)?.let { p ->
+        // How much to add, from what is outside the pocket. Starts at all of it.
+        if (adding) {
+            Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(amount ?: zec(wallet), style = MaterialTheme.typography.displayMedium, maxLines = 1,
+                    color = if (amount == "") Ink.faint else if (!valid) Ink.red else Ink.text, modifier = Modifier.testTag("prepare_amount"))
+                // Fixed height: "Max" appearing must not push the keypad down under a finger.
+                Row(Modifier.height(if (small) 40.dp else 48.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text("of ${zec(wallet)} in wallet", style = MaterialTheme.typography.bodyMedium, color = Ink.dim)
+                    if (amount != null) TextButton("Max", { amount = null }, Modifier.testTag("prepare_max"))
+                }
+            }
+            Keypad({ k -> amount = keypadInput(amount ?: "", k) }, Modifier.weight(1f), maxKeyHeight = 64.dp)
+        } else if (!waiting && idle != null && wallet == 0L) {
+            Text("Everything is offline cash", style = MaterialTheme.typography.bodyMedium, color = Ink.dim,
+                textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp))
+        }
+        if (!showNotes || wallet == 0L) PrimaryButton(
+            if (busy) "Sending…" else if (waiting) "Confirming…" else "Add to offline cash",
+            { c.prepareForOffline(target); amount = null }, Modifier.testTag("prepare_button"),
+            enabled = !busy && !waiting && sync.atTip && allSpendable && valid,
+        )
+        val hint = when {
+            !sync.atTip -> "Waiting for sync"
+            !waiting && !allSpendable && wallet > 0 -> "Waiting for funds to confirm"
+            else -> null
+        }
+        hint?.let { Text(it, style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth().testTag("prepare_hint")) }
+        msg?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
+        if (!adding) idle?.let { p ->
             // One row per note size: "0.01 ZEC × 2" and whether it can be spent offline yet.
-            Column {
+            Column(Modifier.padding(top = 8.dp)) {
                 p.notes.groupBy { it.value }.toSortedMap(compareByDescending { it }).entries.forEachIndexed { i, (value, notes) ->
                     val conf = notes.minOf { n ->
                         if (n.minedHeight != null && p.tip != null) (p.tip - n.minedHeight + 1).coerceAtLeast(0) else 0
                     }
                     val ok = conf >= SPEND_CONFIRMATIONS
                     if (i > 0) HorizontalDivider(color = Ink.card)
-                    Row(Modifier.fillMaxWidth().height(56.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Row(Modifier.fillMaxWidth().height(48.dp), verticalAlignment = Alignment.CenterVertically) {
                         Text("${zec(value)} ZEC × ${notes.size}", style = MaterialTheme.typography.titleMedium,
                             modifier = Modifier.weight(1f).testTag("denomination"))
                         Text(if (ok) "ready" else "$conf/$SPEND_CONFIRMATIONS", style = MaterialTheme.typography.labelMedium,
@@ -509,21 +600,7 @@ fun PrepareScreen(c: AppController, back: () -> Unit) {
                 }
             }
         }
-        val hint = when {
-            !sync.atTip -> "Waiting for sync"
-            !waiting && !allSpendable -> "Waiting for funds to confirm (${zec(sync.ironwoodAvailable)} of ${zec(sync.ironwoodTotal)})"
-            else -> null
-        }
-        Spacer(Modifier.height(8.dp))
-        PrimaryButton(
-            if (busy) "Sending…" else if (waiting) "Confirming…" else "Prepare",
-            { c.prepareForOffline() }, Modifier.testTag("prepare_button"),
-            enabled = !busy && !waiting && sync.atTip && allSpendable,
-        )
-        hint?.let { Text(it, style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth().testTag("prepare_hint")) }
-        msg?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(if (small) 8.dp else 24.dp))
     }
 }
 

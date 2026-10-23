@@ -39,3 +39,45 @@ fn balances_that_cannot_pay_the_fee_are_refused() {
         }
     }
 }
+
+proptest! {
+    #![proptest_config(ProptestConfig::with_cases(10_000))]
+
+    /// Partial prepare: the pocket notes never exceed the target, the change takes the rest, the
+    /// plan still balances exactly, and it fits in one transaction.
+    #[test]
+    fn partial_plans_stay_under_target(total in 1_000_000u64..=10_000_000_000, notes in 1usize..=20, pct in 1u64..=99) {
+        let target = total * pct / 100;
+        match offline_core::split::plan_target(target, total, notes) {
+            Ok(Some(plan)) => {
+                let pocket = plan.output_total() - plan.remainder;
+                prop_assert!(pocket <= target);
+                // Exact, to within dust, even below the smallest denomination.
+                prop_assert!(pocket + 5_000 >= target);
+                prop_assert!(pocket > 0);
+                prop_assert!(plan.remainder > 0);
+                prop_assert_eq!(plan.output_total() + plan.fee, total);
+                prop_assert!(plan.outputs() <= MAX_OUTPUTS);
+                prop_assert_eq!(plan.fee, zip317_fee(notes, plan.outputs()));
+            }
+            // Nearly everything: the whole balance is split instead.
+            Ok(None) => prop_assert!(target + zip317_fee(notes, MAX_OUTPUTS) + 5_000 >= total),
+            // Below the smallest note size.
+            Err(_) => prop_assert!(target < FEE_NOTES[0]),
+        }
+    }
+}
+
+#[test]
+fn partial_split_tags_every_payment_with_the_pocket_memo() {
+    use offline_core::split::{plan_target, zip321_uri};
+    let plan = plan_target(25_000_000, 100_000_000, 1).unwrap().unwrap();
+    let uri = zip321_uri("utest1abc", &plan.payments(), Some(b"offline-cash"));
+    // base64url("offline-cash") = "b2ZmbGluZS1jYXNo"
+    assert_eq!(uri.matches("b2ZmbGluZS1jYXNo").count(), plan.payments().len());
+    assert!(uri.starts_with("zcash:?address=utest1abc&amount="));
+    assert!(uri.contains("&memo=b2ZmbGluZS1jYXNo"));
+    assert!(uri.contains("&memo.1=b2ZmbGluZS1jYXNo"));
+    // No memo: the URI is as before.
+    assert!(!zip321_uri("utest1abc", &[1_000_000], None).contains("memo"));
+}

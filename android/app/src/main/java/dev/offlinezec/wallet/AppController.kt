@@ -260,12 +260,13 @@ class AppController(private val app: Application) {
     // ---- Prepare ----
 
     /** Safe to call any number of times: at most one split is ever in flight. */
-    fun prepareForOffline() {
+    /** [target]: zatoshis to add to offline cash; null = everything not yet offline. */
+    fun prepareForOffline(target: Long? = null) {
         if (!_prepareBusy.compareAndSet(false, true)) return
         scope.launch {
             try {
-                val txid = preparer.prepare()
-                say("Split sent: ${txid.take(16)}…")
+                val txid = preparer.prepare(target)
+                Log.i(TAG, "split sent: $txid")
                 refresh()
             } catch (e: Exception) {
                 Log.e(TAG, "prepare failed", e)
@@ -401,7 +402,7 @@ class AppController(private val app: Application) {
         when (val p = _prepare.value) {
             is PrepareStatus.Waiting -> o.put("prepare", JSONObject().put("state", "waiting").put("txid", p.txid))
             is PrepareStatus.Idle -> o.put("prepare", JSONObject().put("state", if (p.ready) "ready" else "idle")
-                .put("notes", p.notes.toJson()))
+                .put("notes", p.notes.toJson()).put("wallet", p.wallet))
             null -> {}
         }
         o.put("prepare_busy", _prepareBusy.value)

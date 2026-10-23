@@ -22,7 +22,12 @@ object NativeCore {
 
     @JvmStatic external fun notes(db: String, network: String): String
 
-    @JvmStatic external fun planSplit(db: String, network: String, account: String, address: String): String
+    @JvmStatic external fun planSplit(db: String, network: String, account: String, address: String, target: Long): String
+
+    /** Locks the account's offline pocket notes so an online split can't spend them; returns the count. */
+    @JvmStatic external fun lockOfflineNotes(db: String, network: String, account: String): String
+
+    @JvmStatic external fun releaseSelectionLocks(db: String, network: String): String
 
     @JvmStatic external fun inFlightOnlineTxs(db: String, network: String): String
 

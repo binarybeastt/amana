@@ -162,7 +162,7 @@ fn main() -> anyhow::Result<()> {
             }
         }
         Command::PlanSplit { account, address, json } => {
-            let req = store.plan_split_request(&account, &address)?;
+            let req = store.plan_split_request(&account, &address, None)?;
             let (plan, uri) = (&req.plan, &req.zip321);
             if json {
                 println!("{}", serde_json::to_string_pretty(&req)?);

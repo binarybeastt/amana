@@ -41,6 +41,10 @@ pub enum NoteStatus {
 /// Notes worth this much or less are dust (ZIP 317 marginal fee, the wallet's "uneconomic" line).
 pub const DUST_LIMIT: u64 = 5_000;
 
+/// Memo prefix on the notes a partial "prepare" pays into the offline pocket. Its leftover change
+/// carries no memo, which is how it is told apart from the pocket notes made next to it.
+pub const POCKET_MEMO: &[u8] = b"offline-cash";
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum NoteEvent {
     /// The transaction that created the note was mined.
@@ -113,6 +117,10 @@ pub struct NoteInfo {
     pub status: NoteStatus,
     /// Transaction that spends the note, if any (display byte order).
     pub spent_by: Option<String>,
+    /// In the offline pocket: made by one of our own transactions (a split, or an offline
+    /// payment's change), and not the untagged leftover of a partial split. Funds from anyone
+    /// else stay out until prepared. Only pocket notes are spent offline.
+    pub offline: bool,
 }
 
 const POOLS: [&str; 2] = ["ironwood", "orchard"];
@@ -133,14 +141,21 @@ fn notes_query(pool: &str) -> String {
                   WHERE s.{pool}_received_note_id = n.id AND st.mined_height IS NULL
                     AND (st.expiry_height IS NULL OR st.expiry_height = 0
                          OR st.expiry_height >= :target_height)
-                  LIMIT 1)
+                  LIMIT 1),
+                (EXISTS (SELECT 1 FROM ironwood_received_note_spends WHERE transaction_id = n.transaction_id)
+                 OR EXISTS (SELECT 1 FROM orchard_received_note_spends WHERE transaction_id = n.transaction_id)),
+                substr(n.memo, 1, {tag_len}) = X'{tag}',
+                EXISTS (SELECT 1 FROM {pool}_received_notes m
+                         WHERE m.transaction_id = n.transaction_id AND substr(m.memo, 1, {tag_len}) = X'{tag}')
            FROM {pool}_received_notes n
            JOIN transactions t ON t.id_tx = n.transaction_id
            JOIN accounts a ON a.id = n.account_id
           WHERE n.value > 0
             AND (t.mined_height IS NOT NULL
              OR t.expiry_height IS NULL OR t.expiry_height = 0
-             OR t.expiry_height >= :target_height)"
+             OR t.expiry_height >= :target_height)",
+        tag_len = POCKET_MEMO.len(),
+        tag = plain_hex(POCKET_MEMO),
     )
 }
 
@@ -173,6 +188,9 @@ impl WalletStore {
                 let pending_spend: Option<Vec<u8>> = r.get(8)?;
                 let mined_height: Option<u32> = r.get(5)?;
                 let value = r.get::<_, i64>(3)? as u64;
+                let ours: bool = r.get(9)?;
+                let tagged: bool = r.get::<_, Option<bool>>(10)?.unwrap_or(false);
+                let tx_tagged: bool = r.get(11)?;
                 let (status, spent_by) = match (&mined_spend, &pending_spend) {
                     (Some(t), _) => (NoteStatus::Spent, Some(display_hex(t))),
                     (None, Some(t)) => (NoteStatus::SpentOffline, Some(display_hex(t))),
@@ -191,6 +209,7 @@ impl WalletStore {
                     has_tree_position: r.get(6)?,
                     status,
                     spent_by,
+                    offline: ours && (tagged || !tx_tagged),
                 })
             })?;
             for row in rows {

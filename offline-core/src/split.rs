@@ -11,7 +11,7 @@
 use anyhow::bail;
 use serde::Serialize;
 
-use crate::{NoteStatus, WalletStore};
+use crate::{NoteStatus, WalletStore, notes::{DUST_LIMIT, POCKET_MEMO}};
 
 pub const COIN: u64 = 100_000_000;
 
@@ -140,6 +140,35 @@ pub fn plan_split(input_total: u64, input_notes: usize) -> anyhow::Result<SplitP
     }
 }
 
+/// Plans a partial split: pocket notes worth about `target` zatoshis (fee-sized notes first, then
+/// denominations, as [`plan_split`] fills them) out of `input_total` held in `input_notes` notes.
+/// Everything else comes back as change, which stays out of the offline pocket. `None` when the
+/// target is all or nearly all of the input: then the whole balance is split.
+pub fn plan_target(target: u64, input_total: u64, input_notes: usize) -> anyhow::Result<Option<SplitPlan>> {
+    if target == 0 {
+        bail!("amount must be positive");
+    }
+    if input_notes == 0 {
+        bail!("nothing to split: no input notes");
+    }
+    // One output for the change and one for what the denominations can't make, so the pocket
+    // holds exactly the target (to within dust) even below the smallest denomination.
+    let (fee_notes, mut denominations, left) = fill(target.min(input_total), MAX_OUTPUTS - 2);
+    if left > DUST_LIMIT {
+        denominations.push(left);
+        denominations.sort_unstable_by(|a, b| b.cmp(a));
+    }
+    let pocket = target.min(input_total) - if left > DUST_LIMIT { 0 } else { left };
+    if pocket == 0 {
+        bail!("{target} zats is too small to prepare");
+    }
+    let fee = zip317_fee(input_notes, fee_notes.len() + denominations.len() + 1);
+    if pocket + fee + DUST_LIMIT >= input_total {
+        return Ok(None);
+    }
+    Ok(Some(SplitPlan { fee_notes, denominations, remainder: input_total - pocket - fee, fee }))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -196,21 +225,34 @@ mod tests {
     }
 }
 
-/// ZIP 321 request paying each amount to `address`. The remainder is left for the wallet's change.
-pub fn zip321_uri(address: &str, amounts: &[u64]) -> String {
+/// ZIP 321 request paying each amount to `address`, each with `memo` if given. The remainder is
+/// left for the wallet's change.
+pub fn zip321_uri(address: &str, amounts: &[u64], memo: Option<&[u8]>) -> String {
+    let memo = memo.map(base64url);
     let parts: Vec<String> = amounts
         .iter()
         .enumerate()
         .map(|(i, z)| {
             let amount = zec(*z).trim_end_matches('0').trim_end_matches('.').to_string();
-            if i == 0 {
-                format!("address={address}&amount={amount}")
-            } else {
-                format!("address.{i}={address}&amount.{i}={amount}")
-            }
+            let n = if i == 0 { String::new() } else { format!(".{i}") };
+            let memo = memo.as_ref().map(|m| format!("&memo{n}={m}")).unwrap_or_default();
+            format!("address{n}={address}&amount{n}={amount}{memo}")
         })
         .collect();
     format!("zcash:?{}", parts.join("&"))
+}
+
+/// Unpadded base64url, as ZIP 321 wants memos.
+fn base64url(bytes: &[u8]) -> String {
+    const A: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+    let mut out = String::new();
+    for c in bytes.chunks(3) {
+        let n = (u32::from(c[0]) << 16) | (u32::from(*c.get(1).unwrap_or(&0)) << 8) | u32::from(*c.get(2).unwrap_or(&0));
+        for k in 0..=c.len() {
+            out.push(A[(n >> (18 - 6 * k) & 63) as usize] as char);
+        }
+    }
+    out
 }
 
 /// Zatoshis as a ZEC decimal string with 8 places.
@@ -230,17 +272,31 @@ pub struct SplitRequest {
 }
 
 impl WalletStore {
-    /// Plans "prepare for offline" for `account_uuid`: its available Ironwood notes split into
-    /// denominations and fee-sized notes, paid to `address` (normally the account's own).
-    pub fn plan_split_request(&self, account_uuid: &str, address: &str) -> anyhow::Result<SplitRequest> {
+    /// Plans "prepare for offline" for `account_uuid`: its available Ironwood notes outside the
+    /// offline pocket, split into denominations and fee-sized notes paid to `address` (normally
+    /// the account's own). With a `target`, only about that much goes into the pocket (tagged with
+    /// [`POCKET_MEMO`]) and the rest comes back as change; without one, all of it.
+    pub fn plan_split_request(&self, account_uuid: &str, address: &str, target: Option<u64>) -> anyhow::Result<SplitRequest> {
         let notes: Vec<_> = self
             .notes()?
             .into_iter()
-            .filter(|n| n.account_uuid == account_uuid && n.pool == "ironwood" && n.status == NoteStatus::Available)
+            .filter(|n| {
+                n.account_uuid == account_uuid && n.pool == "ironwood" && n.status == NoteStatus::Available && !n.offline
+            })
             .collect();
+        if notes.is_empty() {
+            bail!("nothing to prepare: every available note is already offline cash");
+        }
         let input_total: u64 = notes.iter().map(|n| n.value).sum();
-        let plan = plan_split(input_total, notes.len())?;
-        let zip321 = zip321_uri(address, &plan.payments());
+        let partial = match target {
+            Some(t) => plan_target(t, input_total, notes.len())?,
+            None => None,
+        };
+        let (plan, memo) = match partial {
+            Some(p) => (p, Some(POCKET_MEMO)),
+            None => (plan_split(input_total, notes.len())?, None),
+        };
+        let zip321 = zip321_uri(address, &plan.payments(), memo);
         Ok(SplitRequest { input_notes: notes.len(), input_total, plan, zip321 })
     }
 }

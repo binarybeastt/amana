@@ -41,7 +41,9 @@ class CoreProvider : ContentProvider() {
                     }
                     "status" -> NativeCore.status(db, net)
                     "notes" -> NativeCore.notes(db, net)
-                    "planSplit" -> NativeCore.planSplit(db, net, s(KEY_ACCOUNT), s(KEY_ADDRESS))
+                    "planSplit" -> NativeCore.planSplit(db, net, s(KEY_ACCOUNT), s(KEY_ADDRESS), x.getLong(KEY_AMOUNT))
+                    "lockOfflineNotes" -> NativeCore.lockOfflineNotes(db, net, s(KEY_ACCOUNT))
+                    "releaseSelectionLocks" -> NativeCore.releaseSelectionLocks(db, net)
                     "inFlightOnlineTxs" -> NativeCore.inFlightOnlineTxs(db, net)
                     "payOffline" -> NativeCore.payOffline(
                         db, net,
