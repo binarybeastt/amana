@@ -79,8 +79,8 @@ class Preparer(private val mgr: WalletManager) {
     }
 }
 
-/** Builds offline payments. Only one at a time. */
-class Payer(private val mgr: WalletManager) {
+/** Builds offline payments. Only one at a time. [caps] = the user's offline limits (P4.G3). */
+class Payer(private val mgr: WalletManager, private val caps: () -> Caps = { Caps() }) {
     private val mutex = Mutex()
 
     /**
@@ -89,6 +89,10 @@ class Payer(private val mgr: WalletManager) {
      */
     suspend fun pay(to: String, amount: Long, memo: String?): BuiltPayment = mutex.withLock {
         val w = mgr.wallet ?: error("no wallet")
+        // Under the lock, so two payments can't both fit under the session cap's last room.
+        caps().takeIf { it.enabled }?.let { c ->
+            Limits.refusal(c, mgr.core.pendingPayments(w.dbPath), amount)?.let { throw LimitException(it) }
+        }
         // The SDK may hold a write lock (e.g. finishing a sync) longer than offline-core waits.
         // Nothing is stored until the last step, so retrying a "database is locked" build is safe.
         var attempt = 1

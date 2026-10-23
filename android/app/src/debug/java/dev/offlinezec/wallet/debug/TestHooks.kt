@@ -6,6 +6,7 @@ import android.content.Intent
 import android.util.Log
 import dev.offlinezec.wallet.App
 import dev.offlinezec.wallet.core.hexToBytes
+import dev.offlinezec.wallet.wallet.Caps
 import dev.offlinezec.wallet.wallet.WalletState
 import dev.offlinezec.wallet.wallet.toJson
 import kotlinx.coroutines.flow.first
@@ -37,6 +38,14 @@ class TestHooks : BroadcastReceiver() {
                     "PREPARE" -> c.prepareForOffline()
                     "PAY" -> c.payOffline(intent.getStringExtra("to")!!, intent.getStringExtra("zats")!!.toLong(), intent.getStringExtra("memo"))
                     "CLEAR_PAY" -> c.clearPay()
+                    // P4.G3: --es on true|false [--es per_payment zats] [--es per_session zats]
+                    "CAPS" -> c.capsState.value.let { old ->
+                        c.setCaps(Caps(
+                            enabled = intent.getStringExtra("on")?.toBoolean() ?: old.enabled,
+                            perPayment = intent.getStringExtra("per_payment")?.toLong() ?: old.perPayment,
+                            perSession = intent.getStringExtra("per_session")?.toLong() ?: old.perSession,
+                        ))
+                    }
                     // P4.G1: stored, unmined payments with raw bytes to files/pending.json; show one's QR again.
                     "DUMP_PENDING" -> c.dumpPending()
                     "SHOW_PENDING" -> c.showPending(intent.getStringExtra("txid")!!).join()

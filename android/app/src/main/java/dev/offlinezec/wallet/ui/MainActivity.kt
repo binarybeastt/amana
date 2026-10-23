@@ -33,6 +33,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
@@ -72,6 +73,8 @@ import dev.offlinezec.wallet.qr.FrameEncoder
 import dev.offlinezec.wallet.qr.QrAnalyzer
 import dev.offlinezec.wallet.qr.qrBitmap
 import dev.offlinezec.wallet.receivedLabel
+import dev.offlinezec.wallet.wallet.Caps
+import dev.offlinezec.wallet.wallet.Limits
 import dev.offlinezec.wallet.wallet.PrepareStatus
 import dev.offlinezec.wallet.wallet.SPEND_CONFIRMATIONS
 import dev.offlinezec.wallet.wallet.WalletState
@@ -80,7 +83,7 @@ import kotlinx.coroutines.delay
 import java.math.BigDecimal
 import java.util.concurrent.Executors
 
-enum class Screen { Home, Prepare, Pay, Receive, Payments }
+enum class Screen { Home, Prepare, Pay, Receive, Payments, Limits }
 
 class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalComposeUiApi::class)
@@ -160,6 +163,7 @@ fun WalletScreens(c: AppController) {
         Screen.Pay -> PayScreen(c) { screen = Screen.Home }
         Screen.Receive -> ReceiveScreen(c) { screen = Screen.Home }
         Screen.Payments -> PaymentsScreen(c, showQr = { screen = Screen.Pay }) { screen = Screen.Home }
+        Screen.Limits -> LimitsScreen(c) { screen = Screen.Home }
     }
 }
 
@@ -197,6 +201,10 @@ fun HomeScreen(c: AppController, go: (Screen) -> Unit) {
             Text("Payments (${pending.size} to send, ${received.count { !it.settled }} unsettled)")
         }
         OutlinedButton(onClick = { c.broadcastNow() }, Modifier.fillMaxWidth().testTag("broadcast_now")) { Text("Broadcast now") }
+        val caps by c.capsState.collectAsState()
+        OutlinedButton(onClick = { go(Screen.Limits) }, Modifier.fillMaxWidth().testTag("nav_limits")) {
+            Text("Offline limits: " + if (caps.enabled) "on" else "off")
+        }
         MeshCard(c)
         msg?.let { Text(it, style = MaterialTheme.typography.bodySmall, modifier = Modifier.testTag("message")) }
         Text("Your address", style = MaterialTheme.typography.titleSmall)
@@ -356,6 +364,15 @@ fun PayScreen(c: AppController, back: () -> Unit) {
             OutlinedTextField(amount, { amount = it }, label = { Text("Amount (ZEC)") }, modifier = Modifier.fillMaxWidth().testTag("pay_amount"))
             OutlinedTextField(memo, { memo = it }, label = { Text("Memo (optional)") }, modifier = Modifier.fillMaxWidth().testTag("pay_memo"))
             val zats = parseZec(amount)
+            val caps by c.capsState.collectAsState()
+            val pending by c.pendingSent.collectAsState()
+            if (caps.enabled) {
+                Text(
+                    "Offline limits on: up to ${zec(caps.perPayment)} ZEC per payment; " +
+                        "${zec(Limits.unsettled(pending))} of ${zec(caps.perSession)} ZEC used until your payments settle.",
+                    style = MaterialTheme.typography.bodySmall, modifier = Modifier.testTag("pay_limits"),
+                )
+            }
             Button(
                 onClick = { c.payOffline(to, zats!!, memo.ifBlank { null }) },
                 enabled = pay !is PayState.Building && to.isNotBlank() && zats != null,
@@ -414,6 +431,14 @@ fun ReceiveScreen(c: AppController, back: () -> Unit) {
             is ReceiveState.Accepted -> {
                 Text("${zec(s.payment.amount)} ZEC", style = MaterialTheme.typography.headlineMedium, modifier = Modifier.testTag("received_amount"))
                 Text(receivedLabel(s.payment), fontWeight = FontWeight.Bold, modifier = Modifier.testTag("received_status"))
+                s.warning?.let {
+                    Card(
+                        Modifier.fillMaxWidth().testTag("receive_warning"),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
+                    ) {
+                        Text("⚠ $it", Modifier.padding(12.dp), color = MaterialTheme.colorScheme.onErrorContainer)
+                    }
+                }
                 s.payment.memo?.let { Text("“$it”") }
                 Text("Proofs and signatures verified offline. It settles once either phone broadcasts it.", style = MaterialTheme.typography.bodySmall)
                 Button(onClick = { c.resetReceive() }, Modifier.fillMaxWidth()) { Text("Receive another") }
@@ -424,6 +449,39 @@ fun ReceiveScreen(c: AppController, back: () -> Unit) {
                 Button(onClick = { c.resetReceive() }, Modifier.fillMaxWidth()) { Text("Scan again") }
             }
         }
+        OutlinedButton(onClick = back, Modifier.fillMaxWidth()) { Text("Back") }
+    }
+}
+
+/** P4.G3: optional caps on paying offline, and a warning on large incoming payments. Off by default. */
+@Composable
+fun LimitsScreen(c: AppController, back: () -> Unit) {
+    val caps by c.capsState.collectAsState()
+    var on by rememberSaveable { mutableStateOf(caps.enabled) }
+    var perPayment by rememberSaveable { mutableStateOf(zec(caps.perPayment)) }
+    var perSession by rememberSaveable { mutableStateOf(zec(caps.perSession)) }
+    var saved by remember { mutableStateOf(false) }
+    Column(Modifier.fillMaxSize().padding(20.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text("Offline limits", style = MaterialTheme.typography.titleLarge)
+        Text("An offline payment is final only once it settles. Limits cap how much rides on unsettled payments: " +
+            "this phone won't sign above them, and warns when it receives more than the per-payment limit.",
+            style = MaterialTheme.typography.bodySmall)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("Use limits", Modifier.weight(1f))
+            Switch(on, { on = it; saved = false }, Modifier.testTag("limits_on"))
+        }
+        OutlinedTextField(perPayment, { perPayment = it; saved = false }, label = { Text("Per payment (ZEC)") },
+            enabled = on, modifier = Modifier.fillMaxWidth().testTag("limits_per_payment"))
+        OutlinedTextField(perSession, { perSession = it; saved = false }, label = { Text("Unsettled total (ZEC)") },
+            supportingText = { Text("Paid offline and not yet mined. Frees up as your payments settle.") },
+            enabled = on, modifier = Modifier.fillMaxWidth().testTag("limits_per_session"))
+        val p = parseZec(perPayment)
+        val s = parseZec(perSession)
+        Button(
+            onClick = { c.setCaps(Caps(on, p ?: caps.perPayment, s ?: caps.perSession)); saved = true },
+            enabled = !on || (p != null && s != null),
+            modifier = Modifier.fillMaxWidth().testTag("limits_save"),
+        ) { Text(if (saved) "Saved" else "Save") }
         OutlinedButton(onClick = back, Modifier.fillMaxWidth()) { Text("Back") }
     }
 }

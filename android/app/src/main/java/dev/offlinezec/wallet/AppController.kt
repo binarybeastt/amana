@@ -9,6 +9,9 @@ import dev.offlinezec.wallet.mesh.Mesh
 import dev.offlinezec.wallet.mesh.Nullifiers
 import dev.offlinezec.wallet.mesh.RelayQueue
 import dev.offlinezec.wallet.qr.FrameDecoder
+import dev.offlinezec.wallet.wallet.Caps
+import dev.offlinezec.wallet.wallet.CapsStore
+import dev.offlinezec.wallet.wallet.Limits
 import dev.offlinezec.wallet.wallet.Payer
 import dev.offlinezec.wallet.wallet.PrepareStatus
 import dev.offlinezec.wallet.wallet.Preparer
@@ -58,7 +61,8 @@ sealed interface PayState {
 sealed interface ReceiveState {
     data class Scanning(val progress: Double) : ReceiveState
     data object Verifying : ReceiveState
-    data class Accepted(val payment: Received) : ReceiveState
+    /** [warning]: above the receiver's own per-payment cap (P4.G3); accepted all the same. */
+    data class Accepted(val payment: Received, val warning: String? = null) : ReceiveState
     data class Rejected(val reason: String) : ReceiveState
 }
 
@@ -71,7 +75,8 @@ class AppController(private val app: Application) {
     val wallet = WalletManager(app, scope)
     val received = ReceivedStore(app)
     val preparer = Preparer(wallet)
-    val payer = Payer(wallet)
+    val caps = CapsStore(app)
+    val payer = Payer(wallet) { caps.get() }
     val receiver = Receiver(wallet, received)
     val settler = Settler(wallet, received)
     val mesh = Mesh(app, scope, wallet, received)
@@ -253,7 +258,7 @@ class AppController(private val app: Application) {
                     _receive.value = when (val r = receiver.receive(st.payload)) {
                         is ReceiveResult.Accepted -> {
                             mesh.addReceived(r.payment.txid, r.payment.raw, r.check.nullifiers)
-                            ReceiveState.Accepted(r.payment)
+                            ReceiveState.Accepted(r.payment, Limits.warning(caps.get(), r.payment.amount))
                         }
                         is ReceiveResult.Rejected -> ReceiveState.Rejected(r.reason)
                     }
@@ -262,6 +267,17 @@ class AppController(private val app: Application) {
                 }
             }
         }
+    }
+
+    // ---- Offline limits (P4.G3) ----
+
+    private val _caps = MutableStateFlow(caps.get())
+    val capsState: StateFlow<Caps> = _caps
+
+    fun setCaps(c: Caps) {
+        caps.set(c)
+        _caps.value = c
+        Log.i(TAG, "CAPS enabled=${c.enabled} per_payment=${c.perPayment} per_session=${c.perSession}")
     }
 
     fun broadcastNow() = scope.launch {
@@ -316,6 +332,7 @@ class AppController(private val app: Application) {
             ReceiveState.Verifying -> JSONObject().put("state", "verifying")
             is ReceiveState.Accepted -> JSONObject().put("state", "accepted").put("txid", r.payment.txid)
                 .put("amount", r.payment.amount).put("label", receivedLabel(r.payment))
+                .put("warning", r.warning ?: JSONObject.NULL)
             is ReceiveState.Rejected -> JSONObject().put("state", "rejected").put("reason", r.reason)
         })
         o.put("received", JSONArray().also { a ->
@@ -325,6 +342,10 @@ class AppController(private val app: Application) {
             }
         })
         o.put("pending_sent", JSONArray(_pendingSent.value.map { it.txid }))
+        _caps.value.let { c ->
+            o.put("caps", JSONObject().put("enabled", c.enabled).put("per_payment", c.perPayment)
+                .put("per_session", c.perSession).put("unsettled", Limits.unsettled(_pendingSent.value)))
+        }
         o.put("mesh", meshJson())
         o.put("conflicts", JSONArray(mesh.nullifiers.conflicts().map(Nullifiers::toJson)))
         val f = File(app.filesDir, "state.json")

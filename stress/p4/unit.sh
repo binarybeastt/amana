@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Phase 4 Auto tests on the JVM (no devices): P4.G2.T3 and conflict detection (NullifiersTest),
+# P4.G3.T1–T3 and caps-off (LimitsTest),
 # with the Phase 3 mesh tests (Wire, Proto, Relay, Broadcaster) as regression. Re-runnable.
 #   ./unit.sh            log in stress/p4/logs/unit.log
 set -euo pipefail
@@ -9,11 +10,15 @@ LOG="$ROOT/stress/p4/logs/unit.log"
 cd "$ROOT/android"
 {
   echo "$(date -u +%FT%TZ) Phase 4 unit tests"
-  ./gradlew --console=plain testDebugUnitTest --tests 'dev.offlinezec.wallet.mesh.*' --rerun-tasks -q 2>&1 | grep -v '^w: ' || true
+  ./gradlew --console=plain testDebugUnitTest --tests 'dev.offlinezec.wallet.mesh.*' --tests 'dev.offlinezec.wallet.wallet.LimitsTest' --rerun-tasks -q 2>&1 | grep -v '^w: ' || true
   python3 - <<'PY'
 import glob, re, sys
 bad = 0
-for f in sorted(glob.glob('app/build/test-results/testDebugUnitTest/TEST-dev.offlinezec.wallet.mesh.*.xml')):
+files = glob.glob('app/build/test-results/testDebugUnitTest/TEST-*.xml')
+for need in ('NullifiersTest', 'LimitsTest'):
+    if not any(need in f for f in files):
+        print(f"missing {need} results"); bad += 1
+for f in sorted(glob.glob('app/build/test-results/testDebugUnitTest/TEST-dev.offlinezec.wallet.mesh.*.xml') + glob.glob('app/build/test-results/testDebugUnitTest/TEST-dev.offlinezec.wallet.wallet.LimitsTest.xml')):
     x = open(f).read()
     suite = re.search(r'<testsuite name="([^"]+)" tests="(\d+)" skipped="\d+" failures="(\d+)" errors="(\d+)"', x)
     print(f"{suite.group(1)}: {suite.group(2)} tests, {suite.group(3)} failures, {suite.group(4)} errors")
