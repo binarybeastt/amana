@@ -1,6 +1,6 @@
-2026-10-23T21:40:14Z Phase 5 unit tests
+2026-10-23T21:53:47Z Phase 5 unit tests
     Building arm64-v8a (aarch64-linux-android)
-    Finished `release` profile [optimized] target(s) in 0.61s
+    Finished `release` profile [optimized] target(s) in 0.59s
      Copying libraries to /Users/binaryy/Downloads/zcash_hack/android/app/src/main/jniLibs
 BroadcasterTest: 4/4
 NullifiersTest: 10/10

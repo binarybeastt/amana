@@ -7,6 +7,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
@@ -170,7 +171,7 @@ fun Chip(text: String, modifier: Modifier = Modifier, selected: Boolean = false,
 @Composable
 fun Tag(text: String, modifier: Modifier = Modifier, color: Color = Ink.dim, mono: Boolean = false) {
     Text(
-        text, color = color, fontSize = 13.sp, maxLines = 1,
+        text, color = color, fontSize = 12.sp, maxLines = 1,
         fontFamily = if (mono) FontFamily.Monospace else Inter,
         modifier = modifier.clip(RoundedCornerShape(8.dp)).background(Ink.raised).padding(horizontal = 8.dp, vertical = 4.dp),
     )
@@ -188,25 +189,26 @@ fun FactPill(modifier: Modifier = Modifier, bg: Color = Ink.card, content: @Comp
 @Composable
 fun Dot(color: Color, size: Dp = 7.dp) = Box(Modifier.size(size).clip(CircleShape).background(color))
 
-/** Round avatar: a tinted disc with a thin icon, like the design's token logos. */
+/** Round avatar: a neutral disc with a thin white icon; green or red only when the icon is a verdict. */
 @Composable
 fun Avatar(g: Glyph, tint: Color, size: Dp = 52.dp) {
-    Box(Modifier.size(size).clip(CircleShape).background(tint.copy(alpha = 0.18f)), contentAlignment = Alignment.Center) {
+    val bg = if (tint == Ink.text) Ink.raised else tint.copy(alpha = 0.16f)
+    Box(Modifier.size(size).clip(CircleShape).background(bg), contentAlignment = Alignment.Center) {
         LineIcon(g, size = size * 0.44f, color = tint, weight = 2f)
     }
 }
 
-/** The ZEC avatar: a yellow Z on a dark-yellow disc. */
+/** The ZEC avatar: a white Z on a dark disc. */
 @Composable
 fun ZecAvatar(size: Dp = 52.dp) {
-    Box(Modifier.size(size).clip(CircleShape).background(Ink.zec.copy(alpha = 0.2f)), contentAlignment = Alignment.Center) {
-        Text("Z", color = Ink.zec, fontFamily = Inter, fontWeight = FontWeight.SemiBold, fontSize = (size.value * 0.42f).sp)
+    Box(Modifier.size(size).clip(CircleShape).background(Ink.raised), contentAlignment = Alignment.Center) {
+        Text("Z", color = Ink.text, fontFamily = InterDisplay, fontWeight = FontWeight.SemiBold, fontSize = (size.value * 0.42f).sp)
     }
 }
 
 fun PayStatus.color(): Color = when (this) {
-    PayStatus.PENDING -> Ink.amber
-    PayStatus.RELAYED -> Ink.blue
+    PayStatus.PENDING -> Ink.dim
+    PayStatus.RELAYED -> Ink.text
     PayStatus.SETTLED -> Ink.green
     PayStatus.CONFLICTED, PayStatus.REJECTED -> Ink.red
 }
@@ -216,7 +218,7 @@ fun PayStatus.color(): Color = when (this) {
 fun StatusText(s: PayStatus, modifier: Modifier = Modifier) {
     Row(modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         Dot(s.color(), 6.dp)
-        Text(s.chip, color = s.color(), fontSize = 13.sp, fontWeight = FontWeight.Medium, fontFamily = Inter)
+        Text(s.chip, color = s.color(), fontSize = 12.sp, fontWeight = FontWeight.Medium, fontFamily = Inter)
     }
 }
 
@@ -293,11 +295,15 @@ fun AddressQr(text: String, size: Dp, tag: String = "qr") {
     }
 }
 
-/** 1–9 . 0 ‹, light numerals as in the design. Keys carry testTags key_0…key_9, key_dot, key_back. */
+/**
+ * 1–9 . 0 ‹, light numerals as in the design. Keys carry testTags key_0…key_9, key_dot, key_back.
+ * Give it the free height (a weight): rows spread evenly over it, keys at most [maxKeyHeight] tall.
+ */
 @Composable
-fun Keypad(onKey: (Char) -> Unit, modifier: Modifier = Modifier, keyHeight: Dp = 56.dp) {
+fun Keypad(onKey: (Char) -> Unit, modifier: Modifier = Modifier, maxKeyHeight: Dp = 72.dp) = BoxWithConstraints(modifier.fillMaxWidth()) {
     val rows = listOf("123", "456", "789", ".0<")
-    Column(modifier.fillMaxWidth()) {
+    val keyHeight = if (maxHeight == Dp.Infinity) maxKeyHeight else minOf(maxHeight / 4, maxKeyHeight)
+    Column(Modifier.fillMaxWidth().let { if (maxHeight == Dp.Infinity) it else it.fillMaxSize() }, verticalArrangement = Arrangement.SpaceEvenly) {
         rows.forEach { r ->
             Row(Modifier.fillMaxWidth()) {
                 r.forEach { k ->
@@ -307,7 +313,7 @@ fun Keypad(onKey: (Char) -> Unit, modifier: Modifier = Modifier, keyHeight: Dp =
                         contentAlignment = Alignment.Center,
                     ) {
                         if (k == '<') LineIcon(Glyph.ChevronLeft, size = 24.dp)
-                        else Text(k.toString(), fontSize = 28.sp, fontFamily = Inter, fontWeight = FontWeight.Normal, color = Ink.text)
+                        else Text(k.toString(), fontSize = 26.sp, fontFamily = InterDisplay, fontWeight = FontWeight.Normal, color = Ink.text)
                     }
                 }
             }
