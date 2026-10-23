@@ -27,3 +27,6 @@ keys.toml
 android/app/src/main/jniLibs/
 # Per-run pending-payment snapshots: raw tx hex, ~25 MB, all mined (kept locally only)
 stress/p4/logs/**/pend*.json
+
+# Built APKs handed out for install
+dist/
