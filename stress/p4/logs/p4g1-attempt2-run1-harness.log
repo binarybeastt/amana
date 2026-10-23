@@ -1,0 +1,5 @@
+23:24:40 P4.G1: 50 kill runs, sender emulator-5554, peer emulator-5558, 10000 zats per payment, seed 2027
+23:24:41 emulator-5556: Bluetooth off (out of range)
+23:24:57 both offline (Wi-Fi + data off), Bluetooth on and in range; sender node 25e0cb9d32e548bd, peer node 91ae091197a9e4ce
+23:26:44 run 0 (no kill): pay flow took 37993 ms, QR shown for 23c1662bd8c1b8649411c2bec51a1ba3e4ed0ac92ef25eb495dfcca85f182c2f
+23:27:23 run 1: FAIL · kill all at 7794 ms (planned 7099) · nothing stored · avail  · 

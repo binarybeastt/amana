@@ -1,0 +1,8 @@
+--------- beginning of main
+10-23 02:29:43.599 I/BLEBLOB ( 4002): START role=send node=A
+10-23 02:30:13.777 I/BLEBLOB ( 4002): RESULT node=A i=1 ok=false ms=30165 sha=acff8002 err=connect_failed:_147
+10-23 02:30:43.865 I/BLEBLOB ( 4002): RESULT node=A i=2 ok=false ms=30085 sha=4f21969a err=connect_failed:_147
+10-23 02:31:13.970 I/BLEBLOB ( 4002): RESULT node=A i=3 ok=false ms=30097 sha=acbcde8a err=connect_failed:_147
+10-23 02:31:44.058 I/BLEBLOB ( 4002): RESULT node=A i=4 ok=false ms=30086 sha=eb04eb61 err=connect_failed:_147
+10-23 02:32:14.165 I/BLEBLOB ( 4002): RESULT node=A i=5 ok=false ms=30105 sha=4d4851fd err=connect_failed:_147
+10-23 02:32:14.166 I/BLEBLOB ( 4002): SUMMARY node=A sent=5 ok=0 p50=-1 p95=-1 max=-1

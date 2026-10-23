@@ -187,11 +187,11 @@ fn main() -> anyhow::Result<()> {
             println!("{}", serde_json::to_string_pretty(&built)?);
         }
         Command::Pending { raw_dir } => {
-            for (txid, expiry, raw) in store.pending_payments()? {
-                println!("{txid}  expiry {expiry}  {} bytes", raw.len());
+            for p in store.pending_payments()? {
+                println!("{}  expiry {}  {} bytes", p.txid, p.expiry_height, p.raw.len());
                 if let Some(dir) = &raw_dir {
                     std::fs::create_dir_all(dir)?;
-                    std::fs::write(dir.join(format!("{txid}.raw")), &raw)?;
+                    std::fs::write(dir.join(format!("{}.raw", p.txid)), &p.raw)?;
                 }
             }
         }

@@ -27,6 +27,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -158,7 +159,7 @@ fun WalletScreens(c: AppController) {
         Screen.Prepare -> PrepareScreen(c) { screen = Screen.Home }
         Screen.Pay -> PayScreen(c) { screen = Screen.Home }
         Screen.Receive -> ReceiveScreen(c) { screen = Screen.Home }
-        Screen.Payments -> PaymentsScreen(c) { screen = Screen.Home }
+        Screen.Payments -> PaymentsScreen(c, showQr = { screen = Screen.Pay }) { screen = Screen.Home }
     }
 }
 
@@ -173,6 +174,7 @@ fun HomeScreen(c: AppController, go: (Screen) -> Unit) {
     val offlineAvailable = (prep as? PrepareStatus.Idle)?.notes?.sumOf { it.value }
     Column(Modifier.fillMaxSize().padding(20.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text("Offline ZEC · testnet", style = MaterialTheme.typography.titleLarge)
+        ConflictBanner(c)
         Card(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text("${zec(sync.shieldedTotal)} ZEC", style = MaterialTheme.typography.headlineMedium, modifier = Modifier.testTag("balance_total"))
@@ -221,6 +223,39 @@ fun MeshCard(c: AppController) {
                     if (m.online) "online: broadcasting" else "offline",
                 style = MaterialTheme.typography.bodySmall, modifier = Modifier.testTag("mesh_queue"),
             )
+        }
+    }
+}
+
+/** P4.G2: two payments spend the same note. Stays up; it is not something to tap away. */
+@Composable
+fun ConflictBanner(c: AppController) {
+    val m by c.meshInfo.collectAsState()
+    if (m.conflicts.isEmpty()) return
+    val ours = m.queue.filter { it.mine || it.forUs }.associateBy { it.txid }
+    Card(
+        Modifier.fillMaxWidth().testTag("conflict_alert"),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
+    ) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Text(
+                "⚠ Double spend detected" + if (m.conflicts.size > 1) " (${m.conflicts.size})" else "",
+                fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onErrorContainer,
+            )
+            m.conflicts.sortedByDescending { it.detectedAt }.take(3).forEach { k ->
+                val involved = k.txids.mapNotNull { ours[it] }
+                val text = buildString {
+                    append(k.txids.joinToString(" and ") { it.take(10) + "…" })
+                    append(" spend the same note; at most one can ever settle.")
+                    when {
+                        involved.any { it.forUs } -> append(" One is a payment TO YOU: don't hand over goods until it settles.")
+                        involved.any { it.mine } -> append(" One is your own payment: your seed may be in use on another phone.")
+                    }
+                    k.settled?.let { append(" Mined: ${it.take(10)}….") }
+                    if (!k.verified) append(" (Partly reported by nearby phones.)")
+                }
+                Text(text, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onErrorContainer)
+            }
         }
     }
 }
@@ -394,14 +429,30 @@ fun ReceiveScreen(c: AppController, back: () -> Unit) {
 }
 
 @Composable
-fun PaymentsScreen(c: AppController, back: () -> Unit) {
+fun PaymentsScreen(c: AppController, showQr: () -> Unit, back: () -> Unit) {
     val received by c.receivedPayments.collectAsState()
     val pending by c.pendingSent.collectAsState()
     Column(Modifier.fillMaxSize().padding(20.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text("Payments", style = MaterialTheme.typography.titleLarge)
         Text("Sent, waiting to reach the network", style = MaterialTheme.typography.titleSmall)
         if (pending.isEmpty()) Text("none")
-        pending.forEach { Text(it, fontFamily = FontFamily.Monospace, fontSize = 10.sp) }
+        pending.forEach { p ->
+            Card(Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(12.dp)) {
+                    Text(
+                        if (p.offline) "${zec(p.amount)} ZEC · signed offline, not yet settled" else "online transaction, waiting to be mined",
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Text(p.txid, fontFamily = FontFamily.Monospace, fontSize = 10.sp)
+                    if (p.offline) {
+                        OutlinedButton(
+                            onClick = { c.showPending(p.txid); showQr() },
+                            Modifier.fillMaxWidth().testTag("pending_show_${p.txid.take(16)}"),
+                        ) { Text("Show QR to the receiver again") }
+                    }
+                }
+            }
+        }
         Spacer(Modifier.height(8.dp))
         Text("Received", style = MaterialTheme.typography.titleSmall)
         if (received.isEmpty()) Text("none")

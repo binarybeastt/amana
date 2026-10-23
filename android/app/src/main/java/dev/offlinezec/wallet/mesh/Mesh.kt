@@ -28,6 +28,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.io.File
 import java.security.SecureRandom
 
@@ -45,7 +47,11 @@ class Mesh(
     val nodeId: String = loadNodeId(app)
     val queue = RelayQueue(File(app.filesDir, "relay"))
     val relay = Relay(queue, verify = ::verify, onForUs = ::fileReceived)
-    val ble = BleMesh(app, nodeId, Net.CORE_NETWORK, queue, relay)
+    val nullifiers: Nullifiers = Nullifiers(File(app.filesDir, "conflicts.json"), onConflict = { c ->
+        Log.w(TAG, "CONFLICT nullifier=${c.nullifier} txids=${c.txids.joinToString(",")} verified=${c.verified} settled=${c.settled ?: "-"}")
+        ble.poke()
+    })
+    val ble: BleMesh = BleMesh(app, nodeId, Net.CORE_NETWORK, queue, relay, nullifiers)
     val broadcaster = Broadcaster(queue, node = { currentNode() }, log = { Log.i(TAG, it) })
 
     private val _online = MutableStateFlow(false)
@@ -57,7 +63,11 @@ class Mesh(
     @Volatile private var started = false
 
     init {
+        // The gossip set starts from the queue: unsettled txs claim their nullifiers, settled ones are spent.
+        for (e in queue.all()) if (e.state == RelayQueue.State.SETTLED) nullifiers.settle(e.txid, e.nullifiers) else nullifiers.local(e.txid, e.nullifiers)
+        queue.onSettled = { nullifiers.settle(it.txid, it.nullifiers) }
         queue.onAdded = {
+            nullifiers.local(it.txid, it.nullifiers)
             ble.poke()
             broadcaster.wake()
         }
@@ -69,6 +79,7 @@ class Mesh(
         started = true
         scope.launch {
             wallet.state.first { it is WalletState.Ready }
+            backfillNullifiers()
             watchBluetooth()
             watchConnectivity()
             startBle()
@@ -96,11 +107,28 @@ class Mesh(
     }.getOrDefault(false)
 
     /** Our own payment, signed and stored: carry it to every peer. */
-    fun addOwn(txid: String, raw: ByteArray, nullifiers: List<String> = emptyList()) {
-        queue.add(
-            RelayQueue.Entry(txid, raw, hops = 0, from = "self", firstSeen = System.currentTimeMillis(), mine = true, nullifiers = nullifiers),
+    fun addOwn(txid: String, raw: ByteArray, nfs: List<String> = emptyList()) {
+        val added = queue.add(
+            RelayQueue.Entry(txid, raw, hops = 0, from = "self", firstSeen = System.currentTimeMillis(), mine = true, nullifiers = nfs),
             force = true,
         )
+        if (added == RelayQueue.AddResult.ADDED && nfs.isEmpty()) scope.launch { backfillNullifiers() }
+    }
+
+    private val backfill = Mutex()
+
+    /** Own payments enter the queue without their nullifiers: read them from the bytes (in `:core`). */
+    private suspend fun backfillNullifiers() = backfill.withLock {
+        for (e in queue.unsettled().filter { it.nullifiers.isEmpty() }) {
+            val v = try {
+                verify(e.raw)
+            } catch (x: Exception) {
+                Log.w(TAG, "could not read nullifiers of ${e.txid}: ${x.message}")
+                continue
+            }
+            queue.update(e.txid) { it.copy(nullifiers = v.nullifiers) }?.let { nullifiers.local(it.txid, it.nullifiers) }
+            Log.i(TAG, "NULLIFIERS txid=${e.txid} n=${v.nullifiers.size}")
+        }
     }
 
     /** A payment to us that arrived some other way (QR): carry it too. */

@@ -49,6 +49,7 @@ class CoreProvider : ContentProvider() {
                         s(KEY_ACCOUNT), s(KEY_TO), x.getLong(KEY_AMOUNT), x.getString(KEY_MEMO),
                     )
                     "pendingPayments" -> NativeCore.pendingPayments(db, net)
+                    "pendingRaw" -> NativeCore.pendingRaw(db, net, s(KEY_TXID))
                     "verifyPayment" -> NativeCore.verifyPayment(
                         db, net,
                         x.getByteArray(KEY_RAW) ?: throw IllegalArgumentException("missing raw"),

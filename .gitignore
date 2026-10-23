@@ -25,3 +25,5 @@ keys.toml
 !android/gradle/wrapper/gradle-wrapper.properties
 # Built by the app's Gradle build from offline-core
 android/app/src/main/jniLibs/
+# Per-run pending-payment snapshots: raw tx hex, ~25 MB, all mined (kept locally only)
+stress/p4/logs/**/pend*.json

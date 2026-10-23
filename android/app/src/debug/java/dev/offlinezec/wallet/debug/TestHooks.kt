@@ -37,6 +37,9 @@ class TestHooks : BroadcastReceiver() {
                     "PREPARE" -> c.prepareForOffline()
                     "PAY" -> c.payOffline(intent.getStringExtra("to")!!, intent.getStringExtra("zats")!!.toLong(), intent.getStringExtra("memo"))
                     "CLEAR_PAY" -> c.clearPay()
+                    // P4.G1: stored, unmined payments with raw bytes to files/pending.json; show one's QR again.
+                    "DUMP_PENDING" -> c.dumpPending()
+                    "SHOW_PENDING" -> c.showPending(intent.getStringExtra("txid")!!).join()
                     "DUMP_FRAMES" -> c.dumpFrames(intent.getStringExtra("count")?.toInt() ?: 0)
                     "RESET_RECEIVE" -> c.resetReceive().join()
                     // Frames pushed into files/in_frames.txt, one per line, fed as if scanned.
@@ -66,6 +69,8 @@ class TestHooks : BroadcastReceiver() {
                         tmp.renameTo(File(files, "inject_result.json"))
                     }
                     "RELAY_CLEAR" -> c.mesh.queue.clear()
+                    // P4.G2: forget nullifier claims and conflict alerts (start a test clean).
+                    "CONFLICTS_CLEAR" -> c.mesh.nullifiers.clear()
                     "MESH_STOP" -> c.mesh.ble.stop("test hook")
                     "MESH_START" -> c.mesh.permissionsChanged()
                     // P3.G2.T3 on devices: speak another protocol version (restarts Bluetooth).

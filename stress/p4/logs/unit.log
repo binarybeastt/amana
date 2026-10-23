@@ -1,0 +1,43 @@
+2026-10-23T00:19:57Z Phase 4 unit tests
+    Building arm64-v8a (aarch64-linux-android)
+    Finished `release` profile [optimized] target(s) in 0.45s
+     Copying libraries to /Users/binaryy/Downloads/zcash_hack/android/app/src/main/jniLibs
+dev.offlinezec.wallet.mesh.BroadcasterTest: 4 tests, 0 failures, 0 errors
+  ok   t3AlreadyMinedIsSuccess (0.073 s)
+  ok   classifiesLightwalletdTexts (0.001 s)
+  ok   t2UnreachableBacksOffThenSucceeds (0.018 s)
+  ok   droppedFromMempoolIsSentAgain (0.002 s)
+dev.offlinezec.wallet.mesh.NullifiersTest: 10 tests, 0 failures, 0 errors
+  ok   t3SettledNullifiersArePrunedAndSizeStaysBounded (0.281 s)
+  ok   relayedConflictingTxsAlertThroughTheQueue (0.007 s)
+  ok   threePhonesThirdMeetsBothAndEveryHolderLearns (0.003 s)
+  ok   conflictsSurviveARestart (0.004 s)
+  ok   nfMessageRoundTripsAndRejectsGarbage (0.067 s)
+  ok   twoTxidsSharingANullifierAlert (0.001 s)
+  ok   honestTrafficNeverAlerts (0.407 s)
+  ok   conflictWithAnAlreadyMinedTxStillAlerts (0.0 s)
+  ok   sameTxSeenTwiceIsNotAConflict (0.003 s)
+  ok   t3SettlementThroughTheRelayQueuePrunes (0.026 s)
+dev.offlinezec.wallet.mesh.ProtoTest: 5 tests, 0 failures, 0 errors
+  ok   messagesRoundTrip (0.005 s)
+  ok   malformedMessagesThrow (0.001 s)
+  ok   otherAppsNetworksAndSelfAreRefused (0.0 s)
+  ok   advertCarriesVersionAndNode (0.0 s)
+  ok   differentProtocolVersionIsRefusedWithAClearReason (0.001 s)
+dev.offlinezec.wallet.mesh.RelayTest: 6 tests, 0 failures, 0 errors
+  ok   t3QueueSurvivesARestart (0.035 s)
+  ok   t4FullQueueEvictsOldestSettledFirstAndKeepsUnsettled (0.091 s)
+  ok   t5InvalidTxIsRejectedBeforeStoringAndNeverForwarded (0.021 s)
+  ok   settledAndRejectedAreNotForwarded (0.017 s)
+  ok   t1SameTxFromThreePeersIsStoredOnce (0.009 s)
+  ok   t2NeverForwardedPastTheHopLimit (0.14 s)
+dev.offlinezec.wallet.mesh.WireTest: 8 tests, 0 failures, 0 errors
+  ok   dropsNeverCompleteAndExpireCleanly (0.053 s)
+  ok   oversizeAndInconsistentFramesFail (0.0 s)
+  ok   interleavedMessagesOnOneLink (0.064 s)
+  ok   duplicatesAndStartLast (0.102 s)
+  ok   garbageFramesNeverDeliver (0.201 s)
+  ok   emptyMessage (0.0 s)
+  ok   inOrderAndShuffled (0.057 s)
+  ok   corruptionIsNeverAccepted (0.177 s)
+PASS

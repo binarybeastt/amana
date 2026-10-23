@@ -1,0 +1,3 @@
+--------- beginning of main
+10-23 00:48:54.611 11819 11861 I MESH    : HELLO role=client peer=91ae091197a9e4ce v=1
+10-23 00:48:54.853 11819 11861 I MESH    : SESSION peer=91ae091197a9e4ce result="ok pushed=0" ms=1159

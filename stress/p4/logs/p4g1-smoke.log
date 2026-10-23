@@ -1,0 +1,13 @@
+21:42:39 P4.G1: 2 kill runs, sender emulator-5554, peer emulator-5558, 10000 zats per payment, seed 11
+21:42:41 emulator-5556: Bluetooth off (out of range)
+21:42:50 both offline (Wi-Fi + data off), Bluetooth on and in range; sender node 25e0cb9d32e548bd, peer node 91ae091197a9e4ce
+21:43:27 run 0 (no kill): pay flow took 26445 ms, QR shown for 786810070c5d461e43fe4b9b2707897f5593218bce623f3bcc80430589d86505
+21:44:10 run 1: pass · kill all at 15851 ms (planned 14823) · nothing stored · avail 44 -> 44
+21:45:53 run 2: pass · kill main at 25223 ms (planned 25038) · stored 2493e11fb5eaa6c1… (QR before kill: yes; raw ok, on peer, QR again) · avail 44 -> 43
+21:45:53 kill runs: 2/2 pass; 1 stored before or during the kill (1 with the QR already shown)
+21:45:54 online: sender has 2 stored payments (this test: 1 + run 0); peer stays offline
+21:48:24 after 149 s online: 0 of 2 still unmined
+21:48:24   786810070c5d461e… mined at 4530316; sender's last send: sent
+21:48:24   2493e11fb5eaa6c1… mined at 4530316; sender's last send: sent
+21:48:24 peer still offline: yes; peer sent: {'sent': 0, 'received': 4, 'refused': 0, 'sessions': 8, 'failed_sessions': 0}
+21:48:25 P4.G1: PASS

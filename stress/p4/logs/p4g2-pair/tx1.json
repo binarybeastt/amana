@@ -1,0 +1,10 @@
+{
+  "txid": "a83e1edf3a79e56878174d98c0412443e12c2bf2f19a1da6c8cfa4f73f2edacb",
+  "raw_len": 9166,
+  "amount": 100000,
+  "fee": 10000,
+  "change": 925000,
+  "spent_notes": [
+    "7265b6f4c5d3b0ba7ad59cb8adf1f72014f5db0fc970ef6e3ba01668da6d1a85:1"
+  ]
+}

@@ -1,0 +1,4 @@
+emulator-5556 offline: no
+emulator-5558 offline: yes
+after 170s online: 0 pending left
+[((4524083, 'retry: (-1) any tran'), 1), ((4524088, 'retry: (-1) any tran'), 1), ((4524094, 'retry: (-1) any tran'), 1), ((4524099, 'retry: (-1) any tran'), 1), ((4524103, 'retry: (-1) any tran'), 1), ((4530288, 'already known: (-1) '), 1), ((4530291, 'already known: (-1) '), 1), ((4530316, 'sent'), 2), ((4530467, 'sent'), 27), ((4530468, 'sent'), 2)]

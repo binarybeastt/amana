@@ -15,5 +15,5 @@ pub mod select;
 pub mod split;
 pub mod wallet;
 
-pub use notes::{NoteEvent, NoteInfo, NoteStatus};
+pub use notes::{NoteEvent, NoteInfo, NoteStatus, PendingPayment};
 pub use wallet::{AccountStatus, Status, WalletStore};

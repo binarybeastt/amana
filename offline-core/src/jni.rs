@@ -181,10 +181,15 @@ pub extern "system" fn Java_dev_offlinezec_wallet_core_NativeCore_payOffline(
 struct PendingJson {
     txid: String,
     expiry_height: u32,
-    raw_hex: String,
+    raw_len: usize,
+    fee: Option<u64>,
+    amount: u64,
 }
 
-/// Stored payments not mined yet (to broadcast once online).
+/// Stored payments not mined yet (to broadcast once online), without their bytes: the reply
+/// crosses binder, whose buffer is 1 MB per process, and ~30 offline payments of raw bytes
+/// (as hex in a UTF-16 string) overflow it. Fetch bytes one payment at a time with
+/// `pendingRaw`.
 #[unsafe(no_mangle)]
 pub extern "system" fn Java_dev_offlinezec_wallet_core_NativeCore_pendingPayments(
     mut env: JNIEnv,
@@ -197,9 +202,37 @@ pub extern "system" fn Java_dev_offlinezec_wallet_core_NativeCore_pendingPayment
         let out: Vec<PendingJson> = store
             .pending_payments()?
             .into_iter()
-            .map(|(txid, expiry_height, raw)| PendingJson { txid, expiry_height, raw_hex: hex(&raw) })
+            .map(|p| PendingJson {
+                txid: p.txid,
+                expiry_height: p.expiry_height,
+                raw_len: p.raw.len(),
+                fee: p.fee,
+                amount: p.amount,
+            })
             .collect();
         json(&out)
+    })
+}
+
+/// The raw bytes of one stored, unmined payment: `{"txid", "raw_hex"}`. Errors if it is not
+/// pending (mined, expired or unknown).
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_dev_offlinezec_wallet_core_NativeCore_pendingRaw(
+    mut env: JNIEnv,
+    _: JClass,
+    db: JString,
+    network: JString,
+    txid: JString,
+) -> jstring {
+    run(&mut env, |env| {
+        let store = open(env, &db, &network)?;
+        let txid = string(env, &txid)?;
+        let p = store
+            .pending_payments()?
+            .into_iter()
+            .find(|p| p.txid == txid)
+            .ok_or_else(|| anyhow::anyhow!("{txid} is not a pending payment"))?;
+        Ok(serde_json::json!({ "txid": p.txid, "raw_hex": hex(&p.raw) }).to_string())
     })
 }
 

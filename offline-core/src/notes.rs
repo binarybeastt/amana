@@ -84,6 +84,19 @@ impl NoteStatus {
     }
 }
 
+/// A stored payment of ours that is not mined yet (see [`WalletStore::pending_payments`]).
+#[derive(Debug, Clone)]
+pub struct PendingPayment {
+    /// Display order.
+    pub txid: String,
+    /// 0 for offline payments (never expire).
+    pub expiry_height: u32,
+    pub raw: Vec<u8>,
+    pub fee: Option<u64>,
+    /// Sent to other wallets (excludes change).
+    pub amount: u64,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct NoteInfo {
     pub account_uuid: String,
@@ -254,23 +267,33 @@ impl WalletStore {
     }
 
     /// Our stored transactions (they spend our notes) that are not mined yet but still can be
-    /// (never-expiring or not yet expired): payments to rebroadcast. Incoming transactions the
-    /// wallet saw in the mempool are not listed. Returns (txid in display order, expiry height,
-    /// raw bytes).
-    pub fn pending_payments(&self) -> anyhow::Result<Vec<(String, u32, Vec<u8>)>> {
+    /// (never-expiring or not yet expired): payments to rebroadcast, or to show the receiver
+    /// again after a crash. Incoming transactions the wallet saw in the mempool are not listed.
+    pub fn pending_payments(&self) -> anyhow::Result<Vec<PendingPayment>> {
         let target_height = self.db.chain_height()?.map_or(0, |h| u32::from(h) + 1);
         let conn = self.read_conn()?;
+        // amount = outputs to other wallets (to_account_id is NULL); outputs to our own
+        // accounts are change.
         let mut stmt = conn.prepare(
-            "SELECT txid, IFNULL(expiry_height, 0), raw FROM transactions
-              WHERE mined_height IS NULL AND raw IS NOT NULL
-                AND (expiry_height IS NULL OR expiry_height = 0 OR expiry_height >= ?1)
-                AND id_tx IN (SELECT transaction_id FROM ironwood_received_note_spends
-                              UNION SELECT transaction_id FROM orchard_received_note_spends
-                              UNION SELECT transaction_id FROM sapling_received_note_spends)
-              ORDER BY id_tx",
+            "SELECT t.txid, IFNULL(t.expiry_height, 0), t.raw, t.fee,
+                    (SELECT IFNULL(SUM(s.value), 0) FROM sent_notes s
+                      WHERE s.transaction_id = t.id_tx AND s.to_account_id IS NULL)
+               FROM transactions t
+              WHERE t.mined_height IS NULL AND t.raw IS NOT NULL
+                AND (t.expiry_height IS NULL OR t.expiry_height = 0 OR t.expiry_height >= ?1)
+                AND t.id_tx IN (SELECT transaction_id FROM ironwood_received_note_spends
+                                UNION SELECT transaction_id FROM orchard_received_note_spends
+                                UNION SELECT transaction_id FROM sapling_received_note_spends)
+              ORDER BY t.id_tx",
         )?;
         let rows = stmt.query_map([target_height], |r| {
-            Ok((display_hex(&r.get::<_, Vec<u8>>(0)?), r.get(1)?, r.get(2)?))
+            Ok(PendingPayment {
+                txid: display_hex(&r.get::<_, Vec<u8>>(0)?),
+                expiry_height: r.get(1)?,
+                raw: r.get(2)?,
+                fee: r.get(3)?,
+                amount: r.get(4)?,
+            })
         })?;
         Ok(rows.collect::<Result<_, _>>()?)
     }

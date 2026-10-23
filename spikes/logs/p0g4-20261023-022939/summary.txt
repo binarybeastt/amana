@@ -1,0 +1,1 @@
+count=5 size=2048 relay=none delivered=0 pct=0 checksum_failures=0

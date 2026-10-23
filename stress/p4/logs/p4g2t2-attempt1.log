@@ -1,0 +1,14 @@
+00:22:33 start: notes ready emulator-5554=53 emulator-5556=7 emulator-5558=44
+00:22:53 payment 1/20 emulator-5554→emulator-5556 065d271a5e03c824… conflicts: 0 0 0
+00:23:07 payment 2/20 emulator-5556→emulator-5558 d6bf2e6d78ec46a1… conflicts: 0 0 0
+00:23:18 payment 3/20 emulator-5558→emulator-5554 07daed6fde38c012… conflicts: 0 0 0
+00:23:34 payment 4/20 emulator-5554→emulator-5556 ea279fcea45ef613… conflicts: 0 0 0
+00:23:48 payment 5/20 emulator-5556→emulator-5558 58d969caa8478819… conflicts: 0 0 0
+00:23:59 payment 6/20 emulator-5558→emulator-5554 9b6e8738aa822156… conflicts: 0 0 0
+00:24:19 payment 7/20 emulator-5554→emulator-5556 15d27498acb5e0fc… conflicts: 0 0 0
+00:24:32 payment 8/20 emulator-5556→emulator-5558 dbfb733114e7a76f… conflicts: 0 0 0
+00:24:43 payment 9/20 emulator-5558→emulator-5554 e0d3c07a1adbc4dc… conflicts: 0 0 0
+00:25:00 payment 10/20 emulator-5554→emulator-5556 c1572f35207034e1… conflicts: 0 0 0
+00:25:14 payment 11/20 emulator-5556→emulator-5558 401e39b520f68e84… conflicts: 0 0 0
+00:40:19 FAIL: payment 12 from emulator-5558 never finished
+exit=1

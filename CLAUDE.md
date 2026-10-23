@@ -46,6 +46,7 @@ Gotchas learned the hard way:
 - Gradle 8.13 cannot run on Java 25: build with Android Studio's JDK 21 (`JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"`).
 - Emulator tests: debug builds expose adb hooks (`.debug.TestHooks`) and write `files/state.json`; see `stress/p2/lib.sh`.
 - Never boot emulators from a quick-boot snapshot with `-no-snapshot-save`: stopping them discards every write since the snapshot (lost two wallets once). `spikes/ble-blob/emulators.sh` cold-boots with `-no-snapshot`.
+- Emulators booted a few seconds apart can each start their own `netsimd` and end up on separate Bluetooth networks (they never see each other; radio cycles don't help). Check `pgrep -f emulator/netsimd` shows one; `emulators.sh start` now waits for the first one's netsimd and fails if there are two.
 - Emulator Bluetooth (netsim) degrades after dozens of fast radio cycles (no GATT connects, filtered scans see nothing) until the radios are power-cycled. Airplane mode cycles the radio: for "offline" use `net_off`/`net_on` (Wi-Fi + data) from `stress/p3/lib.sh`.
 - Phase 3 helpers: `stress/p3/lib.sh` (`mesh`, `inject`, `log_has`, `bt`, `net_off`). In scripts, check logs with `log_has`, never `mesh_log | grep -q` (pipefail).
 

@@ -1,0 +1,7 @@
+--------- beginning of main
+10-22 23:20:18.136 30669 30734 I AppController: paid 10000 zats, txid 6310abba0b83fb61ada7c03fc3eeacda9c81f78248de22cf990cb5b2f4259e66, notes [8cd2a521617ece59888eaab0432af448e693cc31a2d876b6a5f79d91e1d64a25:13]
+10-22 23:20:18.425 30669 30698 I AppController: QR_SHOWN txid=6310abba0b83fb61ada7c03fc3eeacda9c81f78248de22cf990cb5b2f4259e66 spent_notes=[8cd2a521617ece59888eaab0432af448e693cc31a2d876b6a5f79d91e1d64a25:13=spent-offline]
+10-22 23:20:18.706 30669 30797 I MESH    : HELLO role=client peer=91ae091197a9e4ce v=1
+10-22 23:20:19.182 30669 30797 I MESH    : FWD txid=6310abba0b83fb61ada7c03fc3eeacda9c81f78248de22cf990cb5b2f4259e66 to=91ae091197a9e4ce hops=1 status=stored ms=441 reason=""
+10-22 23:20:19.184 30669 30797 I MESH    : SESSION peer=91ae091197a9e4ce result="ok pushed=1" ms=915
+10-22 23:20:19.316 30669 31228 I MESH    : HELLO role=server peer=91ae091197a9e4ce v=1

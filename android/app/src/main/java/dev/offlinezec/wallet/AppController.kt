@@ -3,8 +3,10 @@ package dev.offlinezec.wallet
 import android.app.Application
 import android.util.Log
 import dev.offlinezec.wallet.core.BuiltPayment
+import dev.offlinezec.wallet.core.PendingPayment
 import dev.offlinezec.wallet.core.toHex
 import dev.offlinezec.wallet.mesh.Mesh
+import dev.offlinezec.wallet.mesh.Nullifiers
 import dev.offlinezec.wallet.mesh.RelayQueue
 import dev.offlinezec.wallet.qr.FrameDecoder
 import dev.offlinezec.wallet.wallet.Payer
@@ -39,6 +41,8 @@ data class MeshInfo(
     val online: Boolean = false,
     val peers: Int = 0,
     val queue: List<RelayQueue.Entry> = emptyList(),
+    /** Double spends seen (P4.G2): two txids spending one nullifier. */
+    val conflicts: List<Nullifiers.Conflict> = emptyList(),
 )
 
 /** What the Pay flow is doing. */
@@ -89,8 +93,8 @@ class AppController(private val app: Application) {
 
     private val _payments = MutableStateFlow<List<Received>>(emptyList())
     val receivedPayments: StateFlow<List<Received>> = _payments
-    private val _pendingSent = MutableStateFlow<List<String>>(emptyList())
-    val pendingSent: StateFlow<List<String>> = _pendingSent
+    private val _pendingSent = MutableStateFlow<List<PendingPayment>>(emptyList())
+    val pendingSent: StateFlow<List<PendingPayment>> = _pendingSent
 
     private val _meshInfo = MutableStateFlow(MeshInfo())
     val meshInfo: StateFlow<MeshInfo> = _meshInfo
@@ -127,6 +131,7 @@ class AppController(private val app: Application) {
                 _meshInfo.value = MeshInfo(
                     bluetooth = mesh.bluetoothOn(), permitted = Mesh.hasBluetoothPermissions(app), running = mesh.ble.running,
                     online = mesh.online.value, peers = mesh.ble.peers().size, queue = mesh.queue.all(),
+                    conflicts = mesh.nullifiers.conflicts(),
                 )
                 dumpState()
             } catch (e: Exception) {
@@ -141,7 +146,13 @@ class AppController(private val app: Application) {
         _prepare.value = preparer.status()
         settler.refreshSettled()
         _payments.value = received.all()
-        _pendingSent.value = wallet.core.pendingPayments(w.dbPath).map { it.txid }
+        val pending = wallet.core.pendingPayments(w.dbPath)
+        _pendingSent.value = pending
+        // A payment stored just before a crash never reached the relay queue: carry it now.
+        for (p in pending.filter { it.offline && !mesh.queue.contains(it.txid) }) {
+            mesh.addOwn(p.txid, wallet.core.pendingRaw(w.dbPath, p.txid))
+            Log.i(TAG, "RECOVERED txid=${p.txid}: stored payment added to the relay queue")
+        }
         // Our own and received payments: the wallet sees them mined when it syncs.
         for (e in mesh.queue.unsettled().filter { it.mine || it.forUs }) {
             wallet.core.minedHeight(w.dbPath, e.txid)?.let { mesh.queue.markSettled(e.txid, it.toLong()) }
@@ -192,6 +203,19 @@ class AppController(private val app: Application) {
             }
             refresh()
         }
+    }
+
+    /** Shows a stored, unmined payment's QR again (e.g. the app died before showing it). */
+    fun showPending(txid: String) = scope.launch {
+        val w = wallet.wallet ?: return@launch
+        val p = wallet.core.pendingPayments(w.dbPath).firstOrNull { it.txid == txid && it.offline } ?: run {
+            say("Payment ${txid.take(12)}… is no longer pending")
+            return@launch
+        }
+        val spent = wallet.core.notes(w.dbPath).filter { it.spentBy == txid }.map { it.key }
+        notesAtQr = null
+        val raw = wallet.core.pendingRaw(w.dbPath, txid)
+        _pay.value = PayState.Ready(BuiltPayment(p.txid, p.amount, p.fee ?: 0, change = 0, spentNotes = spent, raw = raw))
     }
 
     fun clearPay() {
@@ -300,8 +324,9 @@ class AppController(private val app: Application) {
                     .put("mined_height", r.minedHeight ?: JSONObject.NULL).put("label", receivedLabel(r)))
             }
         })
-        o.put("pending_sent", JSONArray(_pendingSent.value))
+        o.put("pending_sent", JSONArray(_pendingSent.value.map { it.txid }))
         o.put("mesh", meshJson())
+        o.put("conflicts", JSONArray(mesh.nullifiers.conflicts().map(Nullifiers::toJson)))
         val f = File(app.filesDir, "state.json")
         val tmp = File(app.filesDir, "state.json.tmp")
         tmp.writeText(o.toString(2))
@@ -324,6 +349,7 @@ class AppController(private val app: Application) {
                         .put("last_result", p.lastResult ?: JSONObject.NULL))
                 }
             })
+            .put("nullifiers", mesh.nullifiers.size()).put("settled_nullifiers", mesh.nullifiers.settledCount())
             .put("queue", JSONArray().also { a -> mesh.queue.all().forEach { a.put(RelayQueue.toJson(it, withRaw = false)) } })
     }
 
@@ -336,6 +362,19 @@ class AppController(private val app: Application) {
         val tmp = File(app.filesDir, "qr_frames.txt.tmp")
         tmp.writeText((1..count.coerceAtLeast(enc.seqLen)).joinToString("\n") { enc.next() })
         tmp.renameTo(File(app.filesDir, "qr_frames.txt"))
+    }
+
+    /** Debug only: stored, unmined payments with their raw bytes, to files/pending.json. */
+    suspend fun dumpPending() {
+        val w = wallet.wallet ?: return
+        val a = JSONArray()
+        wallet.core.pendingPayments(w.dbPath).forEach { p ->
+            a.put(JSONObject().put("txid", p.txid).put("expiry_height", p.expiryHeight).put("amount", p.amount)
+                .put("fee", p.fee ?: JSONObject.NULL).put("raw_hex", wallet.core.pendingRaw(w.dbPath, p.txid).toHex()))
+        }
+        val tmp = File(app.filesDir, "pending.json.tmp")
+        tmp.writeText(a.toString())
+        tmp.renameTo(File(app.filesDir, "pending.json"))
     }
 
     companion object {

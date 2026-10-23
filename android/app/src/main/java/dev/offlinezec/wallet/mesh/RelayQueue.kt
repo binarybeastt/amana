@@ -50,6 +50,8 @@ class RelayQueue(
 
     /** Called (under the queue's lock) after a new entry is saved. */
     @Volatile var onAdded: ((Entry) -> Unit)? = null
+    /** Called (under the queue's lock) when an entry becomes settled. */
+    @Volatile var onSettled: ((Entry) -> Unit)? = null
     private val entries = LinkedHashMap<String, Entry>()
 
     /** Bumped when the set of forwardable entries changes, so the mesh knows peers need a sync. */
@@ -113,6 +115,7 @@ class RelayQueue(
         write(new)
         entries[txid] = new
         if (new.unsettled != old.unsettled) version++
+        if (new.state == State.SETTLED && old.state != State.SETTLED) onSettled?.invoke(new)
         new
     }
 

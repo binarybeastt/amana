@@ -1,0 +1,3 @@
+--------- beginning of main
+10-22 23:35:55.068  4224  4579 I MESH    : HELLO role=server peer=91ae091197a9e4ce v=1
+10-22 23:35:59.435  4224  4241 I AppController: paid 10000 zats, txid c3db634d4b745b0435569c03204bdb403d2648a438559f338a3a2bcf8c137531, notes [8cd2a521617ece59888eaab0432af448e693cc31a2d876b6a5f79d91e1d64a25:22]

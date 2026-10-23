@@ -1,0 +1,48 @@
+21:48:30 P4.G1: 50 kill runs, sender emulator-5554, peer emulator-5558, 10000 zats per payment, seed 2026
+21:48:37 emulator-5556: Bluetooth off (out of range)
+21:48:46 both offline (Wi-Fi + data off), Bluetooth on and in range; sender node 25e0cb9d32e548bd, peer node 91ae091197a9e4ce
+21:49:19 run 0 (no kill): pay flow took 23586 ms, QR shown for b1a4921de0337bd8ce8a7709cc032b00b99eaedb39ec4e6e5e16c4bbf59e90ca
+21:49:49 run 1: pass · kill all at 4746 ms (planned 3903) · nothing stored · avail 44 -> 44
+21:51:22 run 2: pass · kill main at 19717 ms (planned 19385) · stored 114d5cbc215afe7c… (QR before kill: no; raw ok, on peer, QR again) · avail 44 -> 43
+21:52:12 run 3: pass · kill all at 17201 ms (planned 16466) · nothing stored · avail 43 -> 43
+21:53:50 run 4: pass · kill main at 22857 ms (planned 22536) · stored 5fd04b28cce3f4fa… (QR before kill: yes; raw ok, on peer, QR again) · avail 43 -> 42
+21:54:39 run 5: pass · kill all at 21831 ms (planned 21207) · nothing stored · avail 42 -> 42
+21:56:16 run 6: pass · kill main at 16381 ms (planned 15832) · stored 0e26c22c4d4b17d8… (QR before kill: no; raw ok, on peer, QR again) · avail 42 -> 41
+21:56:53 run 7: pass · kill all at 8069 ms (planned 7316) · nothing stored · avail 41 -> 41
+21:58:34 run 8: pass · kill main at 24428 ms (planned 23998) · stored 3735e99ee7ef49ce… (QR before kill: no; raw ok, on peer, QR again) · avail 41 -> 40
+21:59:24 run 9: pass · kill all at 21656 ms (planned 20364) · nothing stored · avail 40 -> 40
+22:01:01 run 10: pass · kill main at 23685 ms (planned 23269) · stored beead7c1bbb2df69… (QR before kill: no; raw ok, on peer, QR again) · avail 40 -> 39
+22:01:48 run 11: pass · kill all at 14696 ms (planned 13782) · nothing stored · avail 39 -> 39
+22:03:23 run 12: pass · kill main at 23861 ms (planned 23531) · stored 3c8b9c25095f1914… (QR before kill: no; raw ok, on peer, QR again) · avail 39 -> 38
+22:04:10 run 13: pass · kill all at 18849 ms (planned 17950) · nothing stored · avail 38 -> 38
+22:05:46 run 14: pass · kill main at 22496 ms (planned 22193) · stored 55b4d50b0a3143b2… (QR before kill: yes; raw ok, on peer, QR again) · avail 38 -> 37
+22:06:52 run 15: pass · kill all at 25278 ms (planned 24609) · stored d7378369e7c7f7fd… (QR before kill: yes; raw ok, on peer, QR again) · avail 37 -> 36
+22:08:27 run 16: pass · kill main at 24132 ms (planned 23760) · stored 73cd2a33ebf6e684… (QR before kill: no; raw ok, on peer, QR again) · avail 36 -> 35
+22:09:10 run 17: pass · kill all at 15279 ms (planned 14453) · nothing stored · avail 35 -> 35
+22:10:45 run 18: pass · kill main at 18412 ms (planned 18082) · stored 1aa2644e00fd57f8… (QR before kill: no; raw ok, on peer, QR again) · avail 35 -> 34
+22:11:18 run 19: pass · kill all at 986 ms (planned 83) · nothing stored · avail 34 -> 34
+22:12:52 run 20: pass · kill main at 24573 ms (planned 24214) · stored b833d13e0b7f549d… (QR before kill: no; raw ok, on peer, QR again) · avail 34 -> 33
+22:13:27 run 21: pass · kill all at 3283 ms (planned 2645) · nothing stored · avail 33 -> 33
+22:15:04 run 22: pass · kill main at 16426 ms (planned 15965) · stored f649736bdf871776… (QR before kill: no; raw ok, on peer, QR again) · avail 33 -> 32
+22:15:45 run 23: pass · kill all at 10337 ms (planned 9412) · nothing stored · avail 32 -> 32
+22:17:24 run 24: pass · kill main at 16073 ms (planned 15757) · stored 0eab6bd2e8ba8ab5… (QR before kill: no; raw ok, on peer, QR again) · avail 32 -> 31
+22:18:10 run 25: pass · kill all at 15509 ms (planned 14734) · nothing stored · avail 31 -> 31
+22:19:46 run 26: pass · kill main at 14630 ms (planned 14339) · stored 9e41a53cc5502bc6… (QR before kill: no; raw ok, on peer, QR again) · avail 31 -> 30
+22:20:49 run 27: pass · kill all at 27241 ms (planned 26698) · stored 6310abba0b83fb61… (QR before kill: yes; raw ok, on peer, QR again) · avail 30 -> 29
+22:22:24 run 28: pass · kill main at 25596 ms (planned 25376) · stored aa6bccb118d1fc26… (QR before kill: yes; raw ok, on peer, QR again) · avail 29 -> 28
+22:23:09 run 29: pass · kill all at 17109 ms (planned 16065) · nothing stored · avail 28 -> 28
+22:24:47 run 30: pass · kill main at 25513 ms (planned 25282) · stored 9727c2b0a9f968b0… (QR before kill: yes; raw ok, on peer, QR again) · avail 28 -> 27
+22:25:25 run 31: pass · kill all at 10896 ms (planned 10296) · nothing stored · avail 27 -> 27
+22:27:03 run 32: pass · kill main at 17953 ms (planned 17595) · stored e54c64fc6898036f… (QR before kill: no; raw ok, on peer, QR again) · avail 27 -> 26
+22:27:47 run 33: pass · kill all at 13800 ms (planned 13016) · nothing stored · avail 26 -> 26
+22:29:24 run 34: pass · kill main at 18524 ms (planned 18271) · stored ba36c81e791336d3… (QR before kill: no; raw ok, on peer, QR again) · avail 26 -> 25
+22:30:04 run 35: pass · kill all at 12078 ms (planned 11392) · nothing stored · avail 25 -> 25
+22:31:43 run 36: pass · kill main at 20265 ms (planned 19994) · stored ef8edce713b5da78… (QR before kill: no; raw ok, on peer, QR again) · avail 25 -> 24
+22:32:46 run 37: pass · kill all at 26994 ms (planned 26382) · stored 1069b18930fe8f15… (QR before kill: yes; raw ok, on peer, QR again) · avail 24 -> 23
+22:34:21 run 38: pass · kill main at 20559 ms (planned 20317) · stored 552028f366288184… (QR before kill: no; raw ok, on peer, QR again) · avail 23 -> 22
+22:35:27 run 39: pass · kill all at 24947 ms (planned 24443) · stored 0f545c228457fd8d… (QR before kill: yes; raw ok, on peer, QR again) · avail 22 -> 21
+22:37:02 run 40: pass · kill main at 22918 ms (planned 22565) · stored c3db634d4b745b04… (QR before kill: no; raw ok, on peer, QR again) · avail 21 -> 20
+22:38:03 run 41: pass · kill all at 21345 ms (planned 20896) · stored 0fd58529a7c366b8… (QR before kill: yes; raw ok, on peer, QR again) · avail 20 -> 19
+22:39:38 run 42: pass · kill main at 15675 ms (planned 15401) · stored e3e89a729507e87b… (QR before kill: no; raw ok, on peer, QR again) · avail 19 -> 18
+22:40:39 run 43: pass · kill all at 24325 ms (planned 23694) · stored 0fa98616d6dac45a… (QR before kill: yes; raw ok, on peer, QR again) · avail 18 -> 17
+22:45:55 run 44: FAIL app not ready after restart

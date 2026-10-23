@@ -182,8 +182,11 @@ class Receiver(private val mgr: WalletManager, private val store: ReceivedStore)
     }
 }
 
-/** One tx this phone can broadcast: its own stored payments, or payments it received. */
-data class Outgoing(val txid: String, val raw: ByteArray, val mine: Boolean)
+/**
+ * One tx this phone can broadcast: its own stored payments, or payments it received. [raw] is
+ * null for our own: fetched from offline-core one at a time when sent (binder size limit).
+ */
+data class Outgoing(val txid: String, val raw: ByteArray?, val mine: Boolean)
 
 /**
  * Broadcasts every unmined payment this phone holds, and marks received ones settled once the
@@ -194,7 +197,7 @@ class Settler(private val mgr: WalletManager, private val store: ReceivedStore) 
 
     suspend fun outgoing(): List<Outgoing> {
         val w = mgr.wallet ?: return emptyList()
-        val mine = mgr.core.pendingPayments(w.dbPath).map { Outgoing(it.txid, it.raw, true) }
+        val mine = mgr.core.pendingPayments(w.dbPath).map { Outgoing(it.txid, null, true) }
         val received = store.all().filter { !it.settled }.map { Outgoing(it.txid, it.raw, false) }
         return (mine + received).distinctBy { it.txid }
     }
@@ -218,12 +221,13 @@ class Settler(private val mgr: WalletManager, private val store: ReceivedStore) 
         val out = linkedMapOf<String, String>()
         for (tx in outgoing()) {
             if (mgr.core.minedHeight(w.dbPath, tx.txid) != null) continue
-            val created = CreatedTransaction(
-                txId = FirstClassByteArray(tx.txid.hexToBytes().reversedArray()),
-                raw = FirstClassByteArray(tx.raw),
-                expiryHeight = null,
-            )
             val result = try {
+                val raw = tx.raw ?: mgr.core.pendingRaw(w.dbPath, tx.txid)
+                val created = CreatedTransaction(
+                    txId = FirstClassByteArray(tx.txid.hexToBytes().reversedArray()),
+                    raw = FirstClassByteArray(raw),
+                    expiryHeight = null,
+                )
                 when (val r = w.synchronizer.broadcaster.submit(created, Net.endpoint)) {
                     is TransactionSubmitResult.Success -> "sent"
                     is TransactionSubmitResult.Failure ->
@@ -252,6 +256,7 @@ class Settler(private val mgr: WalletManager, private val store: ReceivedStore) 
 fun List<Note>.toJson(): JSONArray = JSONArray().also { a ->
     forEach { n ->
         a.put(JSONObject().put("note", n.key).put("value", n.value).put("status", n.status)
-            .put("mined_height", n.minedHeight ?: JSONObject.NULL).put("pool", n.pool))
+            .put("mined_height", n.minedHeight ?: JSONObject.NULL).put("pool", n.pool)
+            .put("spent_by", n.spentBy ?: JSONObject.NULL))
     }
 }

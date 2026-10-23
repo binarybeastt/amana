@@ -1,0 +1,11 @@
+00:21:18 pair: tx1=a83e1edf3a79e568… tx2=afbbe6068f985f67… nullifier 1162c859441281d6…
+00:21:36 A inject tx1: {"status":"stored","txid":"a83e1edf3a79e56878174d98c0412443e12c2bf2f19a1da6c8cfa4f73f2edacb","reason":null,"at":1792714896422}
+00:21:39 C holds tx1; no alert anywhere yet: A=0 C=0
+00:21:50 B inject tx2: {"status":"stored","txid":"afbbe6068f985f67e0813058a12d4d1ded537bb586356e56ef3eff37fe8967a8","reason":null,"at":1792714910113}
+00:21:51 C alert after 1 s
+00:21:53 B alert after 3 s
+00:21:56 A alert after 6 s (A's mesh restarted after B's alert)
+00:21:56 C conflict: [{'nullifier': '1162c859441281d6f281ba22a105a7db154c40b36a05668749663e3a66c2fc17', 'txids': ['a83e1edf3a79e56878174d98c0412443e12c2bf2f19a1da6c8cfa4f73f2edacb', 'afbbe6068f985f67e0813058a12d4d1ded537bb586356e56ef3eff37fe8967a8'], 'detected_at': 1792714893438, 'verified': True, 'settled': None}]
+00:21:57 C log: 10-23 01:21:34.226  6224  6486 W MESH    : CONFLICT nullifier=1162c859441281d6f281ba22a105a7db154c40b36a05668749663e3a66c2fc17 txids=a83e1edf3a79e56878174d98c0412443e12c2bf2f19a1da6c8cfa4f73f2edacb,afbbe6068f985f67e0813058a12d4d1ded537bb586356e56ef3eff37fe8967a8 verified=true settled=-
+00:22:04 C banner on screen: 1
+00:22:04 PASS (C alert in 1 s ≤ 60 s)

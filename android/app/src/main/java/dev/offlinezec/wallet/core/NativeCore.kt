@@ -38,6 +38,8 @@ object NativeCore {
 
     @JvmStatic external fun pendingPayments(db: String, network: String): String
 
+    @JvmStatic external fun pendingRaw(db: String, network: String, txid: String): String
+
     @JvmStatic external fun verifyPayment(db: String, network: String, raw: ByteArray, account: String?): String
 
     @JvmStatic external fun prewarm(): String

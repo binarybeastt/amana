@@ -1,0 +1,9 @@
+--------- beginning of main
+10-22 22:52:25.699 23339 23560 I MESH    : HELLO role=server peer=91ae091197a9e4ce v=1
+10-22 22:52:44.486 23339 23358 I AppController: paid 10000 zats, txid 5fd04b28cce3f4fa83aec8c43799f031840c94206c346f8cbf79a30e6e730f44, notes [a425990adb7e52dcb5417be34c37879bfb190badcbf9446bccedefadb04f1a60:0]
+10-22 22:52:44.601 23339 23357 I AppController: RECOVERED txid=5fd04b28cce3f4fa83aec8c43799f031840c94206c346f8cbf79a30e6e730f44: stored payment added to the relay queue
+10-22 22:52:44.731 23339 23409 I AppController: QR_SHOWN txid=5fd04b28cce3f4fa83aec8c43799f031840c94206c346f8cbf79a30e6e730f44 spent_notes=[a425990adb7e52dcb5417be34c37879bfb190badcbf9446bccedefadb04f1a60:0=spent-offline]
+10-22 22:52:44.905 23339 23415 I MESH    : HELLO role=client peer=91ae091197a9e4ce v=1
+10-22 22:52:45.467 23339 23415 I MESH    : FWD txid=5fd04b28cce3f4fa83aec8c43799f031840c94206c346f8cbf79a30e6e730f44 to=91ae091197a9e4ce hops=1 status=stored ms=521 reason=""
+10-22 22:52:45.481 23339 23415 I MESH    : SESSION peer=91ae091197a9e4ce result="ok pushed=1" ms=867
+10-22 22:52:45.537 23339 23581 I MESH    : HELLO role=server peer=91ae091197a9e4ce v=1

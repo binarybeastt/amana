@@ -1,5 +1,6 @@
 package dev.offlinezec.wallet.core
 
+import android.content.ContentProviderClient
 import android.content.Context
 import android.os.Bundle
 import kotlinx.coroutines.Dispatchers
@@ -35,7 +36,14 @@ data class BuiltPayment(
     val raw: ByteArray,
 )
 
-data class PendingPayment(val txid: String, val expiryHeight: Int, val raw: ByteArray)
+/**
+ * A stored payment of ours, not mined yet. [amount] excludes change; [fee] is null if unknown.
+ * No raw bytes: fetch them one payment at a time with [Core.pendingRaw] (binder limit).
+ */
+data class PendingPayment(val txid: String, val expiryHeight: Int, val rawLen: Int, val amount: Long, val fee: Long?) {
+    /** Built offline (expiry 0, never expires), as opposed to an online tx such as a split. */
+    val offline get() = expiryHeight == 0
+}
 
 data class VerifiedPayment(
     val txid: String,
@@ -55,23 +63,43 @@ data class VerifiedPayment(
  */
 class Core(context: Context, private val network: String = "test") {
     private val resolver = context.applicationContext.contentResolver
+    private val clientLock = Any()
+    private var held: ContentProviderClient? = null
+
+    /**
+     * One connection to the core provider, held for the life of this process. While a client
+     * holds it, Android ranks `:core` as important as this process, so the cached-app freezer
+     * never freezes it. Opening a connection per call left `:core` cached between calls; it
+     * was then frozen, and the next call failed or hung until something thawed it (P4.G2.T2,
+     * 2026-10-23). *Unstable*: if the core process dies (a native abort, OOM), Android would
+     * kill every process holding a stable reference to it, this app included; an unstable
+     * client just gets a DeadObjectException, and the next call reconnects.
+     */
+    private fun client(): ContentProviderClient = synchronized(clientLock) {
+        held ?: (resolver.acquireUnstableContentProviderClient(CoreProvider.AUTHORITY)
+            ?: throw CoreException("core provider not found")).also { held = it }
+    }
+
+    private fun drop(c: ContentProviderClient) = synchronized(clientLock) {
+        if (held === c) {
+            held = null
+            runCatching { c.close() }
+        }
+    }
 
     private suspend fun call(method: String, extras: Bundle = Bundle()): String = withContext(Dispatchers.IO) {
-        // An *unstable* client: if the core process dies (a native abort, OOM), Android would
-        // kill every process holding a stable reference to it, this app included. Unstable
-        // clients just get a DeadObjectException.
         val reply = try {
-            val client = resolver.acquireUnstableContentProviderClient(CoreProvider.AUTHORITY)
-                ?: throw CoreException("core provider not found")
+            val c = client()
             try {
-                client.call(method, null, extras)
-            } finally {
-                client.close()
+                c.call(method, null, extras)
+            } catch (e: Exception) {
+                // DeadObjectException etc.: the core process died mid-call. Reconnect next time.
+                drop(c)
+                throw e
             }
         } catch (e: CoreException) {
             throw e
         } catch (e: Exception) {
-            // DeadObjectException etc.: the core process died mid-call.
             throw CoreException("core process unavailable: ${e.javaClass.simpleName}: ${e.message}")
         } ?: throw CoreException("core process gave no reply to $method")
         reply.getString(CoreProvider.KEY_ERROR)?.let { throw CoreException(it) }
@@ -149,9 +177,17 @@ class Core(context: Context, private val network: String = "test") {
         val a = JSONArray(call("pendingPayments", dbArgs(db)))
         return (0 until a.length()).map { i ->
             val o = a.getJSONObject(i)
-            PendingPayment(o.getString("txid"), o.getInt("expiry_height"), o.getString("raw_hex").hexToBytes())
+            PendingPayment(
+                o.getString("txid"), o.getInt("expiry_height"), o.getInt("raw_len"),
+                amount = o.getLong("amount"), fee = if (o.isNull("fee")) null else o.getLong("fee"),
+            )
         }
     }
+
+    /** Raw bytes of one stored, unmined payment. Throws if it is no longer pending. */
+    suspend fun pendingRaw(db: String, txid: String): ByteArray =
+        JSONObject(call("pendingRaw", dbArgs(db).apply { putString(CoreProvider.KEY_TXID, txid) }))
+            .getString("raw_hex").hexToBytes()
 
     suspend fun verifyPayment(db: String, raw: ByteArray, account: String?): VerifiedPayment {
         val o = JSONObject(call("verifyPayment", dbArgs(db).apply {

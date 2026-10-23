@@ -1,0 +1,30 @@
+23:35:08 P4.G1: 10 kill runs, sender emulator-5554, peer emulator-5558, 10000 zats per payment, seed 2028
+23:35:26 emulator-5556: Bluetooth off (out of range)
+23:35:40 both offline (Wi-Fi + data off), Bluetooth on and in range; sender node 25e0cb9d32e548bd, peer node 91ae091197a9e4ce
+23:36:50 run 0 (no kill): pay flow took 49942 ms, QR shown for 95ae3de2b36e7cb2ca1a4fce525d2ff97581ae75c08c40b43d200e4805962a66
+23:37:54 run 1: pass · kill all at 24371 ms (planned 23272) · nothing stored · avail 56 -> 56
+23:40:30 run 2: pass · kill main at 36050 ms (planned 35822) · stored d52950ce74a7acbc… (QR before kill: yes; raw ok, on peer, QR again) · avail 56 -> 55
+23:42:05 run 3: pass · kill all at 47179 ms (planned 46314) · stored 99ccc15442e90591… (QR before kill: yes; raw ok, on peer, QR again) · avail 55 -> 54
+23:44:40 run 4: pass · kill main at 31145 ms (planned 30876) · stored 351c83d0bc842159… (QR before kill: yes; raw ok, on peer, QR again) · avail 54 -> 53
+23:45:52 run 5: pass · kill all at 25003 ms (planned 24397) · stored e6edaf1f5740dad5… (QR before kill: yes; raw ok, on peer, QR again) · avail 53 -> 52
+23:48:27 run 6: pass · kill main at 42028 ms (planned 41836) · stored 4f353208de021db0… (QR before kill: yes; raw ok, on peer, QR again) · avail 52 -> 51
+23:49:18 run 7: pass · kill all at 18178 ms (planned 17165) · nothing stored · avail 51 -> 51
+23:52:01 run 8: pass · kill main at 35508 ms (planned 35290) · stored aa73985bb024bd92… (QR before kill: yes; raw ok, on peer, QR again) · avail 51 -> 50
+23:53:32 run 9: pass · kill all at 43677 ms (planned 43025) · stored 2a3936ce0f71fc86… (QR before kill: yes; raw ok, on peer, QR again) · avail 50 -> 49
+23:56:10 run 10: pass · kill main at 30668 ms (planned 30330) · stored c5fa48123c0b96b7… (QR before kill: no; raw ok, on peer, QR again) · avail 49 -> 48
+23:56:10 kill runs: 10/10 pass; 8 stored before or during the kill (7 with the QR already shown)
+23:56:11 online: sender has 11 stored payments (this test: 8 + run 0); peer stays offline
+23:59:48 after 216 s online: 0 of 11 still unmined
+23:59:48   1995d2996a479049… mined at 4530573; sender's last send: already known: (-1) transaction already exists in mempool
+23:59:48   6c437e9906598133… mined at 4530573; sender's last send: already known: (-1) transaction already exists in mempool
+23:59:48   95ae3de2b36e7cb2… mined at 4530647; sender's last send: sent
+23:59:48   d52950ce74a7acbc… mined at 4530647; sender's last send: sent
+23:59:48   99ccc15442e90591… mined at 4530647; sender's last send: sent
+23:59:48   351c83d0bc842159… mined at 4530647; sender's last send: sent
+23:59:48   e6edaf1f5740dad5… mined at 4530647; sender's last send: sent
+23:59:48   4f353208de021db0… mined at 4530647; sender's last send: sent
+23:59:49   aa73985bb024bd92… mined at 4530647; sender's last send: sent
+23:59:49   2a3936ce0f71fc86… mined at 4530647; sender's last send: sent
+23:59:49   c5fa48123c0b96b7… mined at 4530647; sender's last send: sent
+23:59:49 peer still offline: yes; peer sent: {'sent': 0, 'received': 13, 'refused': 0, 'sessions': 43, 'failed_sessions': 2}
+23:59:49 P4.G1: PASS

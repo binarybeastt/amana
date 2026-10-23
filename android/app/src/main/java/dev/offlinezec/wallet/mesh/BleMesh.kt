@@ -37,12 +37,13 @@ import kotlin.random.Random
 /**
  * The Bluetooth LE side of the mesh. Every phone is both:
  *  - a GATT **server** that advertises [Proto.SERVICE] (with its protocol version and node id
- *    in the scan response) and answers HELLO / INV_REQ / TX requests, and
+ *    in the scan response) and answers HELLO / NF / INV_REQ / TX requests, and
  *  - a **client** that scans for that service only (other BLE devices are never seen), and
- *    connects to each peer it finds to push the transactions the peer lacks.
+ *    connects to each peer it finds to swap nullifier claims ([Nullifiers]) and push the
+ *    transactions the peer lacks.
  * Data only flows client → server, so each side pushes with its own client.
  *
- * Log lines under tag MESH (PEER_FOUND, HELLO, REFUSED, FWD, RECV, SESSION) are read by tests.
+ * Log lines under tag MESH (PEER_FOUND, HELLO, REFUSED, GOSSIP, FWD, RECV, SESSION) are read by tests.
  */
 @SuppressLint("MissingPermission")
 class BleMesh(
@@ -51,6 +52,7 @@ class BleMesh(
     private val network: String,
     private val queue: RelayQueue,
     private val relay: Relay,
+    private val nullifiers: Nullifiers,
 ) {
     data class PeerInfo(
         val node: String,
@@ -273,6 +275,16 @@ class BleMesh(
                 Proto.HelloReply(false, why, hello).encode()
             }
         }
+        is Proto.MNf -> {
+            val peer = link.peer
+            if (peer == null) {
+                Proto.nack("say HELLO first")
+            } else {
+                nullifiers.heard(m.claims)
+                log("GOSSIP role=server peer=${peer.node} got=${m.claims.size} conflicts=${nullifiers.conflicts().size}")
+                Proto.nf(nullifiers.share())
+            }
+        }
         is Proto.MInvReq -> if (link.peer == null) Proto.nack("say HELLO first") else Proto.inv(queue.txids())
         is Proto.MTx -> {
             val peer = link.peer
@@ -371,8 +383,9 @@ class BleMesh(
                 val now = System.currentTimeMillis()
                 peers.values.removeIf { now - it.lastSeen > PEER_GONE_MS }
                 if (!running) break
-                val v = queue.version
-                if (queue.forwardable().isEmpty()) continue
+                // Either changing means peers need a sync: new txs, or a new conflict to spread.
+                val v = queue.version + nullifiers.version
+                if (queue.forwardable().isEmpty() && nullifiers.size() == 0 && nullifiers.conflicts().isEmpty()) continue
                 val due = peers.values.filter {
                     it.fresh && now >= it.nextTry && now - it.lastSeen < PEER_GONE_MS &&
                         (it.syncedVersion != v || now - it.syncedAt > RESYNC_MS)
@@ -427,6 +440,10 @@ class BleMesh(
                 return true
             }
             log("HELLO role=client peer=${p.node} v=${reply.reply.hello?.version}")
+            val mine = nullifiers.share()
+            val theirs = s.request(Proto.nf(mine), REQUEST_TIMEOUT_MS) as? Proto.MNf ?: error("no NF reply")
+            nullifiers.heard(theirs.claims)
+            log("GOSSIP role=client peer=${p.node} sent=${mine.size} got=${theirs.claims.size} conflicts=${nullifiers.conflicts().size}")
             val inv = s.request(Proto.invReq(), REQUEST_TIMEOUT_MS) as? Proto.MInv ?: error("no INV reply")
             val have = inv.txids.toHashSet()
             for (e in queue.forwardable().filter { it.txid !in have }) {
