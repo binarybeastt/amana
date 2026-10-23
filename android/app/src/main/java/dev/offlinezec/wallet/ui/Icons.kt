@@ -16,7 +16,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 /** Thin line icons, drawn on a 24-unit grid like the design's (no icon font in the APK). */
-enum class Glyph { Up, Down, Relay, Scan, Copy, Profile, ChevronDown, ChevronRight, ChevronLeft, Back, Close, Notes, Bluetooth, Paste, Check, Swap, Warning }
+enum class Glyph { Up, Down, Relay, Scan, Copy, Profile, ChevronDown, ChevronRight, ChevronLeft, Back, Close, Notes, Bluetooth, Paste, Check, Swap, Warning, Memo, Info }
 
 @Composable
 fun LineIcon(g: Glyph, modifier: Modifier = Modifier, size: Dp = 24.dp, color: Color = Ink.text, weight: Float = 1.6f) {
@@ -49,6 +49,8 @@ fun LineIcon(g: Glyph, modifier: Modifier = Modifier, size: Dp = 24.dp, color: C
             Glyph.Bluetooth -> line(7f, 7f, 17f, 16f, 12f, 20f, 12f, 4f, 17f, 8f, 7f, 17f)
             Glyph.Paste -> { rr(5f, 5f, 14f, 16f, 2.5f); rr(9f, 3f, 6f, 4f, 1.5f) }
             Glyph.Check -> line(5f, 12.5f, 10f, 17.5f, 19f, 7f)
+            Glyph.Memo -> { line(4f, 20f, 5f, 15.5f, 15.5f, 5f, 19f, 8.5f, 8.5f, 19f, 4f, 20f); line(13f, 7.5f, 16.5f, 11f) }
+            Glyph.Info -> { drawCircle(color, 9f * u, Offset(12f * u, 12f * u), style = st); line(12f, 11f, 12f, 16.5f); line(12f, 7.8f, 12f, 7.81f) }
             Glyph.Warning -> { line(12f, 4f, 21f, 20f, 3f, 20f, 12f, 4f); line(12f, 10f, 12f, 14f); line(12f, 17f, 12f, 17.01f) }
         }
     }

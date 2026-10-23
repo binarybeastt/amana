@@ -40,8 +40,8 @@ object Ink {
 @OptIn(ExperimentalTextApi::class)
 private fun inter(w: Int) = Font(R.font.inter, FontWeight(w), variationSettings = FontVariation.Settings(FontVariation.weight(w)))
 
-/** Inter, the design's typeface (variable font in res/font). */
-val Inter = FontFamily(inter(400), inter(500), inter(600), inter(700), inter(800))
+/** Inter, the design's typeface (variable font in res/font). Three weights only. */
+val Inter = FontFamily(inter(400), inter(500), inter(600))
 
 private val scheme = darkColorScheme(
     primary = Ink.text,
@@ -68,21 +68,22 @@ private val scheme = darkColorScheme(
 private fun t(size: Int, w: FontWeight = FontWeight.Normal, track: Double = 0.0, color: Color = Color.Unspecified) =
     TextStyle(fontFamily = Inter, fontSize = size.sp, fontWeight = w, letterSpacing = track.sp, color = color)
 
+/** One tight scale (34 / 22 / 17 / 15 / 13) plus two display sizes for money. */
 private val type = Typography(
-    displayLarge = t(60, FontWeight.Bold, -2.0),
-    displayMedium = t(44, FontWeight.Bold, -1.4),
-    displaySmall = t(36, FontWeight.Bold, -1.0),
-    headlineLarge = t(32, FontWeight.Bold, -0.8),
-    headlineMedium = t(26, FontWeight.Bold, -0.5),
-    titleLarge = t(20, FontWeight.SemiBold, -0.2),
-    titleMedium = t(16, FontWeight.SemiBold),
+    displayLarge = t(56, FontWeight.SemiBold, -1.6),
+    displayMedium = t(44, FontWeight.SemiBold, -1.2),
+    displaySmall = t(34, FontWeight.SemiBold, -0.8),
+    headlineLarge = t(34, FontWeight.SemiBold, -0.8),
+    headlineMedium = t(22, FontWeight.SemiBold, -0.3),
+    titleLarge = t(17, FontWeight.SemiBold),
+    titleMedium = t(17, FontWeight.Medium),
     titleSmall = t(15, FontWeight.Medium),
-    bodyLarge = t(16),
+    bodyLarge = t(17),
     bodyMedium = t(15),
     bodySmall = t(13, color = Ink.dim),
     labelLarge = t(17, FontWeight.SemiBold),
-    labelMedium = t(14, FontWeight.Medium),
-    labelSmall = t(12, FontWeight.Medium),
+    labelMedium = t(13, FontWeight.Medium),
+    labelSmall = t(13, FontWeight.Medium),
 )
 
 @Composable

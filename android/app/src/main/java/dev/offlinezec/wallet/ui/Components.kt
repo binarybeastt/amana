@@ -47,24 +47,24 @@ import dev.offlinezec.wallet.qr.qrBitmap
 import dev.offlinezec.wallet.qr.styledQrPixels
 
 val CardShape = RoundedCornerShape(32.dp)
-val ButtonShape = RoundedCornerShape(22.dp)
+val ButtonShape = RoundedCornerShape(16.dp)
 val Pill = RoundedCornerShape(50)
 
-/** A screen: background, system-bar padding, a scrolling column with the design's 20 dp gutters. */
+/** A screen: background, system-bar padding, a scrolling column with 24 dp gutters (8 pt grid). */
 @Composable
 fun Page(bg: Color = Ink.page, scroll: Boolean = true, gap: Dp = 16.dp, content: @Composable ColumnScope.() -> Unit) {
     val m = Modifier.fillMaxSize().background(bg).statusBarsPadding().navigationBarsPadding()
-        .padding(horizontal = 20.dp).let { if (scroll) it.verticalScroll(rememberScrollState()) else it }
+        .padding(horizontal = 24.dp).let { if (scroll) it.verticalScroll(rememberScrollState()) else it }
     Column(m, verticalArrangement = Arrangement.spacedBy(gap), content = content)
 }
 
 /** Top of a sheet-like screen: the grabber line, with a quiet close control at the left. */
 @Composable
 fun SheetTop(close: () -> Unit, trailing: @Composable RowScope.() -> Unit = {}) {
-    Box(Modifier.fillMaxWidth().padding(top = 10.dp)) {
-        Box(Modifier.align(Alignment.TopCenter).width(44.dp).height(4.dp).clip(Pill).background(Ink.line))
-        Row(Modifier.fillMaxWidth().padding(top = 14.dp), verticalAlignment = Alignment.CenterVertically) {
-            IconButton(Glyph.ChevronDown, close, tag = "back")
+    Box(Modifier.fillMaxWidth().padding(top = 8.dp)) {
+        Box(Modifier.align(Alignment.TopCenter).width(40.dp).height(4.dp).clip(Pill).background(Ink.line))
+        Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+            IconButton(Glyph.ChevronDown, close, tag = "back", filled = false)
             Spacer(Modifier.weight(1f))
             trailing()
         }
@@ -73,9 +73,9 @@ fun SheetTop(close: () -> Unit, trailing: @Composable RowScope.() -> Unit = {}) 
 
 /** A thin icon in a round hit area. [filled]: on a dark disc. */
 @Composable
-fun IconButton(g: Glyph, onClick: () -> Unit, tag: String? = null, filled: Boolean = true, size: Dp = 44.dp, tint: Color = Ink.text) {
+fun IconButton(g: Glyph, onClick: () -> Unit, tag: String? = null, filled: Boolean = true, size: Dp = 48.dp, tint: Color = Ink.text, modifier: Modifier = Modifier) {
     Box(
-        Modifier.size(size).clip(CircleShape).background(if (filled) Ink.card else Color.Transparent).clickable(onClick = onClick)
+        modifier.size(size).clip(CircleShape).background(if (filled) Ink.card else Color.Transparent).clickable(onClick = onClick)
             .let { if (tag != null) it.testTag(tag) else it },
         contentAlignment = Alignment.Center,
     ) { LineIcon(g, size = 22.dp, color = tint) }
@@ -87,8 +87,8 @@ fun DarkCard(
     color: Color = Ink.card,
     border: Color? = null,
     onClick: (() -> Unit)? = null,
-    padding: Dp = 22.dp,
-    gap: Dp = 10.dp,
+    padding: Dp = 24.dp,
+    gap: Dp = 8.dp,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Column(
@@ -107,7 +107,7 @@ fun PrimaryButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifi
         onClick = onClick, enabled = enabled, shape = ButtonShape,
         colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Color.Black,
             disabledContainerColor = Ink.raised, disabledContentColor = Ink.dim),
-        modifier = modifier.fillMaxWidth().height(62.dp),
+        modifier = modifier.fillMaxWidth().height(56.dp),
     ) { Text(text, style = MaterialTheme.typography.labelLarge, textAlign = TextAlign.Center, maxLines = 1, overflow = TextOverflow.Ellipsis) }
 }
 
@@ -118,10 +118,39 @@ fun SecondaryButton(text: String, onClick: () -> Unit, modifier: Modifier = Modi
         onClick = onClick, enabled = enabled, shape = ButtonShape,
         colors = ButtonDefaults.buttonColors(containerColor = Ink.raised, contentColor = Ink.text,
             disabledContainerColor = Ink.card, disabledContentColor = Ink.faint),
-        modifier = modifier.fillMaxWidth().height(62.dp),
+        modifier = modifier.fillMaxWidth().height(56.dp),
     ) {
-        if (glyph != null) { LineIcon(glyph, size = 20.dp); Spacer(Modifier.width(10.dp)) }
+        if (glyph != null) { LineIcon(glyph, size = 20.dp); Spacer(Modifier.width(8.dp)) }
         Text(text, style = MaterialTheme.typography.labelLarge, textAlign = TextAlign.Center, maxLines = 1)
+    }
+}
+
+/** A home action: a 56 dp round button with a short label under it. [primary]: white disc. */
+@Composable
+fun ActionButton(g: Glyph, label: String, onClick: () -> Unit, modifier: Modifier = Modifier, primary: Boolean = false, badge: Color? = null) {
+    Column(
+        modifier.clip(RoundedCornerShape(16.dp)).clickable(onClick = onClick).padding(horizontal = 8.dp, vertical = 4.dp),
+        horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Box(Modifier.size(56.dp)) {
+            Box(Modifier.fillMaxSize().clip(CircleShape).background(if (primary) Color.White else Ink.raised), contentAlignment = Alignment.Center) {
+                LineIcon(g, size = 24.dp, color = if (primary) Color.Black else Ink.text, weight = 2f)
+            }
+            if (badge != null) Box(Modifier.align(Alignment.TopEnd).size(14.dp).clip(CircleShape).background(Ink.page).padding(3.dp).clip(CircleShape).background(badge))
+        }
+        Text(label, style = MaterialTheme.typography.labelMedium, maxLines = 1)
+    }
+}
+
+/** A quiet text-only action, 48 dp tall. */
+@Composable
+fun TextButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, glyph: Glyph? = null, color: Color = Ink.text) {
+    Row(
+        modifier.height(48.dp).clip(Pill).clickable(onClick = onClick).padding(horizontal = 16.dp),
+        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        if (glyph != null) LineIcon(glyph, size = 20.dp, color = color)
+        Text(text, style = MaterialTheme.typography.titleMedium, color = color, maxLines = 1)
     }
 }
 
@@ -129,10 +158,11 @@ fun SecondaryButton(text: String, onClick: () -> Unit, modifier: Modifier = Modi
 @Composable
 fun Chip(text: String, modifier: Modifier = Modifier, selected: Boolean = false, color: Color = Ink.dim, onClick: (() -> Unit)? = null) {
     Box(
-        modifier.clip(Pill)
+        modifier.height(40.dp).clip(Pill)
             .border(if (selected) 1.5.dp else 1.dp, if (selected) Ink.text else Ink.line, Pill)
             .let { if (onClick != null) it.clickable(onClick = onClick) else it }
-            .padding(horizontal = 16.dp, vertical = 9.dp),
+            .padding(horizontal = 16.dp),
+        contentAlignment = Alignment.Center,
     ) { Text(text, style = MaterialTheme.typography.titleSmall, color = if (selected) Ink.text else color) }
 }
 
@@ -142,7 +172,7 @@ fun Tag(text: String, modifier: Modifier = Modifier, color: Color = Ink.dim, mon
     Text(
         text, color = color, fontSize = 13.sp, maxLines = 1,
         fontFamily = if (mono) FontFamily.Monospace else Inter,
-        modifier = modifier.clip(RoundedCornerShape(8.dp)).background(Ink.raised).padding(horizontal = 9.dp, vertical = 4.dp),
+        modifier = modifier.clip(RoundedCornerShape(8.dp)).background(Ink.raised).padding(horizontal = 8.dp, vertical = 4.dp),
     )
 }
 
@@ -150,8 +180,8 @@ fun Tag(text: String, modifier: Modifier = Modifier, color: Color = Ink.dim, mon
 @Composable
 fun FactPill(modifier: Modifier = Modifier, bg: Color = Ink.card, content: @Composable RowScope.() -> Unit) {
     Row(
-        modifier.clip(Pill).background(bg).padding(horizontal = 14.dp, vertical = 9.dp),
-        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(7.dp), content = content,
+        modifier.clip(Pill).background(bg).padding(horizontal = 12.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp), content = content,
     )
 }
 
@@ -170,7 +200,7 @@ fun Avatar(g: Glyph, tint: Color, size: Dp = 52.dp) {
 @Composable
 fun ZecAvatar(size: Dp = 52.dp) {
     Box(Modifier.size(size).clip(CircleShape).background(Ink.zec.copy(alpha = 0.2f)), contentAlignment = Alignment.Center) {
-        Text("Z", color = Ink.zec, fontFamily = Inter, fontWeight = FontWeight.ExtraBold, fontSize = (size.value * 0.42f).sp)
+        Text("Z", color = Ink.zec, fontFamily = Inter, fontWeight = FontWeight.SemiBold, fontSize = (size.value * 0.42f).sp)
     }
 }
 
@@ -186,7 +216,7 @@ fun PayStatus.color(): Color = when (this) {
 fun StatusText(s: PayStatus, modifier: Modifier = Modifier) {
     Row(modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         Dot(s.color(), 6.dp)
-        Text(s.chip, color = s.color(), fontSize = 14.sp, fontWeight = FontWeight.Medium, fontFamily = Inter)
+        Text(s.chip, color = s.color(), fontSize = 13.sp, fontWeight = FontWeight.Medium, fontFamily = Inter)
     }
 }
 
@@ -195,7 +225,7 @@ fun StatusText(s: PayStatus, modifier: Modifier = Modifier) {
 fun StatusChip(s: PayStatus, modifier: Modifier = Modifier) {
     FactPill(modifier, bg = s.color().copy(alpha = 0.14f)) {
         Dot(s.color(), 6.dp)
-        Text(s.chip, color = s.color(), fontSize = 14.sp, fontWeight = FontWeight.SemiBold, fontFamily = Inter)
+        Text(s.chip, color = s.color(), fontSize = 13.sp, fontWeight = FontWeight.Medium, fontFamily = Inter)
     }
 }
 
@@ -208,21 +238,21 @@ fun ListRow(
     value: String?,
     modifier: Modifier = Modifier,
     valueColor: Color = Ink.text,
-    tagMono: Boolean = false,
+    tagModifier: Modifier = Modifier,
     status: @Composable (() -> Unit)? = null,
     onClick: (() -> Unit)? = null,
 ) {
     Row(
-        modifier.fillMaxWidth().let { if (onClick != null) it.clip(RoundedCornerShape(18.dp)).clickable(onClick = onClick) else it }
-            .padding(vertical = 10.dp),
+        modifier.fillMaxWidth().let { if (onClick != null) it.clip(RoundedCornerShape(16.dp)).clickable(onClick = onClick) else it }
+            .padding(vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         avatar()
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(title.uppercase(), style = MaterialTheme.typography.titleSmall, letterSpacing = 0.3.sp, maxLines = 1)
-            if (tag != null) Tag(tag, mono = tagMono)
+            if (tag != null) Tag(tag, tagModifier)
         }
-        Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(8.dp)) {
             if (value != null) Text(value, style = MaterialTheme.typography.titleLarge, color = valueColor, maxLines = 1)
             status?.invoke()
         }
@@ -258,14 +288,14 @@ fun AddressQr(text: String, size: Dp, tag: String = "qr") {
         Image(bmp.asImageBitmap(), contentDescription = "Address QR code", modifier = Modifier.fillMaxSize().testTag(tag))
         // The logo: a white disc with a black Z, like the design's coin mark.
         Box(Modifier.size(size * 0.17f).clip(CircleShape).background(Color.White), contentAlignment = Alignment.Center) {
-            Text("Z", color = Color.Black, fontFamily = Inter, fontWeight = FontWeight.Black, fontSize = (size.value * 0.085f).sp)
+            Text("Z", color = Color.Black, fontFamily = Inter, fontWeight = FontWeight.SemiBold, fontSize = (size.value * 0.085f).sp)
         }
     }
 }
 
 /** 1–9 . 0 ‹, light numerals as in the design. Keys carry testTags key_0…key_9, key_dot, key_back. */
 @Composable
-fun Keypad(onKey: (Char) -> Unit, modifier: Modifier = Modifier, keyHeight: Dp = 58.dp) {
+fun Keypad(onKey: (Char) -> Unit, modifier: Modifier = Modifier, keyHeight: Dp = 56.dp) {
     val rows = listOf("123", "456", "789", ".0<")
     Column(modifier.fillMaxWidth()) {
         rows.forEach { r ->
@@ -273,11 +303,11 @@ fun Keypad(onKey: (Char) -> Unit, modifier: Modifier = Modifier, keyHeight: Dp =
                 r.forEach { k ->
                     val tag = when (k) { '.' -> "key_dot"; '<' -> "key_back"; else -> "key_$k" }
                     Box(
-                        Modifier.weight(1f).height(keyHeight).clip(RoundedCornerShape(18.dp)).clickable { onKey(k) }.testTag(tag),
+                        Modifier.weight(1f).height(keyHeight).clip(RoundedCornerShape(16.dp)).clickable { onKey(k) }.testTag(tag),
                         contentAlignment = Alignment.Center,
                     ) {
-                        if (k == '<') LineIcon(Glyph.ChevronLeft, size = 28.dp)
-                        else Text(k.toString(), fontSize = 32.sp, fontFamily = Inter, fontWeight = FontWeight.Normal, color = Ink.text)
+                        if (k == '<') LineIcon(Glyph.ChevronLeft, size = 24.dp)
+                        else Text(k.toString(), fontSize = 28.sp, fontFamily = Inter, fontWeight = FontWeight.Normal, color = Ink.text)
                     }
                 }
             }
