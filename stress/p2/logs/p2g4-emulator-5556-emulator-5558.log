@@ -1,7 +1,7 @@
-2026-10-23T14:58:52Z emulator-5556 pays emulator-5558 0.001 ZEC
-paid: txid 3cb9a52d1910654952555b58886e4dce13e9bb2f3e0e05383395b57dab852a7a in 41s
-T3 notes when the QR was first shown: 401e39b520f68e848403b0ac98594ccbdb12951175a84ad717f397304246a4d9:1=spent-offline
+2026-10-23T21:00:56Z emulator-5556 pays emulator-5558 0.001 ZEC
+paid: txid 67227381270e1889df7b495d3562b7cff8e72ec7413993ba2db1e24f760c0a10 in 34s
+T3 notes when the QR was first shown: 3cb9a52d1910654952555b58886e4dce13e9bb2f3e0e05383395b57dab852a7a:1=spent-offline
 T3 pass
-T4 receiver: state=accepted amount=100000 txid=3cb9a52d1910654952555b58886e4dce13e9bb2f3e0e05383395b57dab852a7a screen='0.001 ZEC' 'received, not yet settled' 
+T4 receiver: state=accepted amount=100000 txid=67227381270e1889df7b495d3562b7cff8e72ec7413993ba2db1e24f760c0a10 screen='0.001 ZEC' 'received, not yet settled' 
 T4 pass
 PASS
