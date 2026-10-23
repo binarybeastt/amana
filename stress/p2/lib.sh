@@ -88,10 +88,34 @@ note_txids() { core_notes "$1" | python3 -c "import json,sys; print('\n'.join(so
 # home <serial>: back to the home screen
 home() { "$ADB" -s "$1" shell input keyevent KEYCODE_BACK; "$ADB" -s "$1" shell input keyevent KEYCODE_BACK; launch "$1"; }
 
-# type_into <serial> <resource-id> <text>: focus a field and type (no spaces in text)
+# type_into <serial> <resource-id> <text>: focus a field and type (no spaces in text).
+# pay_amount is not a text field (Phase 5): the amount is typed on the Pay screen's keypad.
 type_into() {
+  if [ "$2" = pay_amount ]; then tap_keys "$1" "$3"; return; fi
   tap_id "$1" "$2"; sleep 0.5; "$ADB" -s "$1" shell input text "$3"; sleep 0.5
   hide_keyboard "$1"
+}
+# tap_keys <serial> <digits-and-dots>: clears the Pay keypad's amount, then taps each key
+# (testTags key_0..key_9, key_dot, key_back).
+tap_keys() {
+  local s=$1 txt=$2
+  hide_keyboard "$s"
+  "$ADB" -s "$s" shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1
+  local taps; taps=$("$ADB" -s "$s" exec-out cat /sdcard/ui.xml | python3 -c "
+import re, sys
+x = sys.stdin.read()
+pos = {}
+for k, a, b, c, d in re.findall(r'resource-id=\"key_(\w+)\"[^>]*bounds=\"\[(\d+),(\d+)\]\[(\d+),(\d+)\]\"', x):
+    pos[k] = ((int(a) + int(c)) // 2, (int(b) + int(d)) // 2)
+amt = re.search(r'text=\"([^\"]*)\"[^>]*resource-id=\"pay_amount\"', x)
+keys = ['back'] * (len(amt.group(1)) if amt and amt.group(1) != '0' else 0)
+keys += ['dot' if ch == '.' else ch for ch in '$txt']
+if all(k in pos for k in keys):
+    print('\n'.join('%d %d' % pos[k] for k in keys))")
+  [ -n "$taps" ] || { echo "no keypad on screen" >&2; return 1; }
+  # </dev/null: adb shell would otherwise swallow the remaining lines
+  while read -r x y; do "$ADB" -s "$s" shell input tap "$x" "$y" </dev/null; done <<<"$taps"
+  sleep 0.5
 }
 # hide_keyboard <serial>: Back closes the on-screen keyboard, but only press it while one shows
 # (otherwise Back leaves the screen). A covering keyboard swallows the next tap.

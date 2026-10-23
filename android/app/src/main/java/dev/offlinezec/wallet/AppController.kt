@@ -2,7 +2,9 @@ package dev.offlinezec.wallet
 
 import android.app.Application
 import android.util.Log
+import android.content.Context
 import dev.offlinezec.wallet.core.BuiltPayment
+import dev.offlinezec.wallet.core.Note
 import dev.offlinezec.wallet.core.PendingPayment
 import dev.offlinezec.wallet.core.toHex
 import dev.offlinezec.wallet.mesh.Mesh
@@ -17,6 +19,10 @@ import dev.offlinezec.wallet.wallet.PrepareStatus
 import dev.offlinezec.wallet.wallet.Preparer
 import dev.offlinezec.wallet.wallet.ReceiveResult
 import dev.offlinezec.wallet.wallet.Received
+import dev.offlinezec.wallet.wallet.SeedWarning
+import dev.offlinezec.wallet.wallet.SeedWarningStore
+import dev.offlinezec.wallet.wallet.seedWarning
+import dev.offlinezec.wallet.ui.balanceSplit
 import dev.offlinezec.wallet.wallet.ReceivedStore
 import dev.offlinezec.wallet.wallet.Receiver
 import dev.offlinezec.wallet.wallet.Reconcile
@@ -106,6 +112,24 @@ class AppController(private val app: Application) {
     private val _meshInfo = MutableStateFlow(MeshInfo())
     val meshInfo: StateFlow<MeshInfo> = _meshInfo
 
+    /** This account's notes as offline-core sees them (the balance split, P5.G2). */
+    private val _notes = MutableStateFlow<List<Note>>(emptyList())
+    val notes: StateFlow<List<Note>> = _notes
+
+    /** Amounts of our own offline payments, kept after they leave the pending list (settled). */
+    private val sentAmountPrefs = app.getSharedPreferences("sent_amounts", Context.MODE_PRIVATE)
+    private val _sentAmounts = MutableStateFlow(readSentAmounts())
+    val sentAmounts: StateFlow<Map<String, Long>> = _sentAmounts
+
+    private val seedWarnings = SeedWarningStore(app)
+    private val _seedWarning = MutableStateFlow<SeedWarning?>(null)
+    /** P5.G3: the seed-on-two-devices warning to show now (blocks the app until acknowledged). */
+    val seedWarning: StateFlow<SeedWarning?> = _seedWarning
+
+    /** Debug: shifts the clock the screens use (P5.G1.T2 shows a payment as a day old). */
+    @Volatile var clockSkewMs = 0L
+    fun now() = System.currentTimeMillis() + clockSkewMs
+
     /** Debug: what the notes looked like the moment the payment QR was first shown. */
     @Volatile var notesAtQr: JSONObject? = null
 
@@ -135,6 +159,7 @@ class AppController(private val app: Application) {
                         refresh()
                     }
                 }
+                updateSeedWarning()
                 _meshInfo.value = MeshInfo(
                     bluetooth = mesh.bluetoothOn(), permitted = Mesh.hasBluetoothPermissions(app), running = mesh.ble.running,
                     online = mesh.online.value, peers = mesh.ble.peers().size, queue = mesh.queue.all(),
@@ -155,6 +180,8 @@ class AppController(private val app: Application) {
         _payments.value = received.all()
         val pending = wallet.core.pendingPayments(w.dbPath)
         _pendingSent.value = pending
+        rememberAmounts(pending)
+        _notes.value = wallet.core.notes(w.dbPath).filter { it.accountUuid == w.accountUuid }
         // A payment stored just before a crash never reached the relay queue: carry it now.
         for (p in pending.filter { it.offline && !mesh.queue.contains(it.txid) }) {
             mesh.addOwn(p.txid, wallet.core.pendingRaw(w.dbPath, p.txid))
@@ -199,10 +226,36 @@ class AppController(private val app: Application) {
 
     // ---- Wallet ----
 
-    fun createWallet() = scope.launch { runCatching { wallet.create() }.onFailure { say("Create failed: ${it.message}") } }
+    fun createWallet() = scope.launch {
+        seedWarnings.clear()
+        runCatching { wallet.create() }.onFailure { say("Create failed: ${it.message}") }
+    }
 
-    fun restoreWallet(mnemonic: String, birthday: Long) =
-        scope.launch { runCatching { wallet.restore(mnemonic, birthday) }.onFailure { say("Restore failed: ${it.message}") } }
+    /** Flags the seed-on-two-devices warning first, so the wallet never opens without it. */
+    fun restoreWallet(mnemonic: String, birthday: Long) = scope.launch {
+        seedWarnings.restored()
+        updateSeedWarning()
+        runCatching { wallet.restore(mnemonic, birthday) }.onFailure { say("Restore failed: ${it.message}") }
+    }
+
+    private fun updateSeedWarning() {
+        _seedWarning.value = seedWarning(seedWarnings.get(), mesh.online.value)
+    }
+
+    fun acknowledgeSeedWarning(w: SeedWarning) {
+        seedWarnings.acknowledge(w)
+        Log.i(TAG, "SEED_WARNING acknowledged: $w")
+        updateSeedWarning()
+    }
+
+    private fun readSentAmounts(): Map<String, Long> = sentAmountPrefs.all.mapNotNull { (k, v) -> (v as? Long)?.let { k to it } }.toMap()
+
+    private fun rememberAmounts(pending: List<dev.offlinezec.wallet.core.PendingPayment>) {
+        val new = pending.filter { it.offline && it.txid !in _sentAmounts.value }
+        if (new.isEmpty()) return
+        sentAmountPrefs.edit().apply { new.forEach { putLong(it.txid, it.amount) } }.apply()
+        _sentAmounts.value = _sentAmounts.value + new.associate { it.txid to it.amount }
+    }
 
     // ---- Prepare ----
 
@@ -376,6 +429,14 @@ class AppController(private val app: Application) {
             }
         })
         o.put("pending_sent", JSONArray(_pendingSent.value.map { it.txid }))
+        val split = balanceSplit(_notes.value, wallet.sync.value.networkHeight ?: wallet.sync.value.scannedHeight)
+        o.put("balance_split", JSONObject().put("available", split.available).put("locked", split.locked)
+            .put("pending", split.pending).put("in_payments", split.inPayments).put("total", split.total))
+        seedWarnings.get().let { f ->
+            o.put("seed_warning", JSONObject().put("restored", f.restored).put("ack_restore", f.ackRestore)
+                .put("ack_offline", f.ackOffline).put("showing", _seedWarning.value?.name ?: JSONObject.NULL))
+        }
+        o.put("clock_skew_ms", clockSkewMs)
         o.put("conflicted_sent", JSONArray(conflictedSent().toList()))
         o.put("balance", JSONObject().put("total", wallet.sync.value.shieldedTotal)
             .put("incoming_unsettled", incomingUnsettled(_payments.value))

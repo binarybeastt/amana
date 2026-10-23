@@ -97,6 +97,8 @@ class TestHooks : BroadcastReceiver() {
                         c.mesh.ble.protoVersion = intent.getStringExtra("v")!!.toInt()
                         c.mesh.permissionsChanged()
                     }
+                    // P5.G1.T2: the screens' clock runs this many ms ahead (0 = real time).
+                    "CLOCK_SKEW" -> c.clockSkewMs = intent.getStringExtra("ms")!!.toLong()
                     "CORE_VERSION" -> File(files, "core_version.txt").writeText(c.wallet.core.version())
                     // P2.G1.T3: 0 = Rust error, 1 = Rust panic, 2 = core process killed.
                     "CORE_FAIL" -> {

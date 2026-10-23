@@ -1,0 +1,11 @@
+2026-10-23T14:57:19Z P5.G1.T2 on emulator-5558
+unsettled own payments: 9b6e8738aa822156770dc59a002301d29440bc3ecabc604b88464262305e4786 f870e3f85bb9a9a809defec6376a5cf52e9c0a53974519b851babb6a9fcc9ae0 07daed6fde38c012fb2c06a59f4b699c137f15a832df125fe47bd9c9cdf8ceac e0d3c07a1adbc4dcfb7b9295ad8cc838e71de0ca7342eb373a07051a86c71022
+clock skew: 35284527 ms (9.8 h)
+9b6e8738aa82… age='1 d 0 h ago' chip='pending' show_qr=True ok
+f870e3f85bb9… age='1 d 0 h ago' chip='pending' show_qr=True ok
+07daed6fde38… age='1 d 0 h ago' chip='pending' show_qr=True ok
+e0d3c07a1adb… age='1 d 0 h ago' chip='pending' show_qr=True ok
+ROWS ok
+progress bars on Home/Payments: 0
+home unchanged after 10 s: True
+PASS

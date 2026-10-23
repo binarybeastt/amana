@@ -1,0 +1,15 @@
+2026-10-23T15:05:38Z P5.G3.T1 on emulator-5556
+app data backed up: /Users/binaryy/Downloads/zcash_hack/wallets/emu-backup/emu-Small_Phone-20261023-1605-pre-p5g3.tar (4.1M)
+restoring from birthday 4495171
+restore: warning on screen=True title='Is this seed on another phone?'
+restore: after Back still shown=True app reachable=False
+restore: after 'I understand' shown=False state=none
+same address after restore: yes
+network off
+offline: warning on screen=True title='You're offline: one phone per seed'
+offline: after Back still shown=True app reachable=False
+offline: after 'I understand' shown=False state=none
+offline again after both acks: warning=none
+flags: {'restored': True, 'ack_restore': True, 'ack_offline': True, 'showing': None}
+note: could not put back payment records
+PASS

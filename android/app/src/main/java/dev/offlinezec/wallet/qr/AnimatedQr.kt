@@ -72,11 +72,14 @@ class FrameDecoder {
     }
 }
 
-/** Renders [text] as a black-on-white QR bitmap [size] pixels square. */
-fun qrBitmap(text: String, size: Int): Bitmap {
+/**
+ * Renders [text] as a black-on-white QR bitmap [size] pixels square. [ec] H leaves room for a
+ * logo over the centre (the address QR); animated frames stay at L, the densest.
+ */
+fun qrBitmap(text: String, size: Int, ec: ErrorCorrectionLevel = ErrorCorrectionLevel.L, margin: Int = 2): Bitmap {
     val hints = mapOf(
-        EncodeHintType.ERROR_CORRECTION to ErrorCorrectionLevel.L,
-        EncodeHintType.MARGIN to 2,
+        EncodeHintType.ERROR_CORRECTION to ec,
+        EncodeHintType.MARGIN to margin,
     )
     val m = QRCodeWriter().encode(text, BarcodeFormat.QR_CODE, size, size, hints)
     val pixels = IntArray(m.width * m.height) { i -> if (m.get(i % m.width, i / m.width)) Color.BLACK else Color.WHITE }
