@@ -1,0 +1,26 @@
+22:44:13 start: notes ready emulator-5554=19 emulator-5556=9 emulator-5558=14
+22:46:06 payment 1/20 emulator-5554→emulator-5556 478b8a3fdec1316a… conflicts: 0 0 0
+22:46:23 payment 2/20 emulator-5556→emulator-5558 61942e8892be86ea… conflicts: 0 0 0
+22:46:40 payment 3/20 emulator-5558→emulator-5554 a9bf7511df11aab0… conflicts: 0 0 0
+22:46:45 payment 4/20 emulator-5554→emulator-5556 478b8a3fdec1316a… conflicts: 0 0 0
+22:47:11 payment 5/20 emulator-5556→emulator-5558 f1f7ca06a61f2f63… conflicts: 0 0 0
+22:47:41 payment 6/20 emulator-5558→emulator-5554 4bd48b4fa218dc4d… conflicts: 0 0 0
+22:47:45 payment 7/20 emulator-5554→emulator-5556 c683eaabe4650dac… conflicts: 0 0 0
+22:48:09 payment 8/20 emulator-5556→emulator-5558 d05235717e185050… conflicts: 0 0 0
+22:48:29 payment 9/20 emulator-5558→emulator-5554 7e5c49c8a8638f56… conflicts: 0 0 0
+22:49:23 payment 10/20 emulator-5554→emulator-5556 408f7163dc4216e3… conflicts: 0 0 0
+22:49:43 payment 11/20 emulator-5556→emulator-5558 bae535294ae84cbb… conflicts: 0 0 0
+22:50:03 payment 12/20 emulator-5558→emulator-5554 397177a0beb452fd… conflicts: 0 0 0
+22:50:58 payment 13/20 emulator-5554→emulator-5556 44062d89e8e006ac… conflicts: 0 0 0
+22:51:15 payment 14/20 emulator-5556→emulator-5558 495f9d1997ba6483… conflicts: 0 0 0
+22:51:32 payment 15/20 emulator-5558→emulator-5554 246f636005dcd747… conflicts: 0 0 0
+22:52:27 payment 16/20 emulator-5554→emulator-5556 4560f1f9b9fbae4e… conflicts: 0 0 0
+22:52:47 payment 17/20 emulator-5556→emulator-5558 78f14110d1ab3007… conflicts: 0 0 0
+22:53:07 payment 18/20 emulator-5558→emulator-5554 1946dc32f89bb39b… conflicts: 0 0 0
+22:54:01 payment 19/20 emulator-5554→emulator-5556 543a092fd8de0b8e… conflicts: 0 0 0
+22:54:21 payment 20/20 emulator-5556→emulator-5558 d6819beb97f3bcfd… conflicts: 0 0 0
+22:54:21 emulator-5554: alerts 0, CONFLICT log lines 0, queue 70, gossip set 6
+22:54:21 emulator-5556: alerts 0, CONFLICT log lines 0, queue 71, gossip set 40
+22:54:21 emulator-5558: alerts 0, CONFLICT log lines 0, queue 71, gossip set 40
+22:54:21 payments 20, not relayed everywhere 0, false alerts 0
+22:54:21 PASS

@@ -1,0 +1,7 @@
+22:54:39 start: notes ready emulator-5554=12 emulator-5556=1 emulator-5558=5
+22:55:33 payment 1/1 emulator-5554→emulator-5556 e52281602023c7a8… conflicts: 0 0 0
+22:55:33 emulator-5554: alerts 0, CONFLICT log lines 0, queue 71, gossip set 2
+22:55:34 emulator-5556: alerts 0, CONFLICT log lines 0, queue 72, gossip set 2
+22:55:34 emulator-5558: alerts 0, CONFLICT log lines 0, queue 72, gossip set 2
+22:55:34 payments 1, not relayed everywhere 0, false alerts 0
+22:55:34 PASS

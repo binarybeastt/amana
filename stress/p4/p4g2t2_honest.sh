@@ -36,9 +36,11 @@ while [ $done_n -lt "$N" ]; do
   done
   [ -n "$payer" ] || { say "INCOMPLETE: no phone has offline-ready notes after $done_n payments"; exit 2; }
   ti=$(( (pi + 1) % 3 )); to=${PHONES[$ti]}
+  # The payer's own previous txid too: a stale 'ready' from its last payment is not a new one.
+  prev=$(state "$payer" "s['pay'].get('txid') or ''")
   hook "$payer" CLEAR_PAY; sleep 4
   hook "$payer" PAY --es to "${ADDR[$ti]}" --es zats "$ZATS"
-  wait_state "$payer" "s['pay']['state'] in ('ready', 'failed') and s['pay'].get('txid') != '$last'" 900 \
+  wait_state "$payer" "s['pay']['state'] in ('ready', 'failed') and s['pay'].get('txid') not in ('$last', '$prev')" 900 \
     || { say "FAIL: payment $((done_n + 1)) from $payer never finished"; exit 1; }
   if [ "$(state "$payer" "s['pay']['state']")" != ready ]; then
     say "payer $payer: $(state "$payer" "s['pay']['error']") (skipping this phone this turn)"; continue

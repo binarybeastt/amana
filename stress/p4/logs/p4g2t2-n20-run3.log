@@ -1,0 +1,26 @@
+21:57:41 start: notes ready emulator-5554=12 emulator-5556=9 emulator-5558=21
+21:58:04 payment 1/20 emulator-5554→emulator-5556 b47a82970d1ee461… conflicts: 0 0 0
+21:58:27 payment 2/20 emulator-5556→emulator-5558 73080a10d6d226db… conflicts: 0 0 0
+21:58:44 payment 3/20 emulator-5558→emulator-5554 95cf51e4f0f4f7b0… conflicts: 0 0 0
+21:59:03 payment 4/20 emulator-5554→emulator-5556 3266a102afdd974a… conflicts: 0 0 0
+21:59:20 payment 5/20 emulator-5556→emulator-5558 c772f0816b66e0e2… conflicts: 0 0 0
+21:59:37 payment 6/20 emulator-5558→emulator-5554 8d64712d0c414b94… conflicts: 0 0 0
+21:59:57 payment 7/20 emulator-5554→emulator-5556 8aa3de4793be91f8… conflicts: 0 0 0
+22:00:13 payment 8/20 emulator-5556→emulator-5558 fbd67dae78a75edd… conflicts: 0 0 0
+22:00:27 payment 9/20 emulator-5558→emulator-5554 88a31485521b66c5… conflicts: 0 0 0
+22:00:47 payment 10/20 emulator-5554→emulator-5556 b109be3654e1cb88… conflicts: 0 0 0
+22:01:04 payment 11/20 emulator-5556→emulator-5558 2b0bdc30e2da6120… conflicts: 0 0 0
+22:01:21 payment 12/20 emulator-5558→emulator-5554 9e4f4af0e196fcef… conflicts: 0 0 0
+22:01:47 payment 13/20 emulator-5554→emulator-5556 9ab9e9b21b61ea3a… conflicts: 0 0 0
+22:01:55 payer emulator-5556: NativeCoreException: insufficient available notes: have 0 zats, need 10000 plus fee (skipping this phone this turn)
+22:02:12 payment 14/20 emulator-5558→emulator-5554 624349462be29509… conflicts: 0 0 0
+22:02:20 payer emulator-5554: NativeCoreException: insufficient available notes: have 0 zats, need 10000 plus fee (skipping this phone this turn)
+22:02:27 payer emulator-5556: NativeCoreException: insufficient available notes: have 0 zats, need 10000 plus fee (skipping this phone this turn)
+22:02:41 payment 15/20 emulator-5558→emulator-5554 6cfd5c4ae356c7b3… conflicts: 0 0 0
+22:02:48 payer emulator-5554: NativeCoreException: insufficient available notes: have 0 zats, need 10000 plus fee (skipping this phone this turn)
+22:02:55 payer emulator-5556: NativeCoreException: insufficient available notes: have 0 zats, need 10000 plus fee (skipping this phone this turn)
+22:08:07   b3d95e81e806… never reached emulator-5554
+22:13:09   b3d95e81e806… never reached emulator-5556
+22:13:09 payment 16/20 emulator-5558→emulator-5554 b3d95e81e8061db7… conflicts: 0 0 0
+22:13:17 payer emulator-5554: NativeCoreException: insufficient available notes: have 0 zats, need 10000 plus fee (skipping this phone this turn)
+22:13:24 payer emulator-5556: NativeCoreException: insufficient available notes: have 0 zats, need 10000 plus fee (skipping this phone this turn)

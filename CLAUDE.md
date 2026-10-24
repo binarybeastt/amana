@@ -16,8 +16,8 @@ Android wallet that signs shielded Zcash payments offline and relays them phone 
 ## Critical: devices (read first)
 
 - **The user has ONE real Android phone.** Emulators cannot talk Bluetooth to a real phone (netsim is virtual), so every test that needs Bluetooth between real phones (P0.G4.T1–T4, P3.G1.T2–T3, P3.G2.T1–T2, P3.G5.T1) cannot run unless a second phone is found. Do not plan a Bluetooth demo or test on real phones. One phone + emulators CAN do: proving speed/memory on the phone, phone-built bytes broadcast, QR payments phone ↔ emulator (emulator camera = Mac webcam; phone scans the emulator screen), the phone going online and broadcasting.
-- **Emulator Bluetooth is broken as of 2026-10-23**: GATT connects never complete on any emulator, even the Phase 0 spike app delivers 0/5, and a full restart on one fresh netsimd did not fix it. Fix plan (not done yet): back up wallets (`stress/backup_emulator.sh`), recreate the three AVDs, restore. Until then, Bluetooth tests (P4.G2.T2, Gate P4) are deferred.
-- **User's call (2026-10-23): Gate P4 and the Bluetooth tests are deferred; work moved on to Phase 5 UI polish.** "Start a phase only after the previous gate passes" is suspended for this; don't go back to the gate unprompted, but remind the user it is still open before Phase 6.
+- **Emulator Bluetooth works after a cold boot but jams eventually (found 2026-10-24)**: when two phones connect to the same phone at once, netsimd keeps one connect "pending" for good and every GATT connect then times out ("timeout waiting for Conn"; netsim log `$TMPDIR/android-$USER/netsimd/netsim_stdout.log` shows "CreatePendingLeConnection: connection already pending"). Bluetooth off/on does not clear it; restart all emulators (`emulators.sh stop` then `start`). The mesh client's random connect delay makes it rare (~40 min); run Bluetooth tests right after a fresh boot.
+- Gate P4 passed in emulator form on 2026-10-24. Real-phone Bluetooth tests still need a second phone before Phase 6.
 
 ## How we work
 

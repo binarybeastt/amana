@@ -390,6 +390,13 @@ class BleMesh(
                     it.fresh && now >= it.nextTry && now - it.lastSeen < PEER_GONE_MS &&
                         (it.syncedVersion != v || now - it.syncedAt > RESYNC_MS)
                 }.minByOrNull { it.syncedAt }
+                // A new tx makes every phone due at once. Wait a random moment so two phones
+                // rarely connect to the same peer together: on emulators that race leaves a
+                // connect pending in netsim for good and no phone can connect again.
+                if (due != null) {
+                    Thread.sleep(Random.nextLong(CONNECT_JITTER_MS))
+                    if (!running) break
+                }
                 if (due != null && !sync(due, v)) {
                     // Watchdog: a run of failures with peers in sight means our side of the
                     // stack is stuck (seen on emulators after rapid Bluetooth toggling).
@@ -463,7 +470,8 @@ class BleMesh(
         } catch (e: Exception) {
             p.failures++
             p.fresh = false
-            p.nextTry = System.currentTimeMillis() + minOf(RETRY_MS shl minOf(p.failures - 1, 4), 30_000L)
+            p.nextTry = System.currentTimeMillis() + minOf(RETRY_MS shl minOf(p.failures - 1, 4), 30_000L) +
+                Random.nextLong(RETRY_MS)
             stats = stats.copy(failedSessions = stats.failedSessions + 1)
             "failed: ${e.message}"
         } finally {
@@ -634,6 +642,7 @@ class BleMesh(
         /** Re-check a peer this often even if our queue has not changed. */
         const val RESYNC_MS = 60_000L
         const val RETRY_MS = 2_000L
+        const val CONNECT_JITTER_MS = 3_000L
         const val WATCHDOG_FAILURES = 5
         const val WATCHDOG_MS = 2 * 60_000L
         const val REFUSED_RETRY_MS = 5 * 60_000L
