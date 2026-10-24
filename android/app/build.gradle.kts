@@ -24,6 +24,14 @@ android {
 
     buildTypes {
         debug { isMinifyEnabled = false }
+        // The build handed out to install: shrunk by R8, signed with the debug key so it installs
+        // over a debug build and keeps that phone's wallet. Testnet, like debug.
+        release {
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            signingConfig = signingConfigs.getByName("debug")
+        }
     }
 
     compileOptions {
@@ -38,8 +46,8 @@ android {
     }
 
     packaging {
-        // The SDK's native library is large; keep it uncompressed and page-aligned.
-        jniLibs { useLegacyPackaging = false }
+        // Compressed in the APK (52 MB SDK library -> about a third), extracted at install.
+        jniLibs { useLegacyPackaging = true }
     }
 
     testOptions { unitTests.isReturnDefaultValues = true }

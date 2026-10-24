@@ -166,9 +166,9 @@ fun fieldColors() = OutlinedTextFieldDefaults.colors(
 
 /** Big centred title with at most one short grey line under it, as on the design's Receive screen. */
 @Composable
-fun BigTitle(title: String, sub: String?, modifier: Modifier = Modifier, tag: String? = null) {
+fun BigTitle(title: String, sub: String?, modifier: Modifier = Modifier, tag: String? = null, small: Boolean = false) {
     Column(modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(title, style = MaterialTheme.typography.displayMedium, textAlign = TextAlign.Center,
+        Text(title, style = if (small) MaterialTheme.typography.displaySmall else MaterialTheme.typography.displayMedium, textAlign = TextAlign.Center,
             modifier = if (tag != null) Modifier.testTag(tag) else Modifier)
         if (sub != null) Text(sub, style = MaterialTheme.typography.bodyMedium, color = Ink.dim, textAlign = TextAlign.Center)
     }
@@ -747,7 +747,9 @@ fun ReceiveScreen(c: AppController, back: () -> Unit) {
     var full by remember { mutableStateOf(false) }
     @Suppress("DEPRECATION") val clipboard = LocalClipboardManager.current
     var copied by remember { mutableStateOf(false) }
-    Page(bg = Ink.black, gap = 24.dp) {
+    // Short screens: a smaller QR and tighter gaps, so Copy and Scan stay on the first screen.
+    val small = LocalConfiguration.current.screenHeightDp < 760
+    Page(bg = Ink.black, gap = if (small) 16.dp else 24.dp) {
         SheetTop(back)
         when (val s = st) {
             is ReceiveState.Scanning -> {
@@ -761,16 +763,16 @@ fun ReceiveScreen(c: AppController, back: () -> Unit) {
                     LineIcon(Glyph.ChevronDown, size = 16.dp, color = Ink.dim)
                 }
                 if (full && !scan) Text(w.address, fontFamily = FontFamily.Monospace, fontSize = 12.sp, color = Ink.dim, modifier = Modifier.padding(horizontal = 8.dp))
-                DarkCard(color = Ink.black, border = Ink.line, padding = if (scan) 8.dp else 32.dp) {
+                DarkCard(color = Ink.black, border = Ink.line, padding = if (scan) 8.dp else if (small) 24.dp else 32.dp) {
                     Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                        if (!scan) AddressQr(w.address, 240.dp)
-                        else CameraScanner(300) { c.onFrame(it) }
+                        if (!scan) AddressQr(w.address, if (small) 176.dp else 240.dp)
+                        else CameraScanner(if (small) 240 else 300) { c.onFrame(it) }
                     }
                     if (scan) LinearProgressIndicator(progress = { s.progress.toFloat() }, color = Ink.text, trackColor = Ink.raised,
                         modifier = Modifier.fillMaxWidth().clip(Pill).testTag("receive_progress"))
                 }
                 if (!scan) {
-                    BigTitle("Receive", "Scan or copy to receive ZEC")
+                    BigTitle("Receive", "Scan or copy to receive ZEC", small = small)
                     Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         PrimaryButton(if (copied) "Copied" else "Copy", {
                             clipboard.setText(AnnotatedString(w.address)); copied = true
@@ -778,7 +780,7 @@ fun ReceiveScreen(c: AppController, back: () -> Unit) {
                         TextButton("Scan a payment", { scan = true }, Modifier.testTag("recv_tab_scan"), glyph = Glyph.Scan)
                     }
                 } else {
-                    BigTitle("Scan", if (s.progress > 0) "Reading… ${(s.progress * 100).toInt()}%" else "Point at the payer's QR")
+                    BigTitle("Scan", small = small, sub = if (s.progress > 0) "Reading… ${(s.progress * 100).toInt()}%" else "Point at the payer's QR")
                     SecondaryButton("Show my address", { scan = false }, Modifier.testTag("recv_tab_address"))
                 }
             }

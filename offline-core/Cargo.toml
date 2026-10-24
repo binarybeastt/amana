@@ -67,3 +67,7 @@ rusqlite = { version = "0.37", features = ["bundled"] }
 proptest = "1"
 rand = { version = "0.10", default-features = false, features = ["std_rng", "sys_rng"] }
 tempfile = "3"
+
+[profile.release]
+# Symbols are 30%+ of the Android library; panics still report messages.
+strip = true
