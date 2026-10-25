@@ -69,8 +69,11 @@ if tb=$(wait_alert "$B" 120); then say "B alert after ${tb} s"; else say "B: no 
 hook "$A" MESH_START
 if ta=$(wait_alert "$A" 180); then say "A alert after ${ta} s (A's mesh restarted after B's alert)"; else say "A: no alert in 180 s (extra check)"; fi
 say "C conflict: $(state "$C" "s['conflicts']")"
+# Phone clocks differ (5558 ran ~18 s behind the host): correct each by its offset from the host.
+clock_off() { local h d; h=$(now_ms); d=$("$ADB" -s "$1" shell date +%s%3N | tr -d '\r'); echo $((d - h)); }
 det=$(state "$C" "next(c['detected_at'] for c in s['conflicts'] if '$TX2' in c['txids'])")
-say "C detected $(python3 -c "print(round(($det - $stored_at) / 1000, 1))") s after B stored tx2 (phone clocks)"
+offB=$(clock_off "$B"); offC=$(clock_off "$C")
+say "C detected $(python3 -c "print(round((($det - $offC) - ($stored_at - $offB)) / 1000, 1))") s after B stored tx2 (phone clocks corrected: B ${offB} ms, C ${offC} ms)"
 # The first hint about the shared nullifier between B and C (either way), the first hint-driven
 # session between them, and C's first alert: the hint must come before the alert.
 first() { mesh_log "$1" | grep -E "$2" | head -1 || true; }

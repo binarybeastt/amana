@@ -169,6 +169,20 @@ class BleMesh(
         val notifySent = Semaphore(0)
         @Volatile var mtu = 23
         @Volatile var peer: Proto.Hello? = null
+        @Volatile var lastFrame = SystemClock.elapsedRealtime()
+        /** Handling a request (verifying a pushed tx takes many seconds). */
+        @Volatile var busy = false
+    }
+
+    /**
+     * A peer is connected to our server and talking. We then start no session of our own: on
+     * emulators, connecting out while a peer is connected in (worst: the same peer, a second
+     * link between one pair) leaves a connect pending in netsim for good. A link idle for
+     * [LINK_IDLE_MS] does not count, so a missed disconnect cannot stall us.
+     */
+    private fun serving(): Boolean {
+        val now = SystemClock.elapsedRealtime()
+        return links.values.any { it.busy || now - it.lastFrame < LINK_IDLE_MS }
     }
 
     private val links = ConcurrentHashMap<String, Link>()
@@ -306,6 +320,7 @@ class BleMesh(
             if (responseNeeded) server?.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, 0, null)
             if (characteristic.uuid != Proto.RX) return
             val link = links.getOrPut(device.address) { Link(device) }
+            link.lastFrame = SystemClock.elapsedRealtime()
             val frame = value.copyOf()
             runCatching { link.exec.execute { onFrame(link, frame) } }
         }
@@ -327,10 +342,14 @@ class BleMesh(
                 reply(link, Proto.nack(ev.reason))
             }
             is Wire.Event.Done -> {
+                link.busy = true
                 val out = try {
                     handle(link, Proto.decode(ev.data))
                 } catch (e: Exception) {
                     Proto.nack("bad request: ${e.message}")
+                } finally {
+                    link.busy = false
+                    link.lastFrame = SystemClock.elapsedRealtime()
                 }
                 reply(link, out)
             }
@@ -489,6 +508,7 @@ class BleMesh(
                 // Either changing means peers need a sync: new txs, or a new conflict to spread.
                 val v = queue.version + nullifiers.version
                 urgent = false
+                if (serving()) continue
                 if (chaseSuspect(v)) continue
                 if (queue.forwardable().isEmpty() && nullifiers.size() == 0 && nullifiers.conflicts().isEmpty()) continue
                 val due = peers.values.filter {
@@ -502,7 +522,7 @@ class BleMesh(
                     val until = SystemClock.elapsedRealtime() + Random.nextLong(CONNECT_JITTER_MS)
                     while (running && !urgent && SystemClock.elapsedRealtime() < until) Thread.sleep(50)
                     if (!running) break
-                    if (urgent) continue
+                    if (urgent || serving()) continue
                 }
                 if (due != null && !sync(due, v)) {
                     // Watchdog: a run of failures with peers in sight means our side of the
@@ -537,6 +557,7 @@ class BleMesh(
         val wait = p.suspectAt + (if (nodeId < p.node) 0 else SUSPECT_DEFER_MS) - SystemClock.elapsedRealtime()
         if (wait > 0) Thread.sleep(wait)
         if (!running) return true
+        if (serving()) return true // still suspect: chased once the peer's session ends
         val hints = chased(p) ?: return true
         val still = Hints.suspects(hints, nullifiers::txidsFor)
         if (still.isEmpty()) {
@@ -805,6 +826,7 @@ class BleMesh(
         const val HINT_RECHECK_MS = 1_000L
         const val ADVERT_TICK_MS = 200L
         const val ROTATE_MS = 1_000L
+        const val LINK_IDLE_MS = 10_000L
         const val WATCHDOG_FAILURES = 5
         const val WATCHDOG_MS = 2 * 60_000L
         const val REFUSED_RETRY_MS = 5 * 60_000L
