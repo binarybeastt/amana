@@ -1,0 +1,13 @@
+12:36:02 pair: tx1=a83e1edf3a79e568… tx2=afbbe6068f985f67… nullifier 1162c859441281d6…
+12:36:15 A inject tx1: {"status":"stored","txid":"a83e1edf3a79e56878174d98c0412443e12c2bf2f19a1da6c8cfa4f73f2edacb","reason":null,"at":1792931774295}
+12:36:27 C holds tx1; no alert anywhere yet: A=0 C=0
+12:37:01 B inject tx2: {"status":"stored","txid":"afbbe6068f985f67e0813058a12d4d1ded537bb586356e56ef3eff37fe8967a8","reason":null,"at":1792931821622}
+12:37:13 C alert after 11 s
+12:37:13 B alert after 11 s
+12:37:25 A alert after 23 s (A's mesh restarted after B's alert)
+12:37:25 C conflict: [{'nullifier': '1162c859441281d6f281ba22a105a7db154c40b36a05668749663e3a66c2fc17', 'txids': ['a83e1edf3a79e56878174d98c0412443e12c2bf2f19a1da6c8cfa4f73f2edacb', 'afbbe6068f985f67e0813058a12d4d1ded537bb586356e56ef3eff37fe8967a8'], 'detected_at': 1792931821580, 'verified': True, 'settled': None}]
+12:37:25 C detected -0.0 s after B stored tx2 (phone clocks)
+12:37:26 alert via gossip only: hint='' hint-session='' C alert='13:37:01.581'
+12:37:26 C log: 10-25 13:37:12.414  3809  4487 W MESH    : CONFLICT nullifier=1162c859441281d6f281ba22a105a7db154c40b36a05668749663e3a66c2fc17 txids=a83e1edf3a79e56878174d98c0412443e12c2bf2f19a1da6c8cfa4f73f2edacb,afbbe6068f985f67e0813058a12d4d1ded537bb586356e56ef3eff37fe8967a8 verified=true settled=-
+12:37:33 C banner on screen: 1
+12:37:33 PASS (C alert in 11 s ≤ 60 s)

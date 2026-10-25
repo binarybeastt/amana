@@ -1,0 +1,7 @@
+13:46:35 start: notes ready emulator-5554=17 emulator-5556=11 emulator-5558=10
+13:46:52 payer emulator-5554: NativeCoreException: proposal failed: InsufficientFunds { available: Zatoshis(0), required: Zatoshis(20000) } (skipping this phone this turn)
+13:47:27 payment 1/20 emulator-5556→emulator-5558 545f32e2d04820a6… conflicts: 0 0 0
+13:48:02 payment 2/20 emulator-5558→emulator-5554 67dbbbe976bf6433… conflicts: 0 0 0
+13:50:35 payment 3/20 emulator-5554→emulator-5556 0ebfceee088d2f17… conflicts: 0 0 0
+13:50:56 payment 4/20 emulator-5556→emulator-5558 34b4b5cf9e200245… conflicts: 0 0 0
+13:56:15   31d22af73ffa… never reached emulator-5554

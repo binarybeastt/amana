@@ -1,11 +1,13 @@
-22:55:41 pair: tx1=a83e1edf3a79e568… tx2=afbbe6068f985f67… nullifier 1162c859441281d6…
-22:55:51 A inject tx1: {"status":"stored","txid":"a83e1edf3a79e56878174d98c0412443e12c2bf2f19a1da6c8cfa4f73f2edacb","reason":null,"at":1792882550381}
-22:56:01 C holds tx1; no alert anywhere yet: A=0 C=0
-22:56:33 B inject tx2: {"status":"stored","txid":"afbbe6068f985f67e0813058a12d4d1ded537bb586356e56ef3eff37fe8967a8","reason":null,"at":1792882592797}
-22:56:41 C alert after 7 s
-22:56:41 B alert after 7 s
-22:56:44 A alert after 10 s (A's mesh restarted after B's alert)
-22:56:44 C conflict: [{'nullifier': '1162c859441281d6f281ba22a105a7db154c40b36a05668749663e3a66c2fc17', 'txids': ['a83e1edf3a79e56878174d98c0412443e12c2bf2f19a1da6c8cfa4f73f2edacb', 'afbbe6068f985f67e0813058a12d4d1ded537bb586356e56ef3eff37fe8967a8'], 'detected_at': 1792882593391, 'verified': True, 'settled': None}]
-22:56:44 C log: 10-24 23:56:40.493  2937  4749 W MESH    : CONFLICT nullifier=1162c859441281d6f281ba22a105a7db154c40b36a05668749663e3a66c2fc17 txids=a83e1edf3a79e56878174d98c0412443e12c2bf2f19a1da6c8cfa4f73f2edacb,afbbe6068f985f67e0813058a12d4d1ded537bb586356e56ef3eff37fe8967a8 verified=true settled=-
-22:56:52 C banner on screen: 1
-22:56:52 PASS (C alert in 7 s ≤ 60 s)
+14:19:12 pair: tx1=a83e1edf3a79e568… tx2=afbbe6068f985f67… nullifier 1162c859441281d6…
+14:19:26 A inject tx1: {"status":"stored","txid":"a83e1edf3a79e56878174d98c0412443e12c2bf2f19a1da6c8cfa4f73f2edacb","reason":null,"at":1792937966229}
+14:20:09 C holds tx1; no alert anywhere yet: A=0 C=0
+14:20:44 B inject tx2: {"status":"stored","txid":"afbbe6068f985f67e0813058a12d4d1ded537bb586356e56ef3eff37fe8967a8","reason":null,"at":1792938044090}
+14:20:44 C alert after 0 s
+14:20:44 B alert after 0 s
+14:20:46 A alert after 1 s (A's mesh restarted after B's alert)
+14:20:46 C conflict: [{'nullifier': '1162c859441281d6f281ba22a105a7db154c40b36a05668749663e3a66c2fc17', 'txids': ['a83e1edf3a79e56878174d98c0412443e12c2bf2f19a1da6c8cfa4f73f2edacb', 'afbbe6068f985f67e0813058a12d4d1ded537bb586356e56ef3eff37fe8967a8'], 'detected_at': 1792938025528, 'verified': False, 'settled': None}]
+14:20:46 C detected 0.7 s after B stored tx2 (phone clocks corrected: B 545 ms, C -18730 ms)
+14:20:46 alert via advert hint: 15:20:25.011 HINT_SUSPECT peer=ba0a58e2ef491054 hints=1162c8594412:afbbe6 ours=a83e1e | 15:20:25.529 GOSSIP role=client peer=ba0a58e2ef491054 got=38 conflicts=1 via=hint-inline | C alert 15:20:25.529
+14:20:46 C log: 10-25 15:20:25.529  2851  3373 W MESH    : CONFLICT nullifier=1162c859441281d6f281ba22a105a7db154c40b36a05668749663e3a66c2fc17 txids=a83e1edf3a79e56878174d98c0412443e12c2bf2f19a1da6c8cfa4f73f2edacb,afbbe6068f985f67e0813058a12d4d1ded537bb586356e56ef3eff37fe8967a8 verified=false settled=-
+14:20:53 C banner on screen: 1
+14:20:53 PASS (C alert in 0 s ≤ 60 s)
