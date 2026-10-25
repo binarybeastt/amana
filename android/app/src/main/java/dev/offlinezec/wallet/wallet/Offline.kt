@@ -19,14 +19,19 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
 
-/** Notes need this many confirmations before offline-core will spend them (its MIN_CONFIRMATIONS). */
-const val SPEND_CONFIRMATIONS = 10
+/**
+ * Confirmations a pocket note needs before offline-core spends it (its MIN_CONFIRMATIONS): 3, the
+ * wallet's trust rule for its own outputs, since pocket notes only come from our own transactions.
+ * A reorg of the last few blocks could undo a fresh split. Only for showing "2/3": whether a note
+ * is ready comes from offline-core ([Note.ready]), never from this.
+ */
+const val SPEND_CONFIRMATIONS = 3
 
 /** Where "prepare for offline" stands, derived from the wallet DB every time (it is the truth). */
 sealed interface PrepareStatus {
     /**
      * No split in flight. [notes] = available Ironwood notes in the offline pocket; [ready] = all
-     * have 10 confirmations. [wallet] = available Ironwood value outside it, which can be prepared.
+     * are spendable offline now ([Note.ready]). [wallet] = available Ironwood value outside it, which can be prepared.
      */
     data class Idle(val notes: List<Note>, val tip: Long?, val ready: Boolean, val wallet: Long = 0) : PrepareStatus
     /** A split (or other online tx of ours) is waiting to be mined. */
@@ -53,8 +58,7 @@ class Preparer(private val mgr: WalletManager) {
             .filter { it.accountUuid == w.accountUuid && it.pool == "ironwood" && it.status == "available" }
             .sortedByDescending { it.value }
             .partition { it.offline }
-        val ready = notes.isNotEmpty() && tip != null &&
-            notes.all { n -> n.minedHeight != null && n.minedHeight + SPEND_CONFIRMATIONS <= tip + 1 }
+        val ready = notes.isNotEmpty() && notes.all { it.ready }
         return PrepareStatus.Idle(notes, tip, ready, outside.sumOf { it.value })
     }
 
@@ -292,6 +296,6 @@ fun List<Note>.toJson(): JSONArray = JSONArray().also { a ->
     forEach { n ->
         a.put(JSONObject().put("note", n.key).put("value", n.value).put("status", n.status)
             .put("mined_height", n.minedHeight ?: JSONObject.NULL).put("pool", n.pool)
-            .put("spent_by", n.spentBy ?: JSONObject.NULL))
+            .put("spent_by", n.spentBy ?: JSONObject.NULL).put("ready", n.ready))
     }
 }

@@ -25,6 +25,12 @@ data class Note(
     val nullifier: String? = null,
     /** In the offline pocket: only these are spent offline (offline-core's `NoteInfo.offline`). */
     val offline: Boolean = true,
+    /**
+     * Spendable offline right now (offline-core's `NoteInfo::ready_offline` at the wallet's synced
+     * tip): available, Ironwood, in the pocket, enough confirmations. The only "ready" rule;
+     * `status == "available"` alone only means mined and unspent.
+     */
+    val ready: Boolean = false,
 ) {
     val key get() = "$txid:$outputIndex"
 }
@@ -138,6 +144,7 @@ class Core(context: Context, private val network: String = "test") {
                 spentBy = if (o.isNull("spent_by")) null else o.getString("spent_by"),
                 nullifier = if (o.isNull("nullifier")) null else o.optString("nullifier", "").ifEmpty { null },
                 offline = o.optBoolean("offline", true),
+                ready = o.optBoolean("ready", false),
             )
         }
     }

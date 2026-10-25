@@ -6,7 +6,6 @@ import dev.offlinezec.wallet.mesh.RelayQueue
 import dev.offlinezec.wallet.receivedLabel
 import dev.offlinezec.wallet.sentLabel
 import dev.offlinezec.wallet.wallet.Received
-import dev.offlinezec.wallet.wallet.SPEND_CONFIRMATIONS
 
 /**
  * What the screens show, derived from wallet facts with no Android or Compose in the way, so the
@@ -122,7 +121,7 @@ fun paymentRows(
  * notes spent by an offline payment are already gone from it).
  */
 data class BalanceSplit(
-    /** Offline pocket notes, mined, with enough confirmations: offline-core can pay with them now. */
+    /** Offline pocket notes offline-core can pay with now ([Note.ready]). */
     val available: Long,
     /** Pocket notes not spendable offline yet: too few confirmations, or not in the Ironwood pool. */
     val locked: Long,
@@ -136,8 +135,8 @@ data class BalanceSplit(
     val total get() = available + locked + pending + wallet
 }
 
-/** [notes]: this account's notes from offline-core; [tip]: the latest height known. */
-fun balanceSplit(notes: List<Note>, tip: Long?): BalanceSplit {
+/** [notes]: this account's notes from offline-core, whose `ready` decides what is available. */
+fun balanceSplit(notes: List<Note>): BalanceSplit {
     var available = 0L
     var locked = 0L
     var pending = 0L
@@ -149,9 +148,8 @@ fun balanceSplit(notes: List<Note>, tip: Long?): BalanceSplit {
             "spent-offline" -> inPayments += n.value
             "pending" -> pending += n.value
             else -> {
-                val confirmed = n.minedHeight != null && tip != null && n.minedHeight + SPEND_CONFIRMATIONS <= tip + 1
                 if (!n.offline) wallet += n.value
-                else if (n.pool == "ironwood" && confirmed) available += n.value else locked += n.value
+                else if (n.ready) available += n.value else locked += n.value
             }
         }
     }

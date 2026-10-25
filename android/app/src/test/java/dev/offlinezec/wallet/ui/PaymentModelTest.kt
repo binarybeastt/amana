@@ -3,6 +3,7 @@ package dev.offlinezec.wallet.ui
 import dev.offlinezec.wallet.core.Note
 import dev.offlinezec.wallet.core.PendingPayment
 import dev.offlinezec.wallet.mesh.RelayQueue
+import dev.offlinezec.wallet.wallet.SPEND_CONFIRMATIONS
 import dev.offlinezec.wallet.wallet.Received
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -100,6 +101,12 @@ class PaymentModelTest {
     private fun note(txid: String, i: Int, v: Long, h: Int?, st: String, pool: String = "ironwood", by: String? = null) =
         Note("acct", pool, txid, i, v, h, st, by)
 
+    /** What offline-core reports at [tip]: `ready` set by its rule (NoteInfo::ready_offline). */
+    private fun atTip(notes: List<Note>, tip: Long) = notes.map { n ->
+        n.copy(ready = n.status == "available" && n.pool == "ironwood" && n.offline &&
+            n.minedHeight != null && n.minedHeight + SPEND_CONFIRMATIONS <= tip + 1)
+    }
+
     /**
      * P5.G2.T1: one wallet through a payment's life. 1 ZEC in prepared notes (0.5 + 0.3 + 0.2),
      * plus 0.05 of fresh, unconfirmed funds and 0.01 in Orchard. Pay 0.3 offline with the 0.5
@@ -114,7 +121,7 @@ class PaymentModelTest {
         val base = listOf(
             note(fund, 1, 3 * zec / 10, 900, "available"),
             note(fund, 2, 2 * zec / 10, 900, "available"),
-            note(tx(12), 0, 5 * zec / 100, 995, "available"), // 6 confirmations: locked
+            note(tx(12), 0, 5 * zec / 100, 999, "available"), // 2 confirmations: locked
             note(tx(13), 0, zec / 100, 900, "available", pool = "orchard"), // not offline-spendable: locked
             note(tx(14), 0, 7 * zec / 10, 800, "spent", by = tx(15)), // long gone
         )
@@ -128,7 +135,7 @@ class PaymentModelTest {
                 (zec - big + change + 6 * zec / 100),
             "relayed" to (base + note(fund, 0, big, 900, "spent-offline", by = pay) + note(pay, 1, change, null, "pending")) to
                 (zec - big + change + 6 * zec / 100),
-            // Mined at 999: the change is ours but not yet 10 confirmations deep.
+            // Mined at 999: the change is ours but not yet 3 confirmations deep.
             "settled" to (base + note(fund, 0, big, 900, "spent", by = pay) + note(pay, 1, change, 999, "available")) to
                 (zec - big + change + 6 * zec / 100),
             // A rival tx from the same seed (0.2 + fee, change 0.2999) was mined instead: ours never will be.
@@ -137,7 +144,7 @@ class PaymentModelTest {
         )
         for ((k, expected) in cases) {
             val (name, notes) = k
-            val s = balanceSplit(notes, tip)
+            val s = balanceSplit(atTip(notes, tip))
             assertEquals("$name: available + locked + pending", expected, s.available + s.locked + s.pending)
             assertEquals("$name: total", expected, s.total)
             // The split's total is exactly the unspent notes, the wallet's own sum.
@@ -145,17 +152,17 @@ class PaymentModelTest {
             assertTrue(name, s.available >= 0 && s.locked >= 0 && s.pending >= 0)
         }
         // Spot checks of where the value sits.
-        val pend = balanceSplit(cases.keys.first { it.first == "pending" }.second, tip)
+        val pend = balanceSplit(atTip(cases.keys.first { it.first == "pending" }.second, tip))
         assertEquals(5 * zec / 10, pend.available) // 0.3 + 0.2
         assertEquals(6 * zec / 100, pend.locked)
         assertEquals(change, pend.pending)
         assertEquals(big, pend.inPayments)
-        val settled = balanceSplit(cases.keys.first { it.first == "settled" }.second, tip)
+        val settled = balanceSplit(atTip(cases.keys.first { it.first == "settled" }.second, tip))
         assertEquals(0L, settled.pending)
         assertEquals(6 * zec / 100 + change, settled.locked)
         assertFalse(settled.inPayments > 0)
-        // Nine blocks on, the change and the fresh funds have their 10 confirmations.
-        assertEquals(5 * zec / 10 + 5 * zec / 100 + change, balanceSplit(cases.keys.first { it.first == "settled" }.second, tip + 9).available)
+        // One block on, the change and the fresh funds have their 3 confirmations.
+        assertEquals(5 * zec / 10 + 5 * zec / 100 + change, balanceSplit(atTip(cases.keys.first { it.first == "settled" }.second, tip + 1)).available)
     }
 
     @Test
@@ -180,14 +187,26 @@ class PaymentModelTest {
         val zec = 100_000_000L
         val notes = listOf(
             note("split", 0, 2 * zec / 10, 900, "available"),
-            note("split", 1, 5 * zec / 100, 995, "available"), // too few confirmations
+            note("split", 1, 5 * zec / 100, 999, "available"), // too few confirmations
             Note("acct", "ironwood", "split", 2, 75 * zec / 100, 900, "available", null, offline = false), // leftover change
             Note("acct", "ironwood", "faucet", 0, zec, 900, "available", null, offline = false),
         )
-        val s = balanceSplit(notes, tip)
+        val s = balanceSplit(atTip(notes, tip))
         assertEquals(2 * zec / 10, s.available)
         assertEquals(5 * zec / 100, s.locked)
         assertEquals(175 * zec / 100, s.wallet)
         assertEquals(notes.sumOf { it.value }, s.total)
+    }
+
+    /**
+     * "available" only means mined and unspent: a pocket note offline-core does not call ready
+     * (2026-10-24: 12 "available" notes, every PAY InsufficientFunds) is never counted as ready.
+     */
+    @Test
+    fun onlyReadyNotesCountAsReadyOffline() {
+        val n = note("split", 0, 1_000_000, 900, "available")
+        assertEquals(0L, balanceSplit(listOf(n)).available)
+        assertEquals(1_000_000L, balanceSplit(listOf(n)).locked)
+        assertEquals(1_000_000L, balanceSplit(listOf(n.copy(ready = true))).available)
     }
 }
