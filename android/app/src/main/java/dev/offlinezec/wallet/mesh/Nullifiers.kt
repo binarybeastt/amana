@@ -95,6 +95,15 @@ class Nullifiers(
 
     fun conflicts(): List<Conflict> = synchronized(lock) { conflicts.values.toList() }
 
+    /** Every txid we know spends a nullifier starting with [prefix] (hex): claims, tombstones, conflicts. For [Hints.suspects]. */
+    fun txidsFor(prefix: String): Set<String> = synchronized(lock) {
+        val out = HashSet<String>()
+        for ((nf, m) in claims) if (nf.startsWith(prefix)) out += m.keys
+        for ((nf, txid) in settled) if (nf.startsWith(prefix)) out += txid
+        for ((nf, c) in conflicts) if (nf.startsWith(prefix)) out += c.txids
+        out
+    }
+
     /** Debug: forget everything (claims, tombstones, conflicts). */
     fun clear() = synchronized(lock) {
         claims.clear()

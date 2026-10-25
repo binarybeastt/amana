@@ -16,6 +16,9 @@ import android.bluetooth.BluetoothStatusCodes
 import android.bluetooth.le.AdvertiseCallback
 import android.bluetooth.le.AdvertiseData
 import android.bluetooth.le.AdvertiseSettings
+import android.bluetooth.le.AdvertisingSet
+import android.bluetooth.le.AdvertisingSetCallback
+import android.bluetooth.le.AdvertisingSetParameters
 import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanFilter
 import android.bluetooth.le.ScanResult
@@ -36,14 +39,15 @@ import kotlin.random.Random
 
 /**
  * The Bluetooth LE side of the mesh. Every phone is both:
- *  - a GATT **server** that advertises [Proto.SERVICE] (with its protocol version and node id
- *    in the scan response) and answers HELLO / NF / INV_REQ / TX requests, and
+ *  - a GATT **server** that advertises [Proto.SERVICE] (with its protocol version, node id and
+ *    nullifier [Hints] in the scan response) and answers HELLO / NF / INV_REQ / TX requests, and
  *  - a **client** that scans for that service only (other BLE devices are never seen), and
  *    connects to each peer it finds to swap nullifier claims ([Nullifiers]) and push the
- *    transactions the peer lacks.
+ *    transactions the peer lacks. A peer whose hints point at a double spend is synced first.
  * Data only flows client → server, so each side pushes with its own client.
  *
- * Log lines under tag MESH (PEER_FOUND, HELLO, REFUSED, GOSSIP, FWD, RECV, SESSION) are read by tests.
+ * Log lines under tag MESH (PEER_FOUND, HELLO, REFUSED, GOSSIP, FWD, RECV, SESSION, HINT_SUSPECT)
+ * are read by tests.
  */
 @SuppressLint("MissingPermission")
 class BleMesh(
@@ -73,6 +77,14 @@ class BleMesh(
         @Volatile var lastResult: String? = null
         /** False after a failed session until the peer is heard again: its address may have rotated or it left. */
         @Volatile var fresh = true
+        /** Its advert's manufacturer data as last checked, and when. */
+        var advert: ByteArray? = null
+        var checkedAt = 0L
+        /** Hints of a double spend we do not know of: sync this peer first. */
+        @Volatile var suspect: List<Hints.Hint>? = null
+        @Volatile var suspectAt = 0L
+        /** Hint → when we last synced for it, so a forged hint costs one session, not a loop. */
+        val chased = HashMap<Hints.Hint, Long>()
     }
 
     private val manager = ctx.getSystemService(BluetoothManager::class.java)
@@ -111,6 +123,7 @@ class BleMesh(
         startServer()
         startScan()
         clientThread = Thread(::clientLoop, "mesh-client").also { it.start() }
+        advertThread = Thread(::advertLoop, "mesh-advert").also { it.start() }
         log("START node=$nodeId v=$protoVersion net=$network")
     }
 
@@ -120,16 +133,19 @@ class BleMesh(
         running = false
         wake.offer(Unit)
         runCatching { scanCb?.let { adapter?.bluetoothLeScanner?.stopScan(it) } }
-        runCatching { advertiseCb?.let { adapter?.bluetoothLeAdvertiser?.stopAdvertising(it) } }
+        runCatching { advertiseCb?.let { adapter?.bluetoothLeAdvertiser?.stopAdvertisingSet(it) } }
         runCatching { server?.close() }
         scanCb = null
         advertiseCb = null
+        advertSet = null
         server = null
         links.values.forEach { it.exec.shutdownNow() }
         links.clear()
         session?.abort()
         clientThread?.interrupt()
         clientThread = null
+        advertThread?.interrupt()
+        advertThread = null
         peers.clear()
         log("STOP reason=$reason")
     }
@@ -143,7 +159,8 @@ class BleMesh(
 
     private var server: BluetoothGattServer? = null
     private var txChar: BluetoothGattCharacteristic? = null
-    private var advertiseCb: AdvertiseCallback? = null
+    private var advertiseCb: AdvertisingSetCallback? = null
+    @Volatile private var advertSet: AdvertisingSet? = null
 
     /** One connected client: its frames are reassembled and handled on its own thread. */
     private inner class Link(val device: BluetoothDevice) {
@@ -178,29 +195,87 @@ class BleMesh(
         s.addService(service) // advertising starts in onServiceAdded
     }
 
+    /**
+     * Legacy (31-byte) advertising, which every phone and the emulators support, as an
+     * advertising set so [advertLoop] can change the hints in place: restarting the advert would
+     * change our address under a peer that is connecting.
+     */
     private fun startAdvertising() {
         val adv = adapter?.bluetoothLeAdvertiser ?: run {
             lastError = "no advertiser"
             return
         }
-        val settings = AdvertiseSettings.Builder()
-            .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY)
-            .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_HIGH)
+        val params = AdvertisingSetParameters.Builder()
+            .setLegacyMode(true)
             .setConnectable(true)
+            .setScannable(true)
+            .setInterval(AdvertisingSetParameters.INTERVAL_MIN)
+            .setTxPowerLevel(AdvertisingSetParameters.TX_POWER_HIGH)
             .build()
         val data = AdvertiseData.Builder().addServiceUuid(ParcelUuid(Proto.SERVICE)).setIncludeDeviceName(false).build()
-        val resp = AdvertiseData.Builder().addServiceData(ParcelUuid(Proto.SERVICE), Proto.advert(nodeId, protoVersion)).build()
-        val cb = object : AdvertiseCallback() {
-            override fun onStartSuccess(settingsInEffect: AdvertiseSettings) {
-                log("ADVERTISING node=$nodeId")
+        val frame = synchronized(advertLock) { frames.getOrNull(frameIdx).orEmpty() }
+        val cb = object : AdvertisingSetCallback() {
+            override fun onAdvertisingSetStarted(set: AdvertisingSet?, txPower: Int, status: Int) {
+                if (status == ADVERTISE_SUCCESS && set != null) {
+                    advertSet = set
+                    log("ADVERTISING node=$nodeId")
+                } else {
+                    lastError = "advertise failed: $status"
+                    log("ADVERTISE_FAILED code=$status")
+                }
             }
-            override fun onStartFailure(errorCode: Int) {
-                lastError = "advertise failed: $errorCode"
-                log("ADVERTISE_FAILED code=$errorCode")
+            override fun onScanResponseDataSet(set: AdvertisingSet?, status: Int) {
+                if (status != ADVERTISE_SUCCESS) log("ADVERT_UPDATE_FAILED code=$status")
             }
         }
         advertiseCb = cb
-        adv.startAdvertising(settings, data, resp, cb)
+        adv.startAdvertisingSet(params, data, scanResponse(frame), null, null, cb)
+    }
+
+    private fun scanResponse(hints: List<Hints.Hint>): AdvertiseData =
+        AdvertiseData.Builder().addManufacturerData(Hints.COMPANY, Hints.encode(protoVersion, nodeId, hints)).build()
+
+    private var advertThread: Thread? = null
+    private val advertLock = Any()
+    private var frames: List<List<Hints.Hint>> = emptyList()
+    private var frameIdx = 0
+
+    /** Keeps the advert's hints current: rebuilt when the queue or a conflict changes, rotated every [ROTATE_MS]. */
+    private fun advertLoop() {
+        var builtFor = -1L
+        var shown: List<Hints.Hint>? = null
+        var shownAt = 0L
+        while (running) {
+            try {
+                val v = queue.version + nullifiers.version
+                val now = SystemClock.elapsedRealtime()
+                val frame = synchronized(advertLock) {
+                    if (v != builtFor) {
+                        builtFor = v
+                        val f = Hints.frames(nullifiers.conflicts(), queue.unsettled())
+                        if (f != frames) {
+                            frames = f
+                            frameIdx = 0
+                            log("ADVERT_HINTS frames=${f.size} first=${f.firstOrNull()?.joinToString(",") ?: "-"}")
+                        }
+                    } else if (frames.size > 1 && now - shownAt >= ROTATE_MS) {
+                        frameIdx = (frameIdx + 1) % frames.size
+                    }
+                    frames.getOrNull(frameIdx).orEmpty()
+                }
+                val set = advertSet
+                if (set != null && frame != shown) {
+                    set.setScanResponseData(scanResponse(frame))
+                    shown = frame
+                    shownAt = now
+                }
+                Thread.sleep(ADVERT_TICK_MS)
+            } catch (_: InterruptedException) {
+                break
+            } catch (e: Exception) {
+                log("ADVERT_ERROR ${e.javaClass.simpleName}: ${e.message}")
+            }
+        }
     }
 
     private val serverCallback = object : BluetoothGattServerCallback() {
@@ -355,26 +430,54 @@ class BleMesh(
 
     private fun seen(r: ScanResult) {
         if (!running) return // late callback after stopScan
-        val (ver, node) = Proto.parseAdvert(r.scanRecord?.getServiceData(ParcelUuid(Proto.SERVICE))) ?: return
+        val raw = r.scanRecord?.getManufacturerSpecificData(Hints.COMPANY)
+        val ad = Hints.decode(raw)
+            ?: Proto.parseAdvert(r.scanRecord?.getServiceData(ParcelUuid(Proto.SERVICE)))?.let { (v, n) -> Hints.Advert(v, n, emptyList()) }
+            ?: return
+        val node = ad.node
         if (node == nodeId) return
-        val p = peers[node]
+        var p = peers[node]
         if (p == null) {
-            peers[node] = Peer(node, r.device, ver)
-            log("PEER_FOUND node=$node v=$ver addr=${r.device.address}")
+            p = Peer(node, r.device, ad.version)
+            peers[node] = p
+            log("PEER_FOUND node=$node v=${ad.version} addr=${r.device.address}")
             wake.offer(Unit)
         } else {
             if (p.device.address != r.device.address) log("PEER_ADDR node=$node ${p.device.address} -> ${r.device.address}")
             p.device = r.device
-            p.version = ver
+            p.version = ad.version
             p.lastSeen = System.currentTimeMillis()
             p.fresh = true
         }
+        if (ad.hints.isNotEmpty()) checkHints(p, raw!!, ad.hints)
+    }
+
+    /** On the scan thread: the peer's hints changed (or a second passed), so compare them with what we hold. */
+    private fun checkHints(p: Peer, raw: ByteArray, hints: List<Hints.Hint>) {
+        val now = SystemClock.elapsedRealtime()
+        if (raw.contentEquals(p.advert) && now - p.checkedAt < HINT_RECHECK_MS) return
+        p.advert = raw
+        p.checkedAt = now
+        val sus = Hints.suspects(hints, nullifiers::txidsFor).filter { h ->
+            synchronized(p.chased) { p.chased[h] }?.let { now - it < SUSPECT_RETRY_MS } != true
+        }
+        if (sus.isEmpty() || p.suspect != null) return
+        p.suspect = sus
+        p.suspectAt = now
+        p.nextTry = 0
+        p.fresh = true
+        val ours = sus.map { h -> nullifiers.txidsFor(h.nf).joinToString("|") { it.take(2 * Hints.TX_BYTES) }.ifEmpty { "-" } }
+        log("HINT_SUSPECT peer=${p.node} hints=${sus.joinToString(",")} ours=${ours.joinToString(",")}")
+        urgent = true
+        wake.offer(Unit)
     }
 
     // ---------------------------------------------------------------- client
 
     private var clientThread: Thread? = null
     @Volatile private var session: Session? = null
+    /** A peer turned suspect: cut the connect jitter short. */
+    @Volatile private var urgent = false
 
     private fun clientLoop() {
         while (running) {
@@ -385,6 +488,8 @@ class BleMesh(
                 if (!running) break
                 // Either changing means peers need a sync: new txs, or a new conflict to spread.
                 val v = queue.version + nullifiers.version
+                urgent = false
+                if (chaseSuspect(v)) continue
                 if (queue.forwardable().isEmpty() && nullifiers.size() == 0 && nullifiers.conflicts().isEmpty()) continue
                 val due = peers.values.filter {
                     it.fresh && now >= it.nextTry && now - it.lastSeen < PEER_GONE_MS &&
@@ -394,8 +499,10 @@ class BleMesh(
                 // rarely connect to the same peer together: on emulators that race leaves a
                 // connect pending in netsim for good and no phone can connect again.
                 if (due != null) {
-                    Thread.sleep(Random.nextLong(CONNECT_JITTER_MS))
+                    val until = SystemClock.elapsedRealtime() + Random.nextLong(CONNECT_JITTER_MS)
+                    while (running && !urgent && SystemClock.elapsedRealtime() < until) Thread.sleep(50)
                     if (!running) break
+                    if (urgent) continue
                 }
                 if (due != null && !sync(due, v)) {
                     // Watchdog: a run of failures with peers in sight means our side of the
@@ -418,6 +525,40 @@ class BleMesh(
         }
     }
 
+    /**
+     * Syncs a suspect peer, if there is one, ahead of everything else. Both phones of a double
+     * spend usually suspect each other at once; the one with the lower node id connects now and
+     * the other waits [SUSPECT_DEFER_MS], so they do not connect to each other together. If the
+     * other's session already brought the conflict, the hints no longer look suspect and it is
+     * dropped. Returns true if it handled one.
+     */
+    private fun chaseSuspect(v: Long): Boolean {
+        val p = peers.values.filter { it.suspect != null }.minByOrNull { it.suspectAt } ?: return false
+        val wait = p.suspectAt + (if (nodeId < p.node) 0 else SUSPECT_DEFER_MS) - SystemClock.elapsedRealtime()
+        if (wait > 0) Thread.sleep(wait)
+        if (!running) return true
+        val hints = chased(p) ?: return true
+        val still = Hints.suspects(hints, nullifiers::txidsFor)
+        if (still.isEmpty()) {
+            log("HINT_RESOLVED peer=${p.node} hints=${hints.joinToString(",")}")
+            return true
+        }
+        if (!sync(p, v, via = "hint")) failStreak++ else failStreak = 0
+        return true
+    }
+
+    /** Clears [p]'s suspicion, remembering its hints as chased. Returns them. */
+    private fun chased(p: Peer): List<Hints.Hint>? {
+        val hints = p.suspect ?: return null
+        val now = SystemClock.elapsedRealtime()
+        synchronized(p.chased) {
+            hints.forEach { p.chased[it] = now }
+            p.chased.entries.removeIf { now - it.value > SUSPECT_RETRY_MS }
+        }
+        p.suspect = null
+        return hints
+    }
+
     private var failStreak = 0
     @Volatile private var lastRestart = 0L
 
@@ -428,7 +569,7 @@ class BleMesh(
     }
 
     /** One session with [p]. Returns false if it failed (refusals count as success). */
-    private fun sync(p: Peer, version: Long): Boolean {
+    private fun sync(p: Peer, version: Long, via: String = "sync"): Boolean {
         val t0 = SystemClock.elapsedRealtime()
         val s = Session(p.device)
         session = s
@@ -450,10 +591,23 @@ class BleMesh(
             val mine = nullifiers.share()
             val theirs = s.request(Proto.nf(mine), REQUEST_TIMEOUT_MS) as? Proto.MNf ?: error("no NF reply")
             nullifiers.heard(theirs.claims)
-            log("GOSSIP role=client peer=${p.node} sent=${mine.size} got=${theirs.claims.size} conflicts=${nullifiers.conflicts().size}")
+            log("GOSSIP role=client peer=${p.node} sent=${mine.size} got=${theirs.claims.size} conflicts=${nullifiers.conflicts().size} via=$via")
             val inv = s.request(Proto.invReq(), REQUEST_TIMEOUT_MS) as? Proto.MInv ?: error("no INV reply")
             val have = inv.txids.toHashSet()
             for (e in queue.forwardable().filter { it.txid !in have }) {
+                // Each push can take the peer many seconds to verify. A suspect hint heard
+                // meanwhile goes first: this peer's is answered by gossiping again here, another
+                // peer's by ending the session (the rest is pushed next time).
+                if (p.suspect != null) {
+                    val again = s.request(Proto.nf(nullifiers.share()), REQUEST_TIMEOUT_MS) as? Proto.MNf ?: error("no NF reply")
+                    nullifiers.heard(again.claims)
+                    log("GOSSIP role=client peer=${p.node} got=${again.claims.size} conflicts=${nullifiers.conflicts().size} via=hint-inline")
+                    chased(p)
+                }
+                if (peers.values.any { it !== p && it.suspect != null }) {
+                    log("SESSION_CUT peer=${p.node} reason=suspect_elsewhere")
+                    break
+                }
                 val tf = SystemClock.elapsedRealtime()
                 val r = s.request(Proto.Tx(e.hops + 1, e.txid, e.raw).encode(), TX_TIMEOUT_MS) as? Proto.MTxResult
                     ?: error("no TX_RESULT for ${e.txid}")
@@ -480,7 +634,7 @@ class BleMesh(
         }
         stats = stats.copy(sessions = stats.sessions + 1)
         p.lastResult = result
-        log("SESSION peer=${p.node} result=\"$result\" ms=${SystemClock.elapsedRealtime() - t0}")
+        log("SESSION peer=${p.node} result=\"$result\" ms=${SystemClock.elapsedRealtime() - t0} via=$via")
         return result.startsWith("ok")
     }
 
@@ -643,6 +797,14 @@ class BleMesh(
         const val RESYNC_MS = 60_000L
         const val RETRY_MS = 2_000L
         const val CONNECT_JITTER_MS = 3_000L
+        /** The higher node id of two phones suspecting each other waits this long (see [chaseSuspect]). */
+        const val SUSPECT_DEFER_MS = 500L
+        /** A hint we synced for is not chased again for this long (forged or stale hints). */
+        const val SUSPECT_RETRY_MS = 30_000L
+        /** Re-check a peer's unchanged hints this often: our own claims may have changed. */
+        const val HINT_RECHECK_MS = 1_000L
+        const val ADVERT_TICK_MS = 200L
+        const val ROTATE_MS = 1_000L
         const val WATCHDOG_FAILURES = 5
         const val WATCHDOG_MS = 2 * 60_000L
         const val REFUSED_RETRY_MS = 5 * 60_000L

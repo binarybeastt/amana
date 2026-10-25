@@ -26,8 +26,8 @@ object Proto {
     val CCCD: UUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
 
     const val APP_ID = "offlinezec-wallet"
-    /** 2: adds NF (nullifier gossip, P4.G2). */
-    const val VERSION = 2
+    /** 2: adds NF (nullifier gossip, P4.G2). 3: version + node id move to manufacturer data with nullifier [Hints]. */
+    const val VERSION = 3
     /** Phones forward a transaction at most this many Bluetooth hops from where it was signed. */
     const val MAX_HOPS = 6
 
@@ -146,12 +146,13 @@ object Proto {
     }
 
     /**
-     * What a phone advertises in its scan response next to [SERVICE]: protocol version (1) and
-     * node id (8). 128-bit UUID + 9 bytes fits the 31-byte limit.
+     * What a v2 phone advertises in its scan response next to [SERVICE]: protocol version (1) and
+     * node id (8). 128-bit UUID + 9 bytes fits the 31-byte limit. v3 phones advertise [Hints]
+     * instead and still read this, so they see v2 phones and refuse them with a clear reason.
      */
     fun advert(nodeId: String, version: Int = VERSION): ByteArray = byteArrayOf(version.toByte()) + nodeId.hexToBytes()
 
-    /** (version, node id) from a scan response, or null if it is not ours. */
+    /** (version, node id) from a v2 scan response, or null if it is not one. */
     fun parseAdvert(b: ByteArray?): Pair<Int, String>? {
         if (b == null || b.size != 1 + NODE_ID_BYTES) return null
         return (b[0].toInt() and 0xFF) to b.copyOfRange(1, b.size).toHex()

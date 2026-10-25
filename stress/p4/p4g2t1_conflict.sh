@@ -8,6 +8,9 @@
 #   1. A holds tx1 (injected), B's mesh stopped. A meets C: C gets tx1. A's mesh stopped.
 #   2. B's mesh started, tx2 injected on B (clock starts once it is stored). C meets B.
 #   3. Wait for C's alert (≤ 60 s), and B's; then start A's mesh and wait for A's.
+# Also reported: C's detection time on the phones' clocks (conflict detected_at − tx2 stored at;
+# the state.json poll above lags by up to a few seconds), and whether it came via an advert
+# hint (v3: HINT_SUSPECT on C for the shared nullifier, then a hint-driven gossip on B or C).
 # Ends with every queue and alert cleared, so the pair is never carried online.
 #   ./p4g2t1_conflict.sh <A> <B> <C> [pair-dir=stress/p4/logs/p4g2-pair]   (p4g2_make_pair.sh first)
 set -uo pipefail
@@ -56,7 +59,7 @@ hook "$B" MESH_START
 wait_mesh "$B" "m['ble_running']" 60 || { say "FAIL: B mesh did not restart"; exit 1; }
 r=$(inject "$B" "$PAIR/tx2.hex" 1 "$TX2"); say "B inject tx2: $r"
 echo "$r" | grep -c '"stored"' >/dev/null || { say "FAIL: B did not store tx2"; exit 1; }
-t0=$(now_ms)
+t0=$(now_ms); stored_at=$(echo "$r" | python3 -c "import json,sys; print(json.load(sys.stdin)['at'])")
 
 # 3. Alerts.
 ok=True
@@ -66,6 +69,20 @@ if tb=$(wait_alert "$B" 120); then say "B alert after ${tb} s"; else say "B: no 
 hook "$A" MESH_START
 if ta=$(wait_alert "$A" 180); then say "A alert after ${ta} s (A's mesh restarted after B's alert)"; else say "A: no alert in 180 s (extra check)"; fi
 say "C conflict: $(state "$C" "s['conflicts']")"
+det=$(state "$C" "next(c['detected_at'] for c in s['conflicts'] if '$TX2' in c['txids'])")
+say "C detected $(python3 -c "print(round(($det - $stored_at) / 1000, 1))") s after B stored tx2 (phone clocks)"
+# The first hint about the shared nullifier between B and C (either way), the first hint-driven
+# session between them, and C's first alert: the hint must come before the alert.
+first() { mesh_log "$1" | grep -E "$2" | head -1 || true; }
+NF12=${SHARED_NF:0:12}; BN=$(node_id "$B")
+h=$( (first "$C" "HINT_SUSPECT peer=$BN hints=[^ ]*$NF12:"; first "$B" "HINT_SUSPECT peer=$CN hints=[^ ]*$NF12:") | sort | head -1)
+g=$( (first "$C" "GOSSIP role=client peer=$BN .*via=hint"; first "$B" "GOSSIP role=client peer=$CN .*via=hint") | sort | head -1)
+a=$(first "$C" "CONFLICT nullifier=$SHARED_NF")
+if [ -n "$h" ] && [ -n "$g" ] && [[ "${h:0:18}" < "${a:0:18}" || "${h:0:18}" == "${a:0:18}" ]]; then
+  say "alert via advert hint: ${h:6:12} $(echo "$h" | sed 's/.*MESH *: //') | ${g:6:12} $(echo "$g" | sed 's/.*MESH *: //') | C alert ${a:6:12}"
+else
+  say "alert via gossip only: hint='${h:6:12}' hint-session='${g:6:12}' C alert='${a:6:12}'"
+fi
 log_has "$C" "CONFLICT nullifier=$SHARED_NF" && say "C log: $(log_line "$C" "CONFLICT nullifier=")" || say "C log: no CONFLICT line"
 # The banner must be on C's home screen (uiautomator).
 home "$C"; sleep 4
