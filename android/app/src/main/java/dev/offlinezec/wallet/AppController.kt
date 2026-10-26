@@ -141,6 +141,24 @@ class AppController(private val app: Application) {
             wallet.start()
             refreshLoop()
         }
+        scope.launch { conflictWatch() }
+    }
+
+    /**
+     * A new double-spend alert reaches the screen (and state.json) at once rather than on the
+     * next refresh: a refresh waits on `:core`, which can be busy for many seconds verifying a
+     * payment a peer just pushed (often the very payment that caused the alert).
+     */
+    private suspend fun conflictWatch() {
+        var seen = mesh.nullifiers.version
+        while (true) {
+            delay(CONFLICT_POLL_MS)
+            val v = mesh.nullifiers.version
+            if (v == seen) continue
+            seen = v
+            _meshInfo.value = _meshInfo.value.copy(conflicts = mesh.nullifiers.conflicts())
+            if (wallet.wallet != null) dumpState()
+        }
     }
 
     /** Refreshes derived state every few seconds; broadcasts pending txs whenever online. */
@@ -379,6 +397,7 @@ class AppController(private val app: Application) {
 
     // ---- Debug state dump (read by the adb test scripts) ----
 
+    @Synchronized
     private fun dumpState() {
         if (!BuildConfig.DEBUG) return
         val o = JSONObject().put("updated_at", System.currentTimeMillis())
@@ -501,6 +520,7 @@ class AppController(private val app: Application) {
     companion object {
         private const val TAG = "AppController"
         const val REFRESH_MS = 3_000L
+        const val CONFLICT_POLL_MS = 250L
         const val BROADCAST_EVERY_MS = 30_000L
     }
 }

@@ -1,0 +1,13 @@
+14:17:29 pair: tx1=a83e1edf3a79e568… tx2=afbbe6068f985f67… nullifier 1162c859441281d6…
+14:17:43 A inject tx1: {"status":"stored","txid":"a83e1edf3a79e56878174d98c0412443e12c2bf2f19a1da6c8cfa4f73f2edacb","reason":null,"at":1792937863775}
+14:17:59 C holds tx1; no alert anywhere yet: A=0 C=0
+14:18:34 B inject tx2: {"status":"stored","txid":"afbbe6068f985f67e0813058a12d4d1ded537bb586356e56ef3eff37fe8967a8","reason":null,"at":1792937914313}
+14:18:35 C alert after 1 s
+14:18:35 B alert after 1 s
+14:18:38 A alert after 4 s (A's mesh restarted after B's alert)
+14:18:38 C conflict: [{'nullifier': '1162c859441281d6f281ba22a105a7db154c40b36a05668749663e3a66c2fc17', 'txids': ['a83e1edf3a79e56878174d98c0412443e12c2bf2f19a1da6c8cfa4f73f2edacb', 'afbbe6068f985f67e0813058a12d4d1ded537bb586356e56ef3eff37fe8967a8'], 'detected_at': 1792937895844, 'verified': False, 'settled': None}]
+14:18:38 C detected -18.5 s after B stored tx2 (phone clocks)
+14:18:38 alert via advert hint: 15:18:15.267 HINT_SUSPECT peer=ba0a58e2ef491054 hints=1162c8594412:afbbe6 ours=a83e1e | 15:18:15.845 GOSSIP role=client peer=ba0a58e2ef491054 got=38 conflicts=1 via=hint-inline | C alert 15:18:15.845
+14:18:38 C log: 10-25 15:18:15.845  2851  3373 W MESH    : CONFLICT nullifier=1162c859441281d6f281ba22a105a7db154c40b36a05668749663e3a66c2fc17 txids=a83e1edf3a79e56878174d98c0412443e12c2bf2f19a1da6c8cfa4f73f2edacb,afbbe6068f985f67e0813058a12d4d1ded537bb586356e56ef3eff37fe8967a8 verified=false settled=-
+14:18:47 C banner on screen: 1
+14:18:47 PASS (C alert in 1 s ≤ 60 s)

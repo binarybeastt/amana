@@ -1,0 +1,31 @@
+14:03:54 start: notes ready emulator-5554=16 emulator-5556=9 emulator-5558=8
+14:04:22 payer emulator-5554: NativeCoreException: proposal failed: InsufficientFunds { available: Zatoshis(0), required: Zatoshis(20000) } (skipping this phone this turn)
+14:04:53 payment 1/20 emulator-5556→emulator-5558 46a8cbfcb5cf3d0d… conflicts: 0 0 0
+14:05:27 payment 2/20 emulator-5558→emulator-5554 654b9ab89aeb3673… conflicts: 0 0 0
+14:06:33 payment 3/20 emulator-5554→emulator-5556 871f36ad8fb442e7… conflicts: 0 0 0
+14:06:56 payment 4/20 emulator-5556→emulator-5558 200443186db46a24… conflicts: 0 0 0
+14:07:17 payment 5/20 emulator-5558→emulator-5554 bf46c77875dbaaf5… conflicts: 0 0 0
+14:08:27 payment 6/20 emulator-5554→emulator-5556 e1ae851f68c003be… conflicts: 0 0 0
+14:08:51 payment 7/20 emulator-5556→emulator-5558 8bd167ed896f1180… conflicts: 0 0 0
+14:09:08 payment 8/20 emulator-5558→emulator-5554 f6fb9a836b295ca2… conflicts: 0 0 0
+14:10:14 payment 9/20 emulator-5554→emulator-5556 0ce210b99cf50ee5… conflicts: 0 0 0
+14:10:34 payment 10/20 emulator-5556→emulator-5558 c6ce9f5449ed9806… conflicts: 0 0 0
+14:11:00 payment 11/20 emulator-5558→emulator-5554 aa067f826988492f… conflicts: 0 0 0
+14:11:58 payment 12/20 emulator-5554→emulator-5556 be5356c69286a8ac… conflicts: 0 0 0
+14:12:16 payment 13/20 emulator-5556→emulator-5558 8abebd58399270fd… conflicts: 0 0 0
+14:12:39 payment 14/20 emulator-5558→emulator-5554 d597931132ee440b… conflicts: 0 0 0
+14:13:39 payment 15/20 emulator-5554→emulator-5556 4861d20917122771… conflicts: 0 0 0
+14:13:56 payment 16/20 emulator-5556→emulator-5558 737a13f93a2fadd9… conflicts: 0 0 0
+14:14:16 payment 17/20 emulator-5558→emulator-5554 10a5e64cf209da23… conflicts: 0 0 0
+14:14:24 payer emulator-5554: NativeCoreException: proposal failed: InsufficientFunds { available: Zatoshis(0), required: Zatoshis(20000) } (skipping this phone this turn)
+14:14:41 payment 18/20 emulator-5556→emulator-5558 ebc166f7a3f0690a… conflicts: 0 0 0
+14:14:48 payer emulator-5558: NativeCoreException: insufficient available notes: have 15000 zats, need 10000 plus fee (skipping this phone this turn)
+14:15:52 payment 19/20 emulator-5554→emulator-5556 246c2711403e2d2b… conflicts: 0 0 0
+14:15:59 payer emulator-5556: NativeCoreException: insufficient available notes: have 15000 zats, need 10000 plus fee (skipping this phone this turn)
+14:16:07 payer emulator-5558: NativeCoreException: insufficient available notes: have 15000 zats, need 10000 plus fee (skipping this phone this turn)
+14:17:07 payment 20/20 emulator-5554→emulator-5556 aae83da1b9eaef2f… conflicts: 0 0 0
+14:17:08 emulator-5554: alerts 0, CONFLICT log lines 0, queue 46, gossip set 2
+14:17:08 emulator-5556: alerts 0, CONFLICT log lines 0, queue 46, gossip set 42
+14:17:08 emulator-5558: alerts 0, CONFLICT log lines 0, queue 46, gossip set 42
+14:17:08 payments 20, not relayed everywhere 0, false alerts 0
+14:17:08 PASS
