@@ -2,6 +2,7 @@
 # Boot headless Android emulators that share netsim's virtual Bluetooth.
 #   ./emulators.sh start Medium_Phone Small_Phone    boot these AVDs, wait until ready
 #   ./emulators.sh stop                              shut down every running emulator
+#   WINDOW=1 ./emulators.sh start ...                with emulator windows (demo recording)
 set -euo pipefail
 
 SDK="${ANDROID_HOME:-$HOME/Library/Android/sdk}"
@@ -19,7 +20,8 @@ case "${1:-}" in
       # -no-snapshot: cold boot from the AVD's disk and keep every write. (With a quick-boot
       # snapshot plus -no-snapshot-save, stopping the emulator throws away everything since the
       # snapshot, wallets included: lost 5554's and 5556's Phase 2 wallets on 2026-10-21.)
-      "$EMU" -avd "$avd" -no-window -no-audio -no-boot-anim -no-snapshot >"/tmp/emu-$avd.log" 2>&1 &
+      nowin=-no-window; [ -n "${WINDOW:-}" ] && nowin=
+      "$EMU" -avd "$avd" $nowin -no-audio -no-boot-anim -no-snapshot >"/tmp/emu-$avd.log" 2>&1 &
       echo "booting $avd (log /tmp/emu-$avd.log)"
       if [ $first = 1 ]; then
         # The first emulator starts netsimd; the others must join it. Booted too close together,
