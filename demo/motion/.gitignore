@@ -2,3 +2,4 @@ node_modules/
 public/*.mp4
 public/*.png
 public/*.ttf
+public/*.wav
