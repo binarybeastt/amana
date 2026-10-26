@@ -9,7 +9,7 @@
 //! 4. Store it in the wallet (write-before-send, [`WalletStore::store_signed`]) and return the
 //!    stored bytes for the receiver.
 
-use std::{collections::BTreeSet, str::FromStr};
+use std::{collections::BTreeSet, num::NonZeroU32, str::FromStr};
 
 use anyhow::{Context, anyhow, bail, ensure};
 use pczt::roles::{prover::Prover, signer::Signer, verifier::Verifier};
@@ -46,9 +46,7 @@ use crate::{NoteInfo, NoteStatus, WalletStore, select::select_notes};
 /// crash can be found and released when the wallet is next opened.
 pub const SELECTION_LOCK_OWNER: LockOwner = LockOwner::new(*b"offline-core:selection-lock:v1\0\0");
 
-/// Notes need this many confirmations to be picked: the wallet's rule for received notes, and
-/// stricter than its 3 for its own change, so the library never rejects our pick.
-pub const MIN_CONFIRMATIONS: u32 = 10;
+pub use crate::notes::MIN_CONFIRMATIONS;
 
 #[derive(Debug, Clone, Serialize)]
 pub struct BuiltPayment {
@@ -79,6 +77,17 @@ fn txid_from_display(hex: &str) -> anyhow::Result<TxId> {
     }
     bytes.reverse();
     Ok(TxId::from_bytes(bytes))
+}
+
+/// The library's confirmation rule for our pick. Its default (ZIP 315) trusts only notes received
+/// on the internal (change) key after 3 confirmations; split denominations and a partial split's
+/// tagged notes are paid to our own external address, so it would want 10 for them and refuse
+/// notes that [`NoteInfo::ready_offline`] accepts. Every note but our pick is locked while it
+/// proposes, and our pick is pocket notes only (our own transactions' outputs), so asking for
+/// [`MIN_CONFIRMATIONS`] for every note here relaxes nothing else. The anchor depth (the trusted
+/// count) stays 3, as with the default.
+fn pocket_confirmations() -> ConfirmationsPolicy {
+    ConfirmationsPolicy::new_symmetrical(NonZeroU32::new(MIN_CONFIRMATIONS).expect("nonzero"), true)
 }
 
 fn output_ref(n: &NoteInfo) -> anyhow::Result<OutputRef> {
@@ -179,12 +188,7 @@ impl WalletStore {
         let notes: Vec<NoteInfo> = self.notes()?.into_iter().filter(|n| n.account_uuid == account_uuid).collect();
         let candidates: Vec<NoteInfo> = notes
             .iter()
-            .filter(|n| {
-                n.pool == "ironwood"
-                    && n.offline
-                    && n.status == NoteStatus::Available
-                    && n.mined_height.is_some_and(|h| h + MIN_CONFIRMATIONS <= target)
-            })
+            .filter(|n| n.ready_offline(target))
             .cloned()
             .collect();
         let selection = select_notes(&candidates, amount)?;
@@ -229,7 +233,7 @@ impl WalletStore {
             &GreedyInputSelector::new(),
             &change_strategy,
             request,
-            ConfirmationsPolicy::default(),
+            pocket_confirmations(),
             &SpendPolicy::default(),
             None,
             None,

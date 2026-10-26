@@ -45,6 +45,13 @@ pub const DUST_LIMIT: u64 = 5_000;
 /// carries no memo, which is how it is told apart from the pocket notes made next to it.
 pub const POCKET_MEMO: &[u8] = b"offline-cash";
 
+/// Confirmations a pocket note needs before it is spent offline. ZIP 315 trusts the wallet's own
+/// outputs after 3 (10 for funds from anyone else), and pocket notes only ever come from our own
+/// transactions, so offline cash is ready about a minute after the split is mined instead of
+/// ~12. Risk: a reorg of the last few blocks could undo a fresh split and with it the notes a
+/// payment spent; testnet and mainnet reorgs that deep are rare. See [`NoteInfo::ready_offline`].
+pub const MIN_CONFIRMATIONS: u32 = 3;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum NoteEvent {
     /// The transaction that created the note was mined.
@@ -121,6 +128,22 @@ pub struct NoteInfo {
     /// payment's change), and not the untagged leftover of a partial split. Funds from anyone
     /// else stay out until prepared. Only pocket notes are spent offline.
     pub offline: bool,
+    /// Spendable offline right now ([`Self::ready_offline`] at the wallet's synced tip): the one
+    /// "ready" count. `available` alone only means mined and unspent.
+    pub ready: bool,
+}
+
+impl NoteInfo {
+    /// The one rule for "can pay offline now", used by [`WalletStore::pay_offline`] and every
+    /// "ready offline" count in the app: available (mined, unspent, not dust), Ironwood, in the
+    /// offline pocket, and at least [`MIN_CONFIRMATIONS`] deep for a payment mined at
+    /// `target_height` (the synced tip + 1).
+    pub fn ready_offline(&self, target_height: u32) -> bool {
+        self.status == NoteStatus::Available
+            && self.pool == "ironwood"
+            && self.offline
+            && self.mined_height.is_some_and(|h| h + MIN_CONFIRMATIONS <= target_height)
+    }
 }
 
 const POOLS: [&str; 2] = ["ironwood", "orchard"];
@@ -198,7 +221,7 @@ impl WalletStore {
                     (None, None) if mined_height.is_none() => (NoteStatus::Pending, None),
                     (None, None) => (NoteStatus::Available, None),
                 };
-                Ok(NoteInfo {
+                let mut note = NoteInfo {
                     account_uuid: uuid_string(&r.get::<_, Vec<u8>>(0)?),
                     pool,
                     txid: display_hex(&r.get::<_, Vec<u8>>(1)?),
@@ -210,7 +233,11 @@ impl WalletStore {
                     status,
                     spent_by,
                     offline: ours && (tagged || !tx_tagged),
-                })
+                    ready: false,
+                };
+                // Never synced (target 0): nothing is ready.
+                note.ready = note.ready_offline(target_height);
+                Ok(note)
             })?;
             for row in rows {
                 out.push(row?);

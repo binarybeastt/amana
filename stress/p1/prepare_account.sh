@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # "Prepare for offline" on the desktop testnet wallet: split an account's available notes into
 # denominations + fee-sized notes (offline-cli plan-split) and send that self-payment online
-# with zcash-devtool. Waits until it is mined and the new notes have 10 confirmations.
+# with zcash-devtool. Waits until it is mined and the new notes have 3 confirmations (MIN_CONFIRMATIONS).
 #   ./prepare_account.sh <account-uuid> <own-address>
 set -euo pipefail
 source "$(dirname "$0")/../../spikes/zcash/env.sh"
@@ -21,7 +21,7 @@ sys.exit(1 if pend else 0)"; do
   sleep 30; "$DT" wallet -w "$W" sync >/dev/null 2>&1
 done
 mined_tip=$(tip)
-until [ "$(tip)" -ge $((mined_tip + 10)) ]; do sleep 30; done
+until [ "$(tip)" -ge $((mined_tip + 2)) ]; do sleep 30; done   # mined_tip itself is the first
 "$DT" wallet -w "$W" sync >/dev/null 2>&1
 echo "prepared at tip $(tip) (sent at $start)"
 nonet "$CLI" -w "$W" notes | awk -v a="${ACCT:0:8}" '$1 == a && $4 == "Available"'

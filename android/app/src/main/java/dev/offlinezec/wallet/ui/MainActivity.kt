@@ -290,7 +290,7 @@ fun HomeScreen(c: AppController, go: (Screen, Boolean) -> Unit) {
     val m by c.meshInfo.collectAsState()
     val amounts by c.sentAmounts.collectAsState()
     val msg by c.message.collectAsState()
-    val split = balanceSplit(notes, sync.networkHeight ?: sync.scannedHeight)
+    val split = balanceSplit(notes)
     val now = c.now()
     val rows = paymentRows(pending, received, m.queue, amounts, now)
     Page(gap = 0.dp) {
@@ -589,12 +589,13 @@ fun PrepareScreen(c: AppController, back: () -> Unit) {
                     val conf = notes.minOf { n ->
                         if (n.minedHeight != null && p.tip != null) (p.tip - n.minedHeight + 1).coerceAtLeast(0) else 0
                     }
-                    val ok = conf >= SPEND_CONFIRMATIONS
+                    val ok = notes.all { it.ready }
                     if (i > 0) HorizontalDivider(color = Ink.card)
                     Row(Modifier.fillMaxWidth().height(48.dp), verticalAlignment = Alignment.CenterVertically) {
                         Text("${zec(value)} ZEC × ${notes.size}", style = MaterialTheme.typography.titleMedium,
                             modifier = Modifier.weight(1f).testTag("denomination"))
-                        Text(if (ok) "ready" else "$conf/$SPEND_CONFIRMATIONS", style = MaterialTheme.typography.labelMedium,
+                        // Not ready yet with enough blocks: the wallet's sync has not caught up with them.
+                        Text(if (ok) "ready" else "${conf.coerceAtMost(SPEND_CONFIRMATIONS - 1L)}/$SPEND_CONFIRMATIONS", style = MaterialTheme.typography.labelMedium,
                             color = if (ok) Ink.green else Ink.dim)
                     }
                 }
@@ -622,7 +623,6 @@ fun PayScreen(c: AppController, scanFirst: Boolean, prepare: () -> Unit, back: (
     var withMemo by rememberSaveable { mutableStateOf(false) }
     var scanning by rememberSaveable { mutableStateOf(scanFirst) }
     val notes by c.notes.collectAsState()
-    val sync by c.wallet.sync.collectAsState()
     val caps by c.capsState.collectAsState()
     @Suppress("DEPRECATION") val clipboard = LocalClipboardManager.current
     if (pay is PayState.Ready) {
@@ -630,7 +630,7 @@ fun PayScreen(c: AppController, scanFirst: Boolean, prepare: () -> Unit, back: (
         return
     }
     val small = LocalConfiguration.current.screenHeightDp < 760
-    val ready = balanceSplit(notes, sync.networkHeight ?: sync.scannedHeight).available
+    val ready = balanceSplit(notes).available
     val zats = parseZec(amount)
     val building = pay is PayState.Building
     Page(scroll = false, gap = if (small) 8.dp else 16.dp) {

@@ -5,7 +5,7 @@
 # Bluetooth on, so every payment spreads only by the mesh; each must reach every phone's
 # queue, and after each one every phone must still show 0 conflicts.
 # If every phone runs out of offline-ready notes before N payments the script stops with
-# exit 2 (incomplete, not a pass): settle (net_on), PREPARE, and re-run with the remainder.
+# exit 2 (incomplete, not a pass; also after 3 failed payments in a row): settle (net_on), PREPARE, and re-run with the remainder.
 #   ./p4g2t2_honest.sh <A> <B> <C> [n=100] [zats=10000]
 set -uo pipefail
 source "$(dirname "$0")/../p3/lib.sh"
@@ -13,7 +13,9 @@ PHONES=("$1" "$2" "$3"); N=${4:-100}; ZATS=${5:-10000}
 LOG="$ROOT/stress/p4/logs/p4g2t2.log"; : >"$LOG"
 say() { echo "$(date -u +%T) $*" | tee -a "$LOG"; }
 conflicts() { state "$1" "len(s.get('conflicts', []))"; }
-ready_notes() { state "$1" "sum(1 for n in s.get('prepare', {}).get('notes', []) if n['status'] == 'available')"; }
+# offline-core's own "can pay now" flag, not status 'available' (mined and unspent only: on
+# 2026-10-24 a phone showed 12 available notes that could not pay, and this loop never ended).
+ready_notes() { state "$1" "sum(1 for n in s.get('prepare', {}).get('notes', []) if n.get('ready'))"; }
 
 for s in "${PHONES[@]}"; do
   launch "$s"; net_off "$s"; bt "$s" on; hook "$s" CONFLICTS_CLEAR; "$ADB" -s "$s" logcat -c
@@ -27,7 +29,7 @@ for i in 0 1 2; do
 done
 say "start: notes ready ${PHONES[0]}=$(ready_notes "${PHONES[0]}") ${PHONES[1]}=$(ready_notes "${PHONES[1]}") ${PHONES[2]}=$(ready_notes "${PHONES[2]}")"
 
-done_n=0; false_alerts=0; missing=0; turn=0; last=""
+done_n=0; false_alerts=0; missing=0; turn=0; last=""; fails=0
 while [ $done_n -lt "$N" ]; do
   payer=""; pi=-1
   for k in 0 1 2; do
@@ -43,9 +45,12 @@ while [ $done_n -lt "$N" ]; do
   wait_state "$payer" "s['pay']['state'] in ('ready', 'failed') and s['pay'].get('txid') not in ('$last', '$prev')" 900 \
     || { say "FAIL: payment $((done_n + 1)) from $payer never finished"; exit 1; }
   if [ "$(state "$payer" "s['pay']['state']")" != ready ]; then
-    say "payer $payer: $(state "$payer" "s['pay']['error']") (skipping this phone this turn)"; continue
+    say "payer $payer: $(state "$payer" "s['pay']['error']") (skipping this phone this turn)"
+    # Ready notes too small for the amount fail every time: stop once each phone has had a turn.
+    fails=$((fails + 1)); [ $fails -lt 3 ] || { say "INCOMPLETE: $fails payments failed in a row after $done_n payments"; exit 2; }
+    continue
   fi
-  tx=$(state "$payer" "s['pay']['txid']"); last=$tx; done_n=$((done_n + 1))
+  tx=$(state "$payer" "s['pay']['txid']"); last=$tx; done_n=$((done_n + 1)); fails=0
   for s in "${PHONES[@]}"; do
     wait_state "$s" "any(e['txid'] == '$tx' for e in s['mesh']['queue'])" 300 || { missing=$((missing + 1)); say "  ${tx:0:12}… never reached $s"; }
   done

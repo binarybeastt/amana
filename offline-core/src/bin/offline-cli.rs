@@ -149,11 +149,12 @@ fn main() -> anyhow::Result<()> {
             } else {
                 for n in &notes {
                     println!(
-                        "{} {:<8} {:>14} {:<13} {}:{}{}",
+                        "{} {:<8} {:>14} {:<13} {:<5} {}:{}{}",
                         &n.account_uuid[..8],
                         n.pool,
                         zec(n.value),
                         format!("{:?}", n.status),
+                        if n.ready { "ready" } else { "-" },
                         &n.txid[..16],
                         n.output_index,
                         n.spent_by.as_deref().map(|t| format!("  spent by {}", &t[..16])).unwrap_or_default(),

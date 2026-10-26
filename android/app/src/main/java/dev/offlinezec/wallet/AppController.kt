@@ -430,7 +430,7 @@ class AppController(private val app: Application) {
             }
         })
         o.put("pending_sent", JSONArray(_pendingSent.value.map { it.txid }))
-        val split = balanceSplit(_notes.value, wallet.sync.value.networkHeight ?: wallet.sync.value.scannedHeight)
+        val split = balanceSplit(_notes.value)
         o.put("balance_split", JSONObject().put("available", split.available).put("locked", split.locked)
             .put("pending", split.pending).put("in_payments", split.inPayments).put("total", split.total))
         seedWarnings.get().let { f ->
