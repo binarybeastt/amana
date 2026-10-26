@@ -1,0 +1,10 @@
+01-title|Zcash that works without signal.
+02-hook|When the power is out and data is down, people still need to pay. Cash gets stolen. Mobile money needs a network. What if your phone could pay privately, with no signal at all?
+03-cast|Ada sells bread. Her phone is a real Android phone. Tunde, the buyer, and a stranger passing by, are emulators. Everything runs on the Zcash test network.
+04-prepare|While he still has signal, Tunde sets aside offline cash, like drawing cash from an ATM. His phone splits it into notes, the way a wallet holds bills. About a minute later, it is ready.
+05-pay|Now there is no internet on either side. Tunde enters the amount, and his phone signs a shielded Zcash payment right there. Ada scans it. Her phone checks the proof by itself, and shows: received, not yet settled.
+06-relay|Any phone running the app carries the payment along over Bluetooth, and none of them can read it. It is encrypted. The first phone to find signal hands it to the Zcash network.
+07-settle|Settled. Ada's phone confirms it as soon as it reconnects. And on the blockchain, nobody can see who paid whom, or how much.
+08-cheat|What if someone copies their wallet to a second phone, and pays twice with the same money? Phones nearby see it, and every one of them raises a double spend alert.
+09-limits|Offline double spending can't be made impossible without special hardware. So we stop honest mistakes, catch cheats in seconds, and cap what anyone can lose, while the strangers carrying your money learn nothing.
+10-close|Today it moves Zcash. Tomorrow, the same mesh can carry a shielded dollar, for markets that run on cash and patchy data.

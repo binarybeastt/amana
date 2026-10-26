@@ -73,3 +73,24 @@ phone shows the red conflict alert within a second. [Caption: "Alert in under a 
 4. Scene 6 uses the double-spend pair in `stress/p4/logs/p4g2-pair/` (made by
    `stress/p4/p4g2_make_pair.sh`), injected while all phones are offline, as in
    `stress/p4/p4g2t1_conflict.sh`; clear queues and alerts after, so the pair is never broadcast.
+
+## How the first cut was made (2026-10-26)
+
+Roles swapped from the plan above so no webcam is needed: **Ada is the real phone**, Tunde is
+`emulator-5556`. The payment QR reaches the phone through the debug QR bridge (`relay_frames` in
+`stress/p2/lib.sh`); the phone decodes and verifies it itself, offline. Footage: `adb screenrecord`
+via `stress/p6/demo_lib.sh`; cards: `demo/cards/make_cards.py`; draft voice: macOS `say`
+(Samantha) from `demo/vo/lines.txt`; assembly: `demo/build_video.sh` → `demo/out/demo.mp4`.
+
+Gotchas found while recording:
+- Sync **both** phones right before they go offline. A receiver that synced before the sender's
+  anchor rejects the payment ("sender's anchor is unknown here").
+- Take the payer offline only after a complete sync. Taken offline mid-sync, its wallet library
+  saw no spendable notes (InsufficientFunds, available 0) until it synced again.
+- Typing a 217-character address with `adb input text` on an emulator drops characters; use the
+  `PAY` hook for the payment itself.
+- The public testnet explorer (testnet.zcashexplorer.app) follows another testnet branch (tip
+  ~4,494,200), so it can't show our transactions; the "on chain" card is built from the real
+  transaction bytes (`offline-cli inspect-raw`).
+- Record the double spend within minutes of a fresh emulator boot; Android's screenrecord stops
+  at 3 minutes. The banner shot used is from the run where it came 0.5 s after the second spend.

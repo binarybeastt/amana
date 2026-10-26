@@ -30,4 +30,8 @@ stress/p4/logs/**/pend*.json
 
 # Built APKs handed out for install
 dist/
-demo/
+demo/raw/
+demo/out/
+demo/vo/*.aiff
+demo/cards/*.png
+demo/cards/*.html

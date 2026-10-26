@@ -171,6 +171,7 @@ relay_frames() {
     [ "$(app_file "$r" in_frames.tmp | grep -c '^UR:BYTES/')" = "$want" ] && break; sleep 1
   done
   "$ADB" -s "$r" shell run-as "$PKG" mv files/in_frames.tmp files/in_frames.txt
-  hook "$r" FEED_FRAMES --es skip "$skip"
+  # Real phones' am rejects an empty --es value: pass skip only when set.
+  if [ -n "$skip" ]; then hook "$r" FEED_FRAMES --es skip "$skip"; else hook "$r" FEED_FRAMES; fi
   wait_state "$r" "s['receive']['state'] in ('accepted', 'rejected')" 600  # slow emulators: ~2 frames/s
 }
