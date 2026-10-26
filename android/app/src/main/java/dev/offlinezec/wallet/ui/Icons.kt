@@ -55,3 +55,18 @@ fun LineIcon(g: Glyph, modifier: Modifier = Modifier, size: Dp = 24.dp, color: C
         }
     }
 }
+
+/** The Amana mark (docs/brand/amana-mark.svg): an arch keeping a green dot, drawn on its 100-unit grid. */
+@Composable
+fun AmanaMark(modifier: Modifier = Modifier, size: Dp = 24.dp, color: Color = Ink.text, dot: Color = Ink.green) {
+    Canvas(modifier.size(size)) {
+        val u = this.size.minDimension / 100f
+        val arch = Path().apply {
+            moveTo(27f * u, 82f * u); lineTo(27f * u, 50f * u)
+            arcTo(androidx.compose.ui.geometry.Rect(27f * u, 27f * u, 73f * u, 73f * u), 180f, 180f, false)
+            lineTo(73f * u, 82f * u)
+        }
+        drawPath(arch, color, style = Stroke(width = 11f * u))
+        drawCircle(dot, 8f * u, Offset(50f * u, 64f * u))
+    }
+}

@@ -64,9 +64,9 @@ class MeshService : Service() {
             this, 0, Intent(this, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE,
         )
         return Notification.Builder(this, CHANNEL)
-            .setContentTitle("Offline ZEC")
+            .setContentTitle("Amana")
             .setContentText(text)
-            .setSmallIcon(android.R.drawable.stat_sys_data_bluetooth)
+            .setSmallIcon(dev.offlinezec.wallet.R.drawable.ic_notification)
             .setContentIntent(open)
             .setOngoing(true)
             .build()

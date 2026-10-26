@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Black window behind Compose, so launch and screen changes never flash grey. -->
+    <style name="Theme.Amana" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/ic_launcher_background</item>
+    </style>
+</resources>

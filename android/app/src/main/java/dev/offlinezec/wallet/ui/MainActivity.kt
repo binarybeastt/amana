@@ -151,7 +151,7 @@ fun Centered(text: String) {
         Modifier.fillMaxSize().background(Ink.black).padding(24.dp),
         verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        ZecAvatar(72.dp)
+        AmanaMark(size = 72.dp)
         Spacer(Modifier.height(24.dp))
         Text(text, style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center, modifier = Modifier.testTag("status_text"))
     }
@@ -191,7 +191,7 @@ fun SetupScreen(c: AppController) {
     val msg by c.message.collectAsState()
     Page(bg = Ink.black, gap = 16.dp) {
         Spacer(Modifier.height(64.dp))
-        ZecAvatar(64.dp)
+        AmanaMark(size = 64.dp)
         Spacer(Modifier.height(8.dp))
         Text("Zcash that works\nwithout signal", style = MaterialTheme.typography.displaySmall)
         Text("Pay phone to phone, settle later.", style = MaterialTheme.typography.bodyLarge, color = Ink.dim)
@@ -338,13 +338,15 @@ fun HomeScreen(c: AppController, go: (Screen, Boolean) -> Unit) {
     }
 }
 
-/** The design's minimal bar: connection on the left, scan in the middle, the profile circle (limits) on the right. */
+/** The design's minimal bar: the Amana mark and connection on the left, scan and the profile circle (limits) on the right. */
 @Composable
 fun TopBar(c: AppController, sync: SyncInfo, go: (Screen, Boolean) -> Unit) {
     val m by c.meshInfo.collectAsState()
     Box(Modifier.fillMaxWidth().height(64.dp)) {
         Row(Modifier.align(Alignment.CenterStart).padding(start = 12.dp), verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            AmanaMark(size = 28.dp, modifier = Modifier.testTag("brand_mark"))
+            Spacer(Modifier.width(4.dp))
             Dot(if (isOffline(sync)) Ink.dim else Ink.green, 8.dp)
             Text(syncText(sync), style = MaterialTheme.typography.labelMedium, color = Ink.dim, maxLines = 1, modifier = Modifier.testTag("sync_status"))
             // Bluetooth relay, as a glyph and the number of phones in reach.
@@ -353,8 +355,10 @@ fun TopBar(c: AppController, sync: SyncInfo, go: (Screen, Boolean) -> Unit) {
             LineIcon(Glyph.Bluetooth, size = 16.dp, color = if (on) Ink.text else Ink.faint)
             Text(if (on) "${m.peers}" else "off", style = MaterialTheme.typography.labelMedium, color = Ink.dim, modifier = Modifier.testTag("mesh_status"))
         }
-        IconButton(Glyph.Scan, { c.clearPay(); go(Screen.Pay, true) }, tag = "nav_scan", filled = false, modifier = Modifier.align(Alignment.Center))
-        IconButton(Glyph.Profile, { go(Screen.Limits, false) }, tag = "nav_limits", filled = false, modifier = Modifier.align(Alignment.CenterEnd))
+        Row(Modifier.align(Alignment.CenterEnd), verticalAlignment = Alignment.CenterVertically) {
+            IconButton(Glyph.Scan, { c.clearPay(); go(Screen.Pay, true) }, tag = "nav_scan", filled = false)
+            IconButton(Glyph.Profile, { go(Screen.Limits, false) }, tag = "nav_limits", filled = false)
+        }
     }
 }
 

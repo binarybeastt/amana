@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Status-bar icon: the Amana mark as a white silhouette. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="24dp"
+    android:viewportWidth="100" android:viewportHeight="100">
+    <path android:pathData="M27,88V54a23,23 0,0 1,46 0v34"
+        android:strokeColor="#FFFFFF" android:strokeWidth="12" />
+    <path android:pathData="M41,68a9,9 0,1 0,18 0a9,9 0,1 0,-18 0z" android:fillColor="#FFFFFF" />
+</vector>
