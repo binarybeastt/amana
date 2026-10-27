@@ -14,7 +14,6 @@ and it settles when any phone reaches the network.</p>
 
 > **Try it on your phone:** download `amana-testnet.apk` from the [latest release](../../releases/latest) and
 > follow **[TRY_IT.md](TRY_IT.md)**: free testnet coins, offline cash, a payment with no network, settled.
-> About 15 minutes.
 
 ## Why
 
