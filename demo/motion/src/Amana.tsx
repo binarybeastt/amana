@@ -222,10 +222,10 @@ const Side: React.FC<{ children: React.ReactNode; hideFrom?: number; hideTo?: nu
 
 // ---------------------------------------------------------------- 1. the problem
 
-// NASA Black Marble 2016 (public domain), cropped to lon 0–21.33°E, lat 3–15°N: 240 px per degree.
-const MAP = { w: 5120, h: 2880, lon0: 0, lat0: 15, ppd: 240 };
-const CITIES: [string, number, number, number][] = [
-  ["Lagos", 6.45, 3.39, 60], ["Abuja", 9.06, 7.49, 70], ["Kano", 12.0, 8.52, 80], ["Port Harcourt", 4.82, 7.03, 90],
+// NASA Black Marble 2016 (public domain), tile C1 cropped to lon 0–90°E, lat 4.4–55°N, scaled to 3840 px.
+const MAP = { w: 3840, h: 2160, lon0: 0, lat0: 55, ppd: 3840 / 90 };
+const REGIONS: [string, number, number, number][] = [
+  ["Europe", 47, 18, 60], ["Africa", 22, 20, 72], ["Middle East", 27, 44, 84], ["India", 21, 78.5, 96],
 ];
 
 /** A big number with its sentence, on the map's dark right side. */
@@ -236,7 +236,7 @@ const Stat: React.FC<{ at: number; until: number; to: number; decimals?: number;
   if (f < at || f > until + 16) return null;
   const leave = k(f, until, until + 12, 0, 1, inOut);
   return (
-    <div style={{ position: "absolute", left: 1180, top: 330, width: 660, opacity: 1 - leave,
+    <div style={{ position: "absolute", left: 140, top: 330, width: 900, opacity: 1 - leave,
       transform: `translateY(${-leave * 14}px)` }}>
       <Count to={to} decimals={decimals} at={at} suffix="M" size={200} />
       <Lines lines={lines} at={at + 16} size={44} weight={500} style={{ marginTop: 28 }} spans={{ "The most of any country.": DIM }} />
@@ -247,71 +247,61 @@ const Stat: React.FC<{ at: number; until: number; to: number; decimals?: number;
 const NightMap: React.FC = () => {
   const f = useCurrentFrame();
   const base = 1920 / MAP.w;
-  const s = interpolate(f, [0, 720], [1.06, 1.2]);
-  const ox = 820, oy = 520; // camera aims a little left of centre (Nigeria's middle)
+  const s = interpolate(f, [0, 720], [1.04, 1.16]);
+  const ox = 960, oy = 560;
   const pos = (lat: number, lon: number) => {
     const x = (lon - MAP.lon0) * MAP.ppd * base, y = (MAP.lat0 - lat) * MAP.ppd * base;
     return [ox + (x - ox) * s, oy + (y - oy) * s];
   };
   const appear = k(f, 0, 60, 0, 1, inOut);
-  const dim = 1 - 0.45 * k(f, 150, 190, 0, 1, inOut);
+  const dim = 1 - 0.6 * k(f, 150, 190, 0, 1, inOut);
   const leave = k(f, 690, 720, 0, 1, inOut);
   return (
     <AbsoluteFill style={{ background: BG }}>
       <AbsoluteFill style={{ opacity: appear * dim * (1 - leave) }}>
-        <Img src={staticFile("nigeria_night.jpg")} style={{ position: "absolute", width: 1920, height: 1080,
+        <Img src={staticFile("world_night.jpg")} style={{ position: "absolute", width: 1920, height: 1080,
           transformOrigin: `${ox}px ${oy}px`, transform: `scale(${s})` }} />
-        <AbsoluteFill style={{ background: "linear-gradient(90deg, #05050500 45%, #050505d0 78%, #050505 100%)" }} />
-        {CITIES.map(([name, lat, lon, at]) => {
+        <AbsoluteFill style={{ background: "linear-gradient(90deg, #050505e6 0%, #050505b0 38%, #05050500 62%)",
+          opacity: k(f, 150, 190, 0, 1, inOut) }} />
+        {REGIONS.map(([name, lat, lon, at]) => {
           const [x, y] = pos(lat, lon);
           const a = k(f, at, at + 24) * (1 - k(f, 150, 175));
           return (
-            <div key={name} style={{ position: "absolute", left: x, top: y, opacity: a }}>
-              <div style={{ position: "absolute", left: -5, top: -5, width: 10, height: 10, borderRadius: 5,
-                border: `1.5px solid ${TEXT}` }} />
-              <div style={{ position: "absolute", left: 16, top: -12, fontFamily: FONT, fontSize: 20, fontWeight: 500,
-                color: TEXT, whiteSpace: "nowrap", letterSpacing: 0.2 }}>{name}</div>
-            </div>
+            <div key={name} style={{ position: "absolute", left: x, top: y, transform: "translate(-50%, -50%)", opacity: a,
+              fontFamily: FONT, fontSize: 20, fontWeight: 600, letterSpacing: 3.2, textTransform: "uppercase",
+              color: TEXT, whiteSpace: "nowrap" }}>{name}</div>
           );
         })}
       </AbsoluteFill>
       <div style={{ position: "absolute", left: 140, top: 90 }}><Label text="The problem" at={20} until={690} /></div>
-      <div style={{ position: "absolute", left: 1180, top: 430, width: 660 }}>
-        <Lines lines={["This is Nigeria", "at night."]} at={40} until={150} size={72} />
+      <div style={{ position: "absolute", left: 140, bottom: 150, width: 900 }}>
+        <Lines lines={["Europe, Africa and Asia,", "at night."]} at={40} until={150} size={64} />
       </div>
-      <Stat at={180} until={420} to={86.8} decimals={1} lines={["people have no electricity.", "{The most of any country.}"]} />
-      <Stat at={440} until={690} to={20} lines={["live where a phone gets", "no signal at all."]} />
-      <Source text="NASA Earth Observatory, Black Marble 2016" at={30} until={170} left={1180} />
-      <Source text="World Bank, Tracking SDG7 2025 (2023 data)" at={200} until={420} left={1180} />
-      <Source text="Federal Government, NUCAP tower rollout, Oct 2026" at={460} until={690} left={1180} />
+      <Stat at={180} until={420} to={666} lines={["people live without electricity."]} />
+      <Stat at={440} until={690} to={300} lines={["live outside mobile", "broadband coverage."]} />
+      <Source text="NASA Earth Observatory, Black Marble 2016" at={30} until={170} />
+      <Source text="IEA, IRENA, UN, World Bank, WHO: Tracking SDG7 2025 (2023 data)" at={200} until={420} />
+      <Source text="GSMA, The State of Mobile Internet Connectivity 2025" at={460} until={690} />
       <Sfx at={180} src="hit.wav" volume={0.55} />
       <Sfx at={440} src="hit.wav" volume={0.55} />
     </AbsoluteFill>
   );
 };
 
-const Pos: React.FC = () => {
-  const f = useCurrentFrame();
-  return (
-    <AbsoluteFill style={{ background: BG }}>
-      <div style={{ position: "absolute", left: 140, top: 90 }}><Label text="The problem" /></div>
-      <div style={{ position: "absolute", left: 140, top: 300 }}>
-        <Lines lines={["Even in the city,"]} at={6} until={200} size={44} weight={500} color={DIM} />
-        <div style={{ height: 22 }} />
-        <div style={{ opacity: 1 - k(f, 200, 212), fontFamily: FONT, fontSize: 200, fontWeight: 650, color: TEXT,
-          letterSpacing: -9, lineHeight: 0.95, display: "flex", gap: 40, alignItems: "baseline" }}>
-          <span style={{ opacity: k(f, 16, 26), transform: `translateY(${(1 - k(f, 16, 40)) * 30}px)`, display: "inline-block" }}>1</span>
-          <span style={{ fontSize: 110, fontWeight: 500, color: DIM, letterSpacing: -3, opacity: k(f, 22, 34) }}>in</span>
-          <span style={{ opacity: k(f, 28, 38), transform: `translateY(${(1 - k(f, 28, 52)) * 30}px)`, display: "inline-block" }}>7</span>
-        </div>
-        <div style={{ height: 30 }} />
-        <Lines lines={["card payments at a POS terminal fails."]} at={40} until={200} size={44} weight={500} />
-      </div>
-      <Source text="NIBSS: 13–15% of card transactions on POS terminals fail" at={46} until={200} />
-      <Sfx at={28} src="hit.wav" volume={0.55} />
-    </AbsoluteFill>
-  );
-};
+const Pos: React.FC = () => (
+  <AbsoluteFill style={{ background: BG }}>
+    <div style={{ position: "absolute", left: 140, top: 90 }}><Label text="The problem" /></div>
+    <div style={{ position: "absolute", left: 140, top: 300 }}>
+      <Lines lines={["Even where the network reaches,"]} at={6} until={200} size={44} weight={500} color={DIM} />
+      <div style={{ height: 26 }} />
+      <Count to={296} at={16} size={200} />
+      <Lines lines={["times in 2024, the internet was", "switched off. In 54 countries."]} at={34} until={200} size={44}
+        weight={500} style={{ marginTop: 30 }} />
+    </div>
+    <Source text="Access Now, #KeepItOn: Internet shutdowns in 2024" at={40} until={200} />
+    <Sfx at={16} src="hit.wav" volume={0.55} />
+  </AbsoluteFill>
+);
 
 // ---------------------------------------------------------------- 2. why
 
@@ -319,13 +309,13 @@ const Excluded: React.FC = () => (
   <AbsoluteFill style={{ background: BG }}>
     <div style={{ position: "absolute", left: 140, top: 90 }}><Label text="Why it matters" /></div>
     <div style={{ position: "absolute", left: 140, top: 290 }}>
-      <Count to={28.8} decimals={1} at={8} suffix="M" size={200} />
-      <Lines lines={["adults are outside the financial system."]} at={24} until={220} size={44} weight={500}
+      <Count to={1.3} decimals={1} at={8} suffix="B" size={200} />
+      <Lines lines={["adults have no account at all."]} at={24} until={220} size={44} weight={500}
         style={{ marginTop: 30 }} />
-      <Lines lines={["In the Northwest, nearly half."]} at={70} until={220} size={44} weight={500} color={DIM}
+      <Lines lines={["Not at a bank. Not on mobile money."]} at={70} until={220} size={44} weight={500} color={DIM}
         style={{ marginTop: 14 }} />
     </div>
-    <Source text="EFInA, Access to Financial Services in Nigeria 2023 (26% excluded; Northwest 47%)" at={30} until={220} />
+    <Source text="World Bank, Global Findex 2025" at={30} until={220} />
     <Sfx at={8} src="hit.wav" volume={0.55} />
   </AbsoluteFill>
 );
@@ -355,7 +345,7 @@ const Brand: React.FC = () => {
       </div>
       <div style={{ marginTop: 40, fontFamily: FONT, fontSize: 32, fontWeight: 500, color: DIM, letterSpacing: 0.2,
         opacity: k(f, 74, 94), transform: `translateY(${(1 - k(f, 74, 98)) * 10}px)` }}>
-        <i>amana</i> · Hausa: trust, something held in good faith for someone
+        <i>amana</i> · trust, held in good faith. One word across Arabic, Swahili, Hausa and Malay.
       </div>
       <Sfx at={30} src="chime.wav" volume={0.35} />
     </AbsoluteFill>
@@ -373,7 +363,7 @@ const Who: React.FC<{ name: string; role: string; state: string; stateColor?: st
     <div style={{ fontFamily: FONT, display: "flex", alignItems: "baseline", gap: 18, opacity: a,
       transform: `translateY(${(1 - a) * 8}px)` }}>
       <span style={{ fontSize: 30, fontWeight: 650, color: TEXT, letterSpacing: -0.5 }}>{name}</span>
-      <span style={{ fontSize: 22, fontWeight: 500, color: DIM }}>{role}</span>
+      {role ? <span style={{ fontSize: 22, fontWeight: 500, color: DIM }}>{role}</span> : null}
       <span style={{ fontSize: 22, fontWeight: 500, color: stateColor, display: "flex", alignItems: "center", gap: 8 }}>
         <span style={{ width: 8, height: 8, borderRadius: 4, background: stateColor, display: "inline-block",
           transform: "translateY(-2px)" }} />{state}
@@ -411,8 +401,8 @@ const RELAY: Seg[] = [{ start: 8.6, end: 13, rate: 1.1 }, { start: 13, end: 18.6
 const SETTLE: Seg[] = [{ start: 9.6, end: 18.6 }];
 const durOf = (segs: Seg[]) => segs.reduce((a, s) => a + segFrames(s), 0);
 
-// Amana opening on Tunde's phone (cold start: the splash, "Opening wallet…", home with the mark).
-const OPEN: Seg[] = [{ start: 2.2, end: 5.9 }, { start: 6.4, end: 10.4 }];
+// Amana opening on the buyer's phone (cold start: the splash, "Opening wallet…", home with the mark).
+const OPEN: Seg[] = [{ start: 3.0, end: 5.9 }, { start: 6.4, end: 10.4 }];
 
 const Open: React.FC = () => {
   const f = useCurrentFrame();
@@ -422,7 +412,7 @@ const Open: React.FC = () => {
     <AbsoluteFill style={{ background: BG }}>
       <div style={{ position: "absolute", left: 150, top: 0, bottom: 0, width: 700, display: "flex",
         flexDirection: "column", justifyContent: "center", gap: 26 }}>
-        <Lines lines={["Tunde wants to buy", "bread from Ada."]} at={d - 70} size={64} />
+        <Lines lines={["A buyer and a seller", "at a market stall."]} at={d - 70} size={64} />
         <Lines lines={["Both use Amana."]} at={d - 52} size={30} weight={500} color={DIM} />
       </div>
       <Screen src="v-open.mp4" dev={EMU} segs={OPEN} cx={960 + 370 * move} />
@@ -437,8 +427,8 @@ const Prepare: React.FC = () => {
     <AbsoluteFill style={{ background: BG }}>
       <Steps n={0} />
       <Side hideFrom={d - 70}>
-        <Who name="Tunde" role="buyer" state="Online, for now" stateColor={GREEN} at={6} />
-        <Lines lines={["While he still has signal,", "Tunde sets aside", "offline cash."]} at={12} size={64} />
+        <Who name="Buyer" role="" state="Online, for now" stateColor={GREEN} at={6} />
+        <Lines lines={["While there's still", "signal, the buyer sets", "aside offline cash."]} at={12} size={64} />
         <Lines lines={["Like drawing cash at an ATM."]} at={34} size={30} weight={500} color={DIM} />
       </Side>
       <Screen src="tunde-prepare.mp4" dev={EMU} segs={PREP}
@@ -456,11 +446,11 @@ const Pay: React.FC = () => {
     <AbsoluteFill style={{ background: BG }}>
       <Steps n={1} />
       <Side hideFrom={qr + 30}>
-        <Who name="Tunde" role="buyer" state="No network" />
+        <Who name="Buyer" role="" state="No network" />
         <Lines lines={["No network on", "either phone."]} at={6} until={qr - 6} size={64} />
-        <Lines lines={["Tunde enters Ada's address", "and the amount."]} at={22} until={qr - 6} size={30} weight={500} color={DIM} />
-        <Lines lines={["His phone signs a", "shielded Zcash", "payment. Right there."]} at={qr} size={64} />
-        <Lines lines={["And shows it as a code for Ada."]} at={qr + 16} size={30} weight={500} color={DIM} />
+        <Lines lines={["The buyer enters the seller's", "address and the amount."]} at={22} until={qr - 6} size={30} weight={500} color={DIM} />
+        <Lines lines={["The phone signs a", "shielded Zcash", "payment. Right there."]} at={qr} size={64} />
+        <Lines lines={["And shows it as a code for the seller."]} at={qr + 16} size={30} weight={500} color={DIM} />
       </Side>
       <Screen src="v-tunde-pay.mp4" dev={EMU} segs={PAY} taps={PAY_TAPS}
         fast={[{ at: fastAt, until: fastAt + segFrames(PAY[2]), text: "Signing · sped up 6×" }]}
@@ -478,9 +468,9 @@ const Receive: React.FC = () => {
     <AbsoluteFill style={{ background: BG }}>
       <Steps n={2} />
       <Side hideFrom={ok + 4} hideTo={home - 20}>
-        <Who name="Ada" role="seller · a real phone" state="Airplane mode" at={4} />
-        <Lines lines={["Ada scans it."]} at={10} until={home - 10} size={64} />
-        <Lines lines={["Her phone checks the payment", "itself. No network involved."]} at={26} until={home - 10}
+        <Who name="Seller" role="a real phone" state="Airplane mode" at={4} />
+        <Lines lines={["The seller scans it."]} at={10} until={home - 10} size={64} />
+        <Lines lines={["The phone checks the payment", "itself. No network involved."]} at={26} until={home - 10}
           size={30} weight={500} color={DIM} />
         <Lines lines={["Received.", "Not yet settled."]} at={home} size={64} />
         <Lines lines={["Amana is honest about where", "the money is."]} at={home + 16} size={30} weight={500} color={DIM} />
@@ -503,10 +493,10 @@ const Relay: React.FC = () => {
     <AbsoluteFill style={{ background: BG }}>
       <Steps n={3} />
       <Side>
-        <Who name="A stranger" role="anyone with Amana" state="Bluetooth" at={4} />
-        <Lines lines={["A stranger's phone", "carries it along,", "over Bluetooth."]} at={10} until={sent - 6} size={64} />
-        <Lines lines={["It's encrypted.", "The stranger can't read it."]} at={28} until={sent - 6} size={30} weight={500} color={DIM} />
-        <Lines lines={["The first phone", "to find signal", "sends it on."]} at={sent} size={64} />
+        <Who name="Phones nearby" role="anyone with Amana" state="Bluetooth" at={4} />
+        <Lines lines={["The payment hops", "from phone to phone", "over Bluetooth."]} at={10} until={sent - 6} size={64} />
+        <Lines lines={["Sealed: no phone along", "the way can read it."]} at={28} until={sent - 6} size={30} weight={500} color={DIM} />
+        <Lines lines={["The first phone", "to reach the network", "delivers it."]} at={sent} size={64} />
       </Side>
       <Screen src="v-relay.mp4" dev={EMU} segs={RELAY} taps={[[11.5, 608, 967]]}
         fast={[{ at: segFrames(RELAY[0]), until: sent - 4, text: "Sped up 2.5×" }]}
@@ -523,8 +513,8 @@ const Settle: React.FC = () => {
     <AbsoluteFill style={{ background: BG }}>
       <Steps n={4} />
       <Side hideFrom={flip + 70}>
-        <Who name="Ada" role="seller · a real phone" state="Back online" stateColor={GREEN} at={4} />
-        <Lines lines={["Ada's phone finds", "signal again."]} at={8} until={flip - 8} size={64} />
+        <Who name="Seller" role="a real phone" state="Back online" stateColor={GREEN} at={4} />
+        <Lines lines={["The seller's phone", "finds signal again."]} at={8} until={flip - 8} size={64} />
         <Lines lines={["Settled."]} at={flip} size={96} spans={{ "Settled.": GREEN }} />
         <Lines lines={["Mined in block 4,544,893", "on the Zcash testnet."]} at={flip + 14} size={30} weight={500} color={DIM} />
       </Side>

@@ -37,16 +37,16 @@ Times are approximate (scenes cross-dissolve, 16 frames). Every app screen is a 
 
 | # | Scene | On screen | Text | Sound |
 |---|---|---|---|---|
-| 1 | Problem: the map | NASA night image of Nigeria, slow push-in; Lagos, Abuja, Kano, Port Harcourt marked | "This is Nigeria at night." → **86.8M** "people have no electricity. The most of any country." → **20M** "live where a phone gets no signal at all." Sources under each | bed; low hit on each number |
-| 2 | Problem: POS | Black | "Even in the city, **1 in 7** card payments at a POS terminal fails." (NIBSS) | hit |
-| 3 | Why | Black | **28.8M** "adults are outside the financial system. In the Northwest, nearly half." (EFInA 2023) → "Payments shouldn't need a signal. / And they shouldn't need to be watched." | hit |
-| 4 | Brand | The arch strokes in, the green dot drops in and settles, "amana" slides out | "*amana* · Hausa: trust, something held in good faith for someone" | chime |
-| 5 | Open | Amana cold start on Tunde's phone (splash, "Opening wallet…", home with the mark); the phone slides right | "Tunde wants to buy bread from Ada. Both use Amana." | — |
-| 6 | 1 Prepare | `tunde-prepare.mp4`: Prepare → 0.03 → Add to offline cash → ready offline ("Sped up 5×" while sending) | "While he still has signal, Tunde sets aside offline cash. Like drawing cash at an ATM." | — |
-| 7 | 2 Pay | `v-tunde-pay.mp4`: Pay → 0.01 → Pay → Signing (6×) → payment QR, push-in | "No network on either phone." → "His phone signs a shielded Zcash payment. Right there." | taps, sent cue |
-| 8 | 3 Receive | `v-ada-pay.mp4` (real phone, airplane mode): Receive → Scan → Checking → ✓ 0.01, push-in → home "Received offline, not yet settled" | "Ada scans it. Her phone checks the payment itself." → "Received. Not yet settled." | taps, received cue |
-| 9 | 4 Carry | `v-relay.mp4`: Payments, pending → relayed | "A stranger's phone carries it along, over Bluetooth. It's encrypted." → "The first phone to find signal sends it on." | sent cue |
-| 10 | 5 Settle | `v-ada-settle-clean.mp4` (real phone): pending → settled, push-in | "**Settled.** Mined in block 4,544,893 on the Zcash testnet." | chime |
+| 1 | Problem: the map | NASA night image of Europe, Africa and Asia, slow push-in; region names; dims for the numbers | "Europe, Africa and Asia, at night." → **666M** "people live without electricity." → **300M** "live outside mobile broadband coverage." Sources under each | bed; low hit on each number |
+| 2 | Problem: shutdowns | Black | "Even where the network reaches, **296** times in 2024, the internet was switched off. In 54 countries." (Access Now) | hit |
+| 3 | Why | Black | **1.3B** "adults have no account at all. Not at a bank. Not on mobile money." (Global Findex 2025) → "Payments shouldn't need a signal. / And they shouldn't need to be watched." | hit |
+| 4 | Brand | The arch strokes in, the green dot drops in and settles, "amana" slides out | "*amana* · trust, held in good faith. One word across Arabic, Swahili, Hausa and Malay." | chime |
+| 5 | Open | Amana cold start on the buyer's phone (splash, "Opening wallet…", home with the mark); the phone slides right | "A buyer and a seller at a market stall. Both use Amana." | — |
+| 6 | 1 Prepare | `tunde-prepare.mp4`: Prepare → 0.03 → Add to offline cash → ready offline ("Sped up 5×" while sending) | "While there's still signal, the buyer sets aside offline cash. Like drawing cash at an ATM." | — |
+| 7 | 2 Pay | `v-tunde-pay.mp4`: Pay → 0.01 → Pay → Signing (6×) → payment QR, push-in | "No network on either phone." → "The phone signs a shielded Zcash payment. Right there." | taps, sent cue |
+| 8 | 3 Receive | `v-ada-pay.mp4` (real phone, airplane mode): Receive → Scan → Checking → ✓ 0.01, push-in → home "Received offline, not yet settled" | "The seller scans it. The phone checks the payment itself." → "Received. Not yet settled." | taps, received cue |
+| 9 | 4 Carry | `v-relay.mp4`: Payments, pending → relayed | "The payment hops from phone to phone over Bluetooth. Sealed: no phone along the way can read it." → "The first phone to reach the network delivers it." | sent cue |
+| 10 | 5 Settle | `v-ada-settle-clean.mp4` (real phone): pending → settled, push-in | "The seller's phone finds signal again." → "**Settled.** Mined in block 4,544,893 on the Zcash testnet." | chime |
 | 11 | Holds up: the cheat | Three emulators side by side, lined up on the second payment; a clock counts since it (wait sped up 8×) and stops red when the nearby phone's "Double spend" banner lands | "What if someone spends the same money twice?" → clock **24.2 s** → each label turns "warned" as its own banner lands → "No network anywhere. All three phones warned, within half a second of each other." Source line: a real test pair, never broadcast; emulators over virtual Bluetooth; fastest run 0.5 s | alert + hit |
 | 12 | Holds up: facts | Four statements; the real transaction's bytes faint on the right | Real shielded Zcash · Checked on the phone · Relays see nothing · Losses are capped | soft ticks |
 | 13 | Where it goes | Black | "Today it moves ZEC. / Next, a shielded digital dollar, on the same rails." | — |
@@ -72,8 +72,9 @@ New on the Amana build (2026-10-27, emulators only):
 - `cheat-5554/5556/5558.mp4`: `SETTLE=25 stress/p6/shoot_cheat.sh emulator-5554 emulator-5556 emulator-5558`,
   right after a cold boot. Android's screenrecord writes frames only on change, so clips are padded with their
   last frame and converted to 30 fps (`tpad=stop_mode=clone`) before use. Timings in `demo/motion/src/cheat.ts`.
-- `nigeria_night.jpg`: NASA Black Marble 2016 tile C1 (public domain), cropped to lon 0–21.33°E, lat 3–15°N
-  (240 px/degree) and graded to warm lights on near-black. Raw tile in `demo/raw/nasa/`.
+- `world_night.jpg`: NASA Black Marble 2016 tile C1 (public domain), cropped to lon 0–90°E, lat 4.4–55°N
+  (rows 8400–20550 of the 240 px/degree tile), scaled to 3840 px and graded to warm lights on near-black. Raw
+  tile in `demo/raw/nasa/`.
 
 Sounds: `hit.wav`, `softtick.wav`, `drone.wav` are synthesized with ffmpeg (`aevalsrc`, brown noise); the cues
 are the app's own (`res/raw/cue_*.wav`). No voice yet: the user can record the lines above per scene and they
@@ -83,15 +84,18 @@ Render: `cd demo/motion && npx remotion render src/index.ts Amana ../out/amana.m
 
 ## Data and sources (checked 2026-10-27)
 
+Global on purpose (user's call 2026-10-27: the film should not read as built for one market). Characters are "the
+buyer" and "the seller", not named.
+
 | Line | Source |
 |---|---|
-| ~20 million with no signal | Federal Government NUCAP rollout (3,700 towers), Oct 2026; USPF earlier said 23 million |
-| 86.8 million without electricity, most of any country | World Bank, *Tracking SDG7: The Energy Progress Report 2025* (2023 data) |
-| ~1 in 7 POS card payments fail | NIBSS: 13–15% failure on POS (undated page); 20% peak in April 2019 |
-| 28.8 million adults excluded; Northwest 47% | EFInA, *Access to Financial Services in Nigeria* 2023 |
+| 666 million people without electricity | IEA, IRENA, UN Statistics Division, World Bank, WHO: *Tracking SDG7: The Energy Progress Report 2025* (2023 data, 666.4 million) |
+| ~300 million outside mobile broadband coverage | GSMA, *The State of Mobile Internet Connectivity 2025* (coverage gap, 4% of people) |
+| 296 internet shutdowns in 54 countries in 2024 | Access Now, #KeepItOn report on 2024 (Feb 2025) |
+| 1.3 billion adults with no account (bank or mobile money) | World Bank, *Global Findex Database 2025* |
+| Night image | NASA Earth Observatory, Black Marble 2016, tile C1 cropped to lon 0–90°E, lat 4.4–55°N, graded (`world_night.jpg`) |
 
-Left out on purpose: GSMA's "120 million without mobile internet" (mostly people with coverage who don't use
-it) and 27% smartphone ownership (true; answer it in Q&A, not in the film).
+Left out on purpose: GSMA's usage gap (3.1 billion covered but offline: mostly a usage problem, not ours).
 
 ## How the first cut was made (2026-10-26)
 
