@@ -85,7 +85,7 @@ Status: `todo` · `doing` · `blocked` · `emu-pass` · `done`. A goal is `done`
 
 | Goal | Status | Tests passed | Evidence / notes |
 |---|---|---|---|
-| P7.G1 README | todo | 0/2 | |
+| P7.G1 README | doing | 0/2 | `README.md` written 2026-10-27 (story, architecture, double-spend layers and limits, build steps). Not yet tested: T1 (build from a fresh clone following it), T2 (check against the spec's double-spend section) |
 | P7.G2 Submit | todo | 0/2 | |
 
 ## Test results
@@ -283,3 +283,4 @@ Newest first.
 - **2026-10-26** Renamed the app to Amana with its own icon and mark (header, loading and setup screens, splash, notification); scan moved next to the profile circle so the header fits on narrow phones. Debug APK builds, app unit tests pass; checked on emulator-5554 (its storage is full: the last build with the loading/setup-screen mark did not install there).
 - **2026-10-27** Demo film built: `demo/out/amana.mp4` (2:47, 1080p, Remotion `Amana`), story agreed with the user (problem with sourced numbers on NASA's night image of Nigeria → why → brand → the five real flows → the double spend → facts → a shielded dollar next). New footage on the Amana build: cold start, and the double spend (`stress/p6/shoot_cheat.sh`, three takes after a cold boot: alerts in 43 s, 34.5 s, 24.2 s; the film shows the 24.2 s take with a real clock, all three phones warned within 0.47 s of each other). The 0.5 s best case is no longer claimed as typical. A personal notification was patched out of the settle clip. No voice yet. See `docs/DEMO.md`.
 - **2026-10-27** Film made global (user's call: it should not read as built for the Nigerian market): world night image (Europe, Africa, Asia) and global numbers (666M without electricity, ~300M outside mobile broadband, 296 shutdowns in 54 countries, 1.3B unbanked), "the buyer" / "the seller" instead of names, the brand line shows amana across Arabic, Swahili, Hausa and Malay, relay reworded ("hops from phone to phone… Sealed").
+- **2026-10-27** README written (P7.G1 doing, tests not run yet). Film fact fix: payments spend Ironwood notes (NU6.3 pool, Orchard circuit), not "Orchard notes".

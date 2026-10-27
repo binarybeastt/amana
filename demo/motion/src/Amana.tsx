@@ -584,7 +584,7 @@ const Cheat: React.FC = () => {
 const Holds: React.FC = () => {
   const f = useCurrentFrame();
   const rows: [string, string, number][] = [
-    ["Real shielded Zcash.", "Orchard notes, on the Zcash testnet.", 10],
+    ["Real shielded Zcash.", "Fully shielded Ironwood notes, on the Zcash testnet.", 10],
     ["Checked on the phone.", "The receiver verifies the proof itself, offline.", 40],
     ["Relays see nothing.", "Strangers carry encrypted bytes they can't read.", 70],
     ["Losses are capped.", "Offline double spends can't be prevented without special hardware, so they are caught fast and limited.", 100],
