@@ -12,6 +12,10 @@ and it settles when any phone reaches the network.</p>
 
 *amana*: trust, something held in good faith for someone. One word across Arabic, Swahili, Hausa and Malay.
 
+> **Try it on your phone:** download `amana-testnet.apk` from the [latest release](../../releases/latest) and
+> follow **[TRY_IT.md](TRY_IT.md)**: free testnet coins, offline cash, a payment with no network, settled.
+> About 15 minutes.
+
 ## Why
 
 Digital money stops the moment the network does, and the network is exactly what fails first.
