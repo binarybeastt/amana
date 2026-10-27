@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "studio": "remotion studio src/index.ts",
-    "render": "remotion render src/index.ts Demo ../out/demo-motion.mp4 --codec h264 --crf 18"
+    "render": "remotion render src/index.ts Amana ../out/amana.mp4 --codec h264 --crf 18"
   },
   "dependencies": {
     "@remotion/cli": "4.0.539",

@@ -1,7 +1,7 @@
 # Demo video: Amana
 
-**Status:** story agreed in outline 2026-10-27 (problem → why → solution → how it holds up → where it goes). Not
-yet built. Earlier cuts (`demo/out/demo.mp4`, `demo-motion.mp4`, `launch.mp4`, `vertical.mp4`) are superseded:
+**Status:** built 2026-10-27: `demo/out/amana.mp4` (Remotion composition `Amana`, `demo/motion/src/Amana.tsx`).
+Story agreed with the user: problem → why → solution → how it holds up → where it goes. Earlier cuts (`demo/out/demo.mp4`, `demo-motion.mp4`, `launch.mp4`, `vertical.mp4`) are superseded:
 the user rejected the TTS voice, the mockups and glows ("AI slop"), cropped screens, and a story that didn't
 say why it matters.
 
@@ -31,66 +31,55 @@ say why it matters.
 - Sound: room tone under the problem, the app's own cues (`res/raw/cue_*.wav`) under the demo, one low hit on
   the double-spend alert, silence before the end card. No music bed, or a very quiet one.
 
-## Storyboard
+## Storyboard (as built)
 
-Times are targets. Waits (proving, mining) are cut or sped up, with the real duration said in the caption.
+Times are approximate (scenes cross-dissolve, 16 frames). Every app screen is a real recording, shown whole.
 
-### 1. Problem (0:00–0:35)
+| # | Scene | On screen | Text | Sound |
+|---|---|---|---|---|
+| 1 | Problem: the map | NASA night image of Nigeria, slow push-in; Lagos, Abuja, Kano, Port Harcourt marked | "This is Nigeria at night." → **86.8M** "people have no electricity. The most of any country." → **20M** "live where a phone gets no signal at all." Sources under each | bed; low hit on each number |
+| 2 | Problem: POS | Black | "Even in the city, **1 in 7** card payments at a POS terminal fails." (NIBSS) | hit |
+| 3 | Why | Black | **28.8M** "adults are outside the financial system. In the Northwest, nearly half." (EFInA 2023) → "Payments shouldn't need a signal. / And they shouldn't need to be watched." | hit |
+| 4 | Brand | The arch strokes in, the green dot drops in and settles, "amana" slides out | "*amana* · Hausa: trust, something held in good faith for someone" | chime |
+| 5 | Open | Amana cold start on Tunde's phone (splash, "Opening wallet…", home with the mark); the phone slides right | "Tunde wants to buy bread from Ada. Both use Amana." | — |
+| 6 | 1 Prepare | `tunde-prepare.mp4`: Prepare → 0.03 → Add to offline cash → ready offline ("Sped up 5×" while sending) | "While he still has signal, Tunde sets aside offline cash. Like drawing cash at an ATM." | — |
+| 7 | 2 Pay | `v-tunde-pay.mp4`: Pay → 0.01 → Pay → Signing (6×) → payment QR, push-in | "No network on either phone." → "His phone signs a shielded Zcash payment. Right there." | taps, sent cue |
+| 8 | 3 Receive | `v-ada-pay.mp4` (real phone, airplane mode): Receive → Scan → Checking → ✓ 0.01, push-in → home "Received offline, not yet settled" | "Ada scans it. Her phone checks the payment itself." → "Received. Not yet settled." | taps, received cue |
+| 9 | 4 Carry | `v-relay.mp4`: Payments, pending → relayed | "A stranger's phone carries it along, over Bluetooth. It's encrypted." → "The first phone to find signal sends it on." | sent cue |
+| 10 | 5 Settle | `v-ada-settle-clean.mp4` (real phone): pending → settled, push-in | "**Settled.** Mined in block 4,544,893 on the Zcash testnet." | chime |
+| 11 | Holds up: the cheat | Three emulators side by side, lined up on the second payment; a clock counts since it (wait sped up 8×) and stops red when the nearby phone's "Double spend" banner lands | "What if someone spends the same money twice?" → clock **24.2 s** → each label turns "warned" as its own banner lands → "No network anywhere. All three phones warned, within half a second of each other." Source line: a real test pair, never broadcast; emulators over virtual Bluetooth; fastest run 0.5 s | alert + hit |
+| 12 | Holds up: facts | Four statements; the real transaction's bytes faint on the right | Real shielded Zcash · Checked on the phone · Relays see nothing · Losses are capped | soft ticks |
+| 13 | Where it goes | Black | "Today it moves ZEC. / Next, a shielded digital dollar, on the same rails." | — |
+| 14 | End | Mark + "amana", "Money held in trust." Credits | "Built on Zcash · ZECATHON 2026 · Shielded Payments. Real recordings on the Zcash testnet: one real phone, three emulators." | bed fades out |
 
-| # | Time | On screen | Text / voice | Motion and sound | Footage / asset |
-|---|---|---|---|---|---|
-| 1.1 | 0:00–0:08 | Nigeria at night from space, mostly dark | "This is Nigeria at night." | Very slow push-in on the image; room tone | NASA Black Marble (public domain) cropped to Nigeria. **Download: ask the user first** |
-| 1.2 | 0:08–0:16 | Same image, dimmed; number top-left | "About **20 million** Nigerians live where a phone gets no signal at all." · source: Federal Ministry of Communications, NUCAP rollout, Oct 2026 | Number counts up, holds | — |
-| 1.3 | 0:16–0:24 | Same, second line replaces the first | "**86.8 million** have no electricity. The most of any country." · source: World Bank, Tracking SDG7 2025 | Same treatment | — |
-| 1.4 | 0:24–0:35 | Cut to black; a POS-style line | "Even in the city, about **1 in 7** card payments at a POS fails." · source: NIBSS | Hard cut to black, one dry error beep | Optional: a real shot of a POS "network" error (user films) |
+The demo scenes carry a step rail at the top ("The solution · 1 Prepare 2 Pay 3 Receive 4 Carry 5 Settle"), the
+current step lit.
 
-### 2. Why we solve it (0:35–0:55)
+**Changed from the agreed outline, on purpose:** the double spend is not claimed as "half a second". Three takes
+on 2026-10-27 (fresh emulator boot) alerted in 43 s, 34.5 s and 24.2 s; the film shows the 24.2 s take with a real
+clock and names the fastest measured run (0.5 s) only in the source line. In that take all three phones showed the
+banner within 0.47 s of each other (B 23.8 s, C 24.2 s, A 24.3 s after the second payment), which the film says.
 
-| # | Time | On screen | Text / voice | Motion and sound | Footage / asset |
-|---|---|---|---|---|---|
-| 2.1 | 0:35–0:43 | Black | "**28.8 million** adults are outside the financial system. In the Northwest, nearly half." · source: EFInA A2F 2023 | Number counts up | — |
-| 2.2 | 0:43–0:50 | Black | "Payments shouldn't need a signal." … "And they shouldn't need to be watched." | Two lines, second after a beat | — |
-| 2.3 | 0:50–0:55 | The Amana mark draws in (arch, then the dot drops in), wordmark | "Amana. *Trust, in Hausa.*" | The arch strokes in (~0.6 s), the green dot settles; one soft tone | `docs/brand/amana-wordmark.svg` |
+## Footage used
 
-### 3. The solution, for real (0:55–1:55)
+Old clips (shot 2026-10-26, before the rename, so no mark in their header; the name never appears in them):
+`tunde-prepare.mp4`, `v-tunde-pay.mp4`, `v-ada-pay.mp4`, `v-relay.mp4`, `v-ada-settle.mp4`. The settle clip had a
+personal WhatsApp pop-up over the header at the moment of settling; `v-ada-settle-clean.mp4` patches that strip
+(x 160–920, y 55–245, 12.2–17.2 s) with the same strip from 12.0 s. Use only the clean copy.
 
-Each beat: the full phone screen, centre-left; one caption line right. Two people: **Tunde** (buyer, emulator)
-and **Ada** (seller, the real phone, airplane mode).
+New on the Amana build (2026-10-27, emulators only):
+- `v-open.mp4`: cold start on emulator-5556 (splash with the mark → "Opening wallet…" → home).
+- `cheat-5554/5556/5558.mp4`: `SETTLE=25 stress/p6/shoot_cheat.sh emulator-5554 emulator-5556 emulator-5558`,
+  right after a cold boot. Android's screenrecord writes frames only on change, so clips are padded with their
+  last frame and converted to 30 fps (`tpad=stop_mode=clone`) before use. Timings in `demo/motion/src/cheat.ts`.
+- `nigeria_night.jpg`: NASA Black Marble 2016 tile C1 (public domain), cropped to lon 0–21.33°E, lat 3–15°N
+  (240 px/degree) and graded to warm lights on near-black. Raw tile in `demo/raw/nasa/`.
 
-| # | Time | On screen | Text / voice | Motion and sound | Footage |
-|---|---|---|---|---|---|
-| 3.1 | 0:55–1:05 | Tunde's Home → Prepare → "ready offline" | "While he still has signal, Tunde sets aside offline cash. Like drawing cash at an ATM." caption: "Ready in ~4 min (sped up)" | Push-in on "ready offline"; tick cue | **New:** prepare on the Amana build |
-| 3.2 | 1:05–1:20 | Tunde: Pay → amount 0.01 → Signing → payment QR | "No network on either phone. Tunde's phone signs a shielded Zcash payment, right here." | Tap ripples; push-in on the QR | **New:** `v-tunde-pay` re-shot on the Amana build |
-| 3.3 | 1:20–1:35 | Ada (real phone, airplane mode): Receive → Scan → Checking → ✓ received → Home "Received offline, not yet settled" | "Ada scans it. Her phone checks the proof itself, offline. Received, not yet settled: honest about where the money is." | Status bar shows airplane icon (personal notifications blurred); received cue | **New:** `v-ada-pay` re-shot on the Amana build |
-| 3.4 | 1:35–1:45 | Split: Ada's phone and a stranger's phone (Payments: relaying → relayed) | "Any phone with Amana carries it along over Bluetooth. It can't read it." | Simple horizontal cut between the two full screens, no animated "data line" | **New:** relay on Amana build (emulators, fresh boot) |
-| 3.5 | 1:45–1:55 | Ada's Home: pending → **settled** (green) | "The first phone to find signal sends it. Settled." caption: "Mined in block N on the Zcash testnet" | Push-in on the green "settled"; chime | **New:** settle on the Amana build |
+Sounds: `hit.wav`, `softtick.wav`, `drone.wav` are synthesized with ffmpeg (`aevalsrc`, brown noise); the cues
+are the app's own (`res/raw/cue_*.wav`). No voice yet: the user can record the lines above per scene and they
+drop in as `<Audio>` per scene.
 
-### 4. How it holds up (1:55–2:15)
-
-| # | Time | On screen | Text / voice | Motion and sound | Footage |
-|---|---|---|---|---|---|
-| 4.1 | 1:55–2:05 | Three screens: the same note paid to two sellers; the third phone's red "Double spend" banner | "Spend the same money twice, and every phone nearby is warned in half a second." | Hold on the banner; one low hit | **New:** double spend right after a fresh emulator boot |
-| 4.2 | 2:05–2:15 | Black, three short lines | "Real shielded Zcash. The proof is checked on the phone. Relays see only encrypted bytes. Losses are capped." | One line at a time | Optional: real tx bytes (`offline-cli inspect-raw`) dim behind |
-
-### 5. Where it goes (2:15–2:30)
-
-| # | Time | On screen | Text / voice | Motion and sound | Footage |
-|---|---|---|---|---|---|
-| 5.1 | 2:15–2:24 | Black | "Today it moves ZEC. Next, a shielded digital dollar, on the same rails." | — | — |
-| 5.2 | 2:24–2:30 | Mark + wordmark, small line under | "Amana. Money held in trust." · "Built on Zcash · ZECATHON 2026 · Shielded Payments · recorded on testnet" | Silence, then the dot settles | — |
-
-## Footage and assets to get
-
-All app footage is re-shot on the Amana build (the old clips show "Offline ZEC" and no mark).
-
-1. Install main's build on the phone and all three emulators. emulator-5554's storage is full: free space or
-   wipe its app data first (it holds no needed wallet).
-2. Restart all emulators right before the relay and double-spend takes (netsim jams; see `CLAUDE.md`).
-3. Shots, in order: 3.1 prepare (Tunde), 3.2 pay (Tunde), 3.3 receive (Ada, real phone, airplane mode, user
-   unlocks and taps), 3.4 relay (stranger), 3.5 settle (Ada), 4.1 double spend (three emulators).
-4. Assets: NASA Black Marble of Nigeria (download needs the user's OK); the brand SVGs in `docs/brand/`.
-5. Optional, filmed by the user: a real POS "network" failure, hands holding the phone in airplane mode.
-6. Voice: the user reads the voice lines above, one memo per scene, after the picture is locked.
+Render: `cd demo/motion && npx remotion render src/index.ts Amana ../out/amana.mp4 --codec h264 --crf 18`.
 
 ## Data and sources (checked 2026-10-27)
 
@@ -103,11 +92,6 @@ All app footage is re-shot on the Amana build (the old clips show "Offline ZEC" 
 
 Left out on purpose: GSMA's "120 million without mobile internet" (mostly people with coverage who don't use
 it) and 27% smartphone ownership (true; answer it in Q&A, not in the film).
-
-## Build
-
-Remotion in `demo/motion/` (new composition, 1920×1080, 30 fps), reusing the tap-ripple and push-in code
-from `src/Vertical.tsx`. Footage via `stress/p6/shoot.sh` / `stress/p6/demo_lib.sh`.
 
 ## How the first cut was made (2026-10-26)
 
